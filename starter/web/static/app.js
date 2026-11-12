@@ -158,9 +158,9 @@ async function updateGraph() {
   const container = $('connections-graph');
   if (!graphWidget) container.replaceChildren(element('p', 'Connecting this check’s source records…', 'view-status'));
   try {
-    const graph = await request(`/api/place/${encodeURIComponent(current.place_id)}/graph`);
+    const graph = await request(`/api/place/${encodeURIComponent(current.place_id)}/graph?run_id=${encodeURIComponent(runId)}`);
     if (requestId !== graphRequest || runId !== current?.run_id || activeView !== 'connections') return;
-    if (graph.run_id !== runId) throw new Error('A newer check has replaced this place’s graph. Start a fresh X-ray to inspect it.');
+    if (graph.run_id !== runId) throw new Error('The graph for this saved report is unavailable. Its findings and source links are still available.');
     $('graph-query').hidden = graph.engine !== 'surrealdb';  // shown only when SurrealDB really answered
     $('graph-query').querySelector('code').textContent = graph.query || '';
     if (graphWidget) graphWidget.update(graph);
@@ -205,7 +205,7 @@ function renderHistory(result) {
     row.append(element('h3', fieldName(record.field)));
     const values = element('p', null, 'history-values');
     const unit = value => record.unit || unitFor(result, record.field, value);
-    if (hasChangedValue(record)) values.append(element('del', valueText(record.previous_value, unit(record.previous_value))));
+    if (hasChangedValue(record)) values.append(element('span', `Earlier record: ${valueText(record.previous_value, unit(record.previous_value))}`, 'history-earlier'));
     values.append(element('span', valueText(record.value, unit(record.value))));
     row.append(values, sourceRecord(record));
     if (record.advert_id) row.append(element('p', `Advert ${record.advert_id}`));
@@ -286,8 +286,9 @@ async function showFlyIn(result) {
 function render(result) {
   current = result;
   $('intro').hidden = true; $('results').hidden = false;
-  $('place-title').textContent = result.place?.title || result.place?.address || 'Listing X-ray';
-  $('place-description').textContent = result.place?.title && result.place?.address ? result.place.address : result.listing_id || '';
+  $('place-title').textContent = result.place?.address || result.place?.title || 'Listing X-ray';
+  $('place-description').textContent = result.place?.address ? '' : result.place?.postcode || '';
+  $('place-description').hidden = !$('place-description').textContent;
   $('run-status').textContent = result.status === 'running' ? 'Checking sources. Findings update as records arrive.' : result.status === 'done' ? 'Check complete.' : result.status === 'error' ? 'Check incomplete. Review the source details below.' : 'Source records from this check.';
   const counts = result.counts || {};
   const disagreements = counts.disagrees || 0;
@@ -486,7 +487,7 @@ async function loadRun(runId) {
   } catch (error) {
     if (generation !== ownGeneration || error.name === 'AbortError') return;
     $('error').textContent = error.status === 404
-      ? `No X-ray run "${runId}" on this server. The link may be from another server or an expired run. Start a new X-ray below.`
+      ? `No X-ray run "${runId}" on this server. The link may be from another server or an expired run. Choose another saved listing below.`
       : `Could not open X-ray run "${runId}": ${error.message}`;
     $('error').hidden = false; $('status').textContent = 'Every finding opens back to its source.';
   }
@@ -501,7 +502,10 @@ $('new-listing').addEventListener('click', () => {
   $('listing').focus(); window.scrollTo({ top: 0, behavior: 'instant' });
 });
 window.addEventListener('pagehide', stop);
-for (const button of document.querySelectorAll('[data-view]')) button.addEventListener('click', () => setView(button.dataset.view));
+for (const button of document.querySelectorAll('[data-view]')) button.addEventListener('click', () => {
+  setView(button.dataset.view);
+  document.querySelector('.result-nav').scrollIntoView({ block: 'start', behavior: 'instant' });
+});
 
 if (mockup) {
   $('prototype').hidden = false; $('listing').value = 'illustrative-listing';

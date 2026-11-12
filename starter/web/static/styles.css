@@ -956,3 +956,13 @@ html {
 .room-table { width: 100%; border-collapse: collapse; margin-top: var(--space-2); font-variant-numeric: tabular-nums }
 .room-table th, .room-table td { text-align: left; padding: var(--space-1) 0; border-bottom: var(--border-width) solid var(--color-border) }
 .room-table th:last-child, .room-table td:last-child { text-align: right }
+
+.listing-page .header { height: auto; padding-block: var(--space-3); gap: var(--space-4); }
+.header-tools { display: flex; gap: var(--space-4); margin-left: auto; }
+.header-tools a { display: inline-flex; align-items: center; min-height: var(--control-height); font-size: var(--type-caption); }
+.listing-page .result-heading h1 { font-size: var(--type-heading); overflow-wrap: anywhere; }
+.listing-page .result-heading > div { min-width: 0; }
+.listing-page .result-heading .secondary { white-space: nowrap; }
+.listing-page .summary { margin-block: var(--space-5); padding-block: var(--space-4); }
+.history-earlier { display: block; color: var(--color-muted); font-size: var(--type-caption); margin-bottom: var(--space-2); }
+@media (max-width: 900px) { .header-tools { gap: var(--space-3); } }

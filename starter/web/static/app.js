@@ -160,13 +160,21 @@ async function updateGraph() {
   }
 }
 
+async function updateInside() {
+  if (!current) return;
+  const result = current;
+  const { renderInside } = await import('./inside.js');
+  if (activeView === 'inside' && current === result) await renderInside($('inside-plan'), result);
+}
+
 function setView(view) {
   activeView = view;
   for (const button of document.querySelectorAll('[data-view]')) button.setAttribute('aria-pressed', String(button.dataset.view === view));
-  for (const name of ['findings', 'connections', 'timeline']) $(`${name}-view`).hidden = name !== view;
+  for (const name of ['findings', 'connections', 'timeline', 'inside']) $(`${name}-view`).hidden = name !== view;
   if (view !== 'connections') { graphRequest += 1; graphWidget?.dispose(); graphWidget = null; }
   if (view === 'timeline' && current) renderTimeline($('history-timeline'), current);
   if (view === 'connections') updateGraph();
+  if (view === 'inside') updateInside();
 }
 
 function renderHistory(result) {
@@ -306,6 +314,7 @@ function render(result) {
   else { selected = null; $('finding-detail').hidden = true; $('findings').hidden = false; }
   if (activeView === 'timeline') renderTimeline($('history-timeline'), result);
   if (activeView === 'connections') updateGraph();
+  if (activeView === 'inside') updateInside();
 }
 
 async function request(url, options = {}) {

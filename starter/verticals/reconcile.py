@@ -32,6 +32,7 @@ CONTEXT = {
     "photo_history": "warn",
     "tenant_reviews": "info",
     "area_context": "info",
+    "room_schedule": "info",
 }
 UNCLAIMED_INFO = {"floor_area"}
 # Companies House statuses that mean the named company cannot be trading normally

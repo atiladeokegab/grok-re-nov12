@@ -18,11 +18,17 @@ from pathlib import Path
 
 from starter.core.errors import NotFound
 from starter.core.xray import Place, now
-from starter.verticals.sources import companies_house, epc, listing_history, photo_reuse
+from starter.verticals.sources import (
+    companies_house,
+    epc,
+    floor_plan,
+    listing_history,
+    photo_reuse,
+)
 
 FIXTURES = Path(__file__).parent / "fixtures"
 # order matters: listing_history fills page
-SOURCES = [listing_history, epc, companies_house, photo_reuse]
+SOURCES = [listing_history, epc, companies_house, photo_reuse, floor_plan]
 LOT = re.compile(
     r"^\s*lot\s+\w+\s*[-:–]?\s*", re.I
 )  # an auction's "Lot 8 " / "LOT 12 - " / "Lot 3:"

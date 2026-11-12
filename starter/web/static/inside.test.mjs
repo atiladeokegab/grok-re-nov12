@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { packRooms, splitFloors, advertMoney, isoScene, insideStats, wallSegments } from './inside.js';
+import { packRooms, splitFloors, advertMoney, isoScene, insideStats, wallSegments, introAt } from './inside.js';
 
 const kimberley = [
   ['Living Room', 6.9, 3.9], ['Kitchen', 2.9, 1.8], ['Bathroom', 1.8, 1.3], ['Bedroom 1', 3.9, 2.9],
@@ -72,4 +72,16 @@ test('wallSegments leaves a door gap in every side long enough for one, and none
   assert.equal(segs.length, 2 + 1 + 2 + 1);
   const total = segs.reduce((s, w) => s + w.len, 0);
   assert.ok(Math.abs(total - (2 * 4 + 2 * 1.2 - 2 * 0.9)) < 1e-9);
+});
+
+test('the build-up intro starts flat and ends on the finished house', () => {
+  const floors = [{ name: 'Ground floor', rooms: [{ name: 'Kitchen', width_m: 3, length_m: 4 }, { name: 'Hall', width_m: 2, length_m: 2 }] }, { name: 'First floor', rooms: [{ name: 'Bedroom', width_m: 3, length_m: 3 }] }];
+  const first = introAt(floors, 0);
+  assert.equal(first.lift(0, 0)[0], 0); // walls flat
+  assert.ok(first.lift(1, 0)[1] >= 40); // upper floor not yet in
+  assert.equal(first.label, 0);
+  const done = introAt(floors, first.duration);
+  assert.deepEqual([done.lift(0, 1), done.lift(1, 0), done.glow, done.label], [[1, 0], [1, 0], 0, 1]);
+  assert.ok(first.duration < 2500);
+  assert.deepEqual(isoScene(floors, 0.3, done.lift), isoScene(floors, 0.3)); // finished frame = the default scene
 });

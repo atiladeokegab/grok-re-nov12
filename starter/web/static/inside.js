@@ -136,21 +136,23 @@ const HUES = [{ re: /living|lounge|reception|sitting|dining/i, h: 34 }, { re: /k
   { re: /bed/i, h: 92 }, { re: /dressing|study|office/i, h: 265 }];
 const hue = name => (HUES.find(x => x.re.test(name)) || { h: 150 }).h;
 
-export function isoScene(floors, angle = 0) {
+// lift(level, room index) -> [wall height fraction, drop in metres]: the build-up intro; default is the finished house.
+export function isoScene(floors, angle = 0, lift = () => [1, 0]) {
   const packs = floors.map(f => packRooms(f.rooms));
   const cos = Math.cos(angle), sin = Math.sin(angle);
   const proj = (x, y, z) => { const u = x * cos - y * sin, v = x * sin + y * cos; return { X: (u - v) * Math.cos(ISO), Y: (u + v) * Math.sin(ISO) - z, d: u + v }; };
   const levels = packs.map((pack, i) => {
-    const z = i * (WALL + GAP), ox = pack.width / 2, oy = pack.height / 2;
+    const z0 = i * (WALL + GAP), ox = pack.width / 2, oy = pack.height / 2;
     const faces = [], labels = [];
-    for (const r of pack.rooms) {
+    for (const [k0, r] of pack.rooms.entries()) {
+      const [rise, drop] = lift(i, k0), z = z0 + drop, top = WALL * rise;
       const c = [[r.x, r.y], [r.x + r.w, r.y], [r.x + r.w, r.y + r.h], [r.x, r.y + r.h]].map(([x, y]) => [x - ox, y - oy]);
       const h = hue(r.name);
       const floor = c.map(([x, y]) => proj(x, y, z));
       faces.push({ kind: 'floor', room: r, h, pts: floor, d: -Infinity });
       for (let k = 0; k < 4; k++) {
         const [a, b] = [c[k], c[(k + 1) % 4]];
-        const pts = [proj(a[0], a[1], z), proj(b[0], b[1], z), proj(b[0], b[1], z + WALL), proj(a[0], a[1], z + WALL)];
+        const pts = [proj(a[0], a[1], z), proj(b[0], b[1], z), proj(b[0], b[1], z + top), proj(a[0], a[1], z + top)];
         const nx = b[1] - a[1], ny = -(b[0] - a[0]); // outward normal for a clockwise-in-screen ring
         const facing = (nx * cos - ny * sin) + (nx * sin + ny * cos); // toward the viewer when > 0
         faces.push({ kind: facing > 0 ? 'near' : 'far', room: r, h, pts, d: (pts[0].d + pts[1].d) / 2 + (facing > 0 ? 0.01 : -0.01), light: (nx * cos - ny * sin) / Math.hypot(nx, ny) });
@@ -161,7 +163,7 @@ export function isoScene(floors, angle = 0) {
     const rank = f => (f.kind === 'far' ? 0 : f.kind === 'floor' ? 1 : 2);
     faces.sort((a, b) => rank(a) - rank(b) || a.d - b.d);
     labels.sort((a, b) => a.d - b.d);
-    return { name: floors[i].name, z, faces, labels };
+    return { name: floors[i].name, z: z0, faces, labels };
   });
   return levels;
 }
@@ -257,17 +259,20 @@ function draw3d(floors) {
   const scene = svgEl('g', {});
   svg.append(scene);
   const pt = p => `${(p.X * S).toFixed(1)},${(p.Y * S).toFixed(1)}`;
-  const render = angle => {
+  const render = (angle, at = Infinity) => {
+    const intro = introAt(floors, at);
     scene.replaceChildren();
     const tags = [];
-    for (const level of isoScene(floors, angle)) {
+    for (const [i, level] of isoScene(floors, angle, intro.lift).entries()) {
+      if (intro.lift(i, 0)[1] >= 40) continue; // an upper floor still waiting to drop in
       const g = svgEl('g', { class: 'iso-level' });
+      const glow = intro.glow > 0 ? `;stroke:var(--color-accent);stroke-opacity:${intro.glow.toFixed(2)};stroke-width:1.5` : '';
       for (const f of level.faces) {
         const light = f.kind === 'floor' ? 30 : 42 + 14 * (f.light || 0);
-        g.append(svgEl('polygon', { points: f.pts.map(pt).join(' '), class: `iso-${f.kind}`, style: `--h:${f.h};--l:${light.toFixed(0)}%` }));
+        g.append(svgEl('polygon', { points: f.pts.map(pt).join(' '), class: `iso-${f.kind}`, style: `--h:${f.h};--l:${light.toFixed(0)}%${glow}` }));
       }
       for (const l of level.labels) {
-        const t = svgEl('g', { class: 'iso-label', transform: `translate(${(l.X * S).toFixed(1)} ${(l.Y * S).toFixed(1)})` });
+        const t = svgEl('g', { class: 'iso-label', transform: `translate(${(l.X * S).toFixed(1)} ${(l.Y * S).toFixed(1)}) scale(${intro.label.toFixed(3)})`, style: `opacity:${Math.min(1, intro.label).toFixed(2)}` });
         t.append(svgEl('text', { y: -5, class: 'iso-name' }, l.room.name), svgEl('text', { y: 15, class: 'iso-area' }, `${l.area.toFixed(1)} m²`));
         t.append(svgEl('title', {}, `${l.room.name}: ${l.room.width_m} × ${l.room.length_m} m`));
         g.append(t);
@@ -278,21 +283,44 @@ function draw3d(floors) {
     }
     scene.append(...tags); // on top, so the upper floor never hides the ground floor's name
   };
-  render(0);
   const still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!still && typeof requestAnimationFrame === 'function') {
-    let angle = 0, last = 0, paused = false;
+  const animate = !still && typeof requestAnimationFrame === 'function';
+  render(0, animate ? 0 : Infinity); // reduced motion: the finished house at once
+  if (animate) {
+    let angle = 0, last = 0, start = 0, paused = false;
+    const end = introAt(floors, 0).duration;
     svg.addEventListener('pointerenter', () => { paused = true; });
     svg.addEventListener('pointerleave', () => { paused = false; });
     const tick = now => {
       if (!svg.isConnected && last) return; // the view was replaced
-      if (last && !paused && !document.hidden) { angle += (now - last) * 0.00012; render(angle); }
+      if (!start) start = now;
+      const at = now - start;
+      if (at <= end + 32) render(0, at); // build-up first, ending on the finished frame
+      else if (last && !paused && !document.hidden) { angle += (now - last) * 0.00012; render(angle); }
       last = now; requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
   }
   return svg;
 }
+const ease = t => 1 - (1 - Math.min(1, Math.max(0, t))) ** 3;
+const pop = t => { const x = Math.min(1, Math.max(0, t)); return x >= 1 ? 1 : 1 + 0.25 * Math.sin(x * Math.PI) - 0.25 * (1 - x) - (1 - x) * 0.75; };
+
+/** The build-up intro at `at` ms: flat plan, ground-floor walls rise room by room, upper floors drop in, labels pop. */
+export function introAt(floors, at) {
+  const FLAT = 250, RISE = 520, STAGGER = Math.min(110, 900 / Math.max(1, floors[0]?.rooms.length || 1)), DROP = 520, LABELS = 380;
+  const groundDone = FLAT + STAGGER * Math.max(0, (floors[0]?.rooms.length || 1) - 1) + RISE;
+  const dropDone = floors.length > 1 ? groundDone + DROP * (floors.length - 1) : groundDone;
+  const duration = dropDone + LABELS;
+  const lift = (level, k) => {
+    if (level === 0) return [ease((at - FLAT - k * STAGGER) / RISE), 0];
+    const t = ease((at - groundDone - (level - 1) * DROP) / DROP);
+    return [1, t <= 0 ? 40 : (1 - t) * 3.5]; // waits far above the frame, then drops into place
+  };
+  const glow = at >= duration ? 0 : at < groundDone ? 1 : 1 - (at - groundDone) / (duration - groundDone);
+  return { lift, glow, label: pop((at - dropDone) / LABELS), duration };
+}
+
 // Screen y of a level's label: just above the back corner of its walls.
 const proj0 = (z, half) => -half * Math.sin(ISO) * 0.55 - z;
 

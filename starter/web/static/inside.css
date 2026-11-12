@@ -21,6 +21,7 @@
 .inside-quote p { margin: 0 0 var(--space-2); color: var(--color-ink); font-size: var(--type-caption); line-height: var(--leading-body); }
 .inside-facts { margin: 0; display: grid; border-top: var(--border-width) solid var(--color-border); }
 .inside-fact { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: var(--space-3); padding: var(--space-3) 0; border-bottom: var(--border-width) solid var(--color-border); }
+.inside-fact:has(.inside-area) { order: -1; }
 .inside-fact dt { color: var(--color-muted); font-size: var(--type-caption); padding-top: 2px; }
 .inside-fact dd { margin: 0; display: grid; gap: var(--space-1); }
 .inside-value { color: var(--color-ink); font-weight: var(--weight-medium); }

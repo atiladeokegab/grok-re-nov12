@@ -20,12 +20,12 @@
   <link rel="stylesheet" href="/static/places.css">
   <script type="module" src="/static/app.js"></script>
 </head>
-<body>
+<body class="listing-page">
   <a class="skip" href="#main">Skip to listing</a>
   <header class="header">
-    <span class="brand" aria-label="X-ray"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M5 5 27 27M27 5 5 27M0 10V0h10M22 0h10v10M32 22v10H22M10 32H0V22"/></svg><span>x-ray</span></span>
+    <a class="brand" href="/" aria-label="X-ray home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M5 5 27 27M27 5 5 27M0 10V0h10M22 0h10v10M32 22v10H22M10 32H0V22"/></svg><span>x-ray</span></a>
     <span class="header-purpose">See through the listing.</span>
-    <a class="header-link" href="#how-it-works">How it works</a>
+    <nav class="header-tools" aria-label="Property tools"><a href="/analyst">Analyst</a><a href="/lease">Lease review</a><a href="#how-it-works">How it works</a></nav>
   </header>
   <div id="prototype" class="prototype" hidden>Illustrative prototype. These values demonstrate the interface; they are not a real property assessment.</div>
   <main id="main">
@@ -62,8 +62,8 @@
       <div class="result-layout" id="findings-view">
         <section class="property-column" aria-label="Listing images and history">
           <div id="property-media" class="property-media"><div class="media-empty">The listing’s source images will appear here.</div></div>
-          <div class="section-title"><h2>What changed</h2><span id="history-count"></span></div>
-          <p class="section-description">The listing’s history, with the original record behind each change.</p>
+          <div class="section-title"><h2>Listing history</h2><span id="history-count"></span></div>
+          <p class="section-description">The records captured for this listing, with each source linked.</p>
           <div id="history" class="history"><p class="empty">Waiting for the listing’s history.</p></div>
           <section id="renters" class="renters" aria-labelledby="renters-title" data-testid="renters" hidden><div class="section-title"><h2 id="renters-title">Area comments</h2></div><p class="section-description">Published comments about this street, linked to their sources.</p><div class="renter-quotes"></div></section>
         </section>
@@ -82,7 +82,7 @@
       </section>
       <section id="inside-view" class="extra-view" aria-labelledby="inside-title" hidden>
         <h2 id="inside-title">Inside the property</h2>
-        <p class="section-description">The rooms redrawn from the advert’s own measurements, beside the costs and facts a renter or buyer asks first. Every fact links to its source.</p>
+        <p class="section-description">Room measurements, recorded costs and property facts, linked to their sources.</p>
         <div id="inside-plan" aria-live="polite"><p class="view-status">Reading the advert…</p></div>
       </section>
             <div class="run-receipt"><section aria-label="What each agent did"><h2>What each agent did</h2><div id="sources"></div></section><section aria-label="Agent activity"><h2>This run’s calls</h2><dl id="activity"></dl><p id="run-id"></p><a id="export-csv" data-testid="export-csv" hidden download>Download as CSV</a></section><section aria-labelledby="clients-title"><h2 id="clients-title">X-ray over MCP</h2><div id="clients"></div></section></div>

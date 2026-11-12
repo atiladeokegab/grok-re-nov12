@@ -161,7 +161,7 @@ export async function renderInside(container, result) {
     for (const floor of floors) plans.append(drawFloor(floor));
     planCol.append(plans, el('figcaption', `Layout is approximate: drawn from the advert’s room sizes, to scale. ${floors.length > 1 ? 'Floors are inferred from room names. ' : ''}The outline is the rooms’ bounding box; halls, stairs and walls are not in the schedule.`, 'inside-note'));
   } else {
-    planCol.append(el('p', 'This advert prints no room schedule, so the inside cannot be drawn to scale.', 'inside-empty'));
+    planCol.append(el('p', 'No room dimensions were recorded for this listing. Its description and sourced facts remain available below.', 'inside-empty'));
   }
   const words = insideDescription(text);
   if (words) {

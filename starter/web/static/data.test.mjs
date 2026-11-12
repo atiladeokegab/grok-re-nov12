@@ -29,6 +29,7 @@ test('finding detail only joins the claim and evidence explicitly cited by the f
   const claim = { id: 'claim' }, evidence = { id: 'cited' };
   assert.deepEqual(findingRecords({ claim_id: 'claim', evidence_ids: ['cited'] }, { claims: [claim], evidence: [{ id: 'unrelated' }, evidence] }), { claim, evidence: [evidence] });
   assert.equal(valueText(0, 'm²'), '0 m²');
+  assert.equal(valueText(81, 'm2'), '81 m²');
   assert.equal(valueText(null), 'Not recorded');
   assert.equal(valueText(770000, 'GBP'), '£770,000');
   assert.equal(unitFor({ claims: [{ field: 'floor_area', value: 70, unit: 'm²' }], evidence: [] }, 'floor_area', 70), 'm²');

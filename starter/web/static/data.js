@@ -17,7 +17,7 @@ export function valueText(value, unit) {
   if (Array.isArray(value) && value.every(c => c?.listing_id)) return `${value.length} comparable listings`;
   const text = value === null || value === undefined ? 'Not recorded' : typeof value === 'object' ? JSON.stringify(value) : String(value);
   if (unit === 'GBP' && typeof value === 'number') return `£${value.toLocaleString('en-GB')}`;
-  return unit ? `${text} ${unit}` : text;
+  return unit ? `${text} ${unit === 'm2' ? 'm²' : unit}` : text;
 }
 
 export function hasChangedValue(record) {

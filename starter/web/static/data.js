@@ -13,6 +13,7 @@ export function safeUrl(value) {
 }
 
 export function valueText(value, unit) {
+  if (Array.isArray(value?.rooms) && Number.isFinite(value.rooms_m2)) return `${value.rooms.length} rooms, ${value.rooms_m2.toFixed(1)} m²`;
   const text = value === null || value === undefined ? 'Not recorded' : typeof value === 'object' ? JSON.stringify(value) : String(value);
   if (unit === 'GBP' && typeof value === 'number') return `£${value.toLocaleString('en-GB')}`;
   return unit ? `${text} ${unit}` : text;

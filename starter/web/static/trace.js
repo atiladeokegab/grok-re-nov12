@@ -1,4 +1,4 @@
-import { safeUrl, sourceLabel, timestamp } from './data.js';
+import { safeUrl, sourceLabel, timestamp, valueText } from './data.js';
 
 const node = (tag, text, className) => {
   const item = document.createElement(tag);
@@ -199,7 +199,7 @@ export async function renderTrace(container, findingId, { signal, runId } = {}) 
       const section = node('section', null, 'trace-evidence');
       section.append(node('h5', first(record.source_name, sourceLabel(record), `Evidence ${index + 1}`)));
       if (record.field) section.append(node('p', `Field: ${record.field}`, 'trace-copy'));
-      if (record.value !== undefined) section.append(node('p', `Recorded value: ${typeof record.value === 'string' ? record.value : JSON.stringify(record.value)}`, 'trace-copy'));
+      if (record.value !== undefined) section.append(node('p', `Recorded value: ${valueText(record.value, record.unit)}`, 'trace-copy'));
       const loaded = documents[index];
       if (loaded.error) {
         state(section, `The source document is unavailable: ${loaded.error.message}`, 'error');

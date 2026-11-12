@@ -53,3 +53,7 @@ test('a run link round-trips through the URL and keeps the other parameters', as
   assert.equal(withRun('https://x.test/?run=xr-9&a=b', null), '/?a=b');
   assert.equal(runFromSearch(withRun('https://x.test/', 'xr-a&b=c').split('/')[1]), 'xr-a&b=c');
 });
+
+test('a room schedule reads as rooms and area, not raw JSON', () => {
+  assert.equal(valueText({ rooms: [{}, {}], rooms_m2: 63.12, stated_m2: 81 }), '2 rooms, 63.1 m²');
+});

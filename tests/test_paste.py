@@ -1,6 +1,7 @@
 """Paste anything: any URL or text gives a normal answer, never a 500, inside the time budget."""
 
 import json
+import threading
 import time
 
 import httpx2
@@ -90,19 +91,26 @@ def test_pasted_advert_text_is_read_and_unreadable_keeps_what_was_read(tmp_path)
     )
 
 
-def test_a_slow_source_is_cut_off_at_the_budget(tmp_path, monkeypatch):
-    slow = next(m for m in SOURCES if m.NAME != listing_history.NAME)
+@pytest.mark.parametrize("hung", [m.NAME for m in SOURCES if m.NAME != listing_history.NAME])
+def test_a_hung_source_is_cut_off_and_the_score_still_lands(tmp_path, monkeypatch, hung):
+    slow = next(m for m in SOURCES if m.NAME == hung)
+    release = threading.Event()
 
     def hang(place, listing):
-        time.sleep(3)
+        release.wait(30)  # hangs until the test ends
         return [], []
 
     monkeypatch.setattr(slow, "ingest", hang)
     gw = build_gateway(Store(tmp_path / "s.json"))
     monkeypatch.setattr(xray, "BUDGET_S", 0.5)
     start = time.monotonic()
-    r = xray.run_xray(gw, "demo", offline=True)
+    try:
+        r = xray.run_xray(gw, "demo", offline=True)
+    finally:
+        release.set()
     assert time.monotonic() - start < 2
+    # the demo's only scored evidence is the EPC's: without it there is nothing to score
+    assert r.trust_score is not None or hung == "epc"
     s = next(s for s in r.sources if s.name == slow.NAME)
     assert (s.status, s.detail) == ("error", "timed out after 0.5 s")
     assert r.status == "done" and r.claims  # the advert still read

@@ -19,7 +19,7 @@ from starter.core.xray import Claim, Evidence, Place
 NAME = "companies_house"
 SOURCE = "Companies House"
 BASE = "https://api.company-information.service.gov.uk"
-TIMEOUT = 15
+TIMEOUT = 8  # under the X-ray's 10 s budget (xray.BUDGET_S)
 # A company name in the advert's words: capitalised words ending in Ltd / Limited / LLP / PLC.
 NAMED = re.compile(r"\b((?:[A-Z][\w&'.-]*\s+){1,6}(?:Ltd|Limited|LLP|PLC))\b\.?")
 

@@ -30,11 +30,8 @@ and X-ray then reads each claim against them.
 The result is a **trust score** and a ledger of findings. Each finding shows its source, when that source was fetched,
 and which agent fetched it. When X-ray can't tie a record to the exact flat, it says **unverifiable** rather than guess.
 
-Example, from public records: for 24 Macquarie Way, E14, the EPC rating **matches** the advert. The advert says
-"semi-detached", but the EPC register says "end-terrace house", so that claim **disagrees**.
-
 **Grok Bot drives it.** X-ray runs an MCP server. Ask Grok Bot to "X-ray 24 Macquarie Way" and it starts the run, then
-answers "why is the score 67?" with the cited findings. Cursor uses the same tools.
+answers "why is the score what it is?" with the cited findings. Cursor uses the same tools.
 
 ## See it
 

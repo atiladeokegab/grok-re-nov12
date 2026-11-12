@@ -4,7 +4,7 @@
     uv run scripts/demo/record.py --out /tmp/media --scenes 1
     DEMO_LATENCY=0 uv run scripts/demo/record.py    # effects answer instantly
 
-The app starts the way the e2e tests start it (tests/e2e/app.py), with CASES run, then Chromium
+The app starts the way the e2e tests start it (tests/e2e/app.py), then Chromium
 plays SCENES in a 1280x720 window scaled to 1920x1080 (1.5x, legible in the GIF), and ffmpeg makes
 an H.264 MP4 (+faststart) and an 8 fps, 640 px GIF. Edit SCENES, not the code below.
 DEMO_LATENCY ("low-high" seconds, default 0.35-1.0) makes every simulated effect wait a random
@@ -25,12 +25,11 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))  # tests/e2e/app.py: one way to start the app, shared with the tests
 from tests.e2e.app import serve, stub_fonts  # noqa: E402
 
-CASES = ["001", "002"]  # sample cases run before the camera rolls
 # One shot each: (page, what must be on screen before the shot counts, seconds it holds then).
 # The film waits on the selector, never on the clock; the hold is screen time for the viewer.
 SCENES = [
-    ("/runs", "[data-run]:has-text('Case 001')", 3),
-    ("/runs?theme=refinery", "[data-run]:has-text('Case 002')", 3),
+    ("/runs", "h1:has-text('Runs')", 3),
+    ("/runs?theme=refinery", "h1:has-text('Runs')", 3),
 ]
 # Playwright pads a small viewport into a larger video size, never scales it; ffmpeg scales
 # the 1280x720 recording to 1920x1080 instead, so the page reads 1.5x larger.
@@ -40,7 +39,7 @@ GIF = "fps=8,scale=640:-1:flags=lanczos"
 
 def record(out: Path, scenes: list, latency: str) -> None:
     out.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory() as tmp, serve(Path(tmp), CASES, latency) as base:
+    with tempfile.TemporaryDirectory() as tmp, serve(Path(tmp), [], latency) as base:
         with sync_playwright() as p:
             browser = p.chromium.launch()
             context = browser.new_context(

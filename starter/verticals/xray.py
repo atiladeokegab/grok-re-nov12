@@ -4,6 +4,7 @@ POST /api/xray {listing_id | url} starts a run in a thread and returns {run_id};
 GET /api/xray/{run_id} is the XRayReport; GET /api/xray/{run_id}/events streams it (SSE) as it
 grows: `source`, `claim`, `evidence`, `finding`, `history`, `score`, then `done` (terminal; also
 sent on error, with status "error"). Each event's data is the full object.
+GET /api/gallery lists the 'try these' offline listings.
 GET /api/place/{id}/graph is the evidence graph of the latest run for that place.
 Ingestion (contract: ingest-contract v1): each source's raw originals are landed as Documents,
 every evidence quote is grounded in its document (`ingestion.landed`, `ingestion.parsed`,
@@ -45,7 +46,7 @@ from starter.runtime.deps import StoreDep
 from starter.verticals import cursor_step
 from starter.verticals import reconcile as rec
 from starter.verticals.narrate import narrate
-from starter.verticals.sources import SOURCES, load_listing
+from starter.verticals.sources import FIXTURES, SOURCES, load_listing
 from starter.verticals.sources import epc as epc_source
 
 router = APIRouter(tags=["xray"])
@@ -376,6 +377,18 @@ def get_report(store: Store, run_id: str) -> dict:
     if run is None:
         raise NotFound(f"no X-ray run {run_id!r}")
     return run
+
+
+@router.get("/api/gallery")
+def gallery() -> list[dict]:
+    """'Try these': real crawl listings recorded offline, one per discrepancy type. Start one with
+    POST /api/xray {"listing_id": name, "offline": true}."""
+    out = []
+    for p in sorted(FIXTURES.glob("*.json")):
+        fx = json.loads(p.read_text())
+        if g := fx.get("gallery"):
+            out.append({**g, "listing_id": fx["listing_id"], "url": fx["crawl"]["url"]})
+    return out
 
 
 @router.post("/api/xray", status_code=202)

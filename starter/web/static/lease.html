@@ -23,8 +23,12 @@
         <p class="lease-eyebrow">Office / lease review</p>
         <h1 id="lease-title">The lease,<br>with its evidence.</h1>
         <p class="lease-lead">Rent, break clauses and obligations. Read the extracted terms beside the words they came from.</p>
+        <div class="lease-sample">
+          <button id="lease-sample" class="secondary" type="button" disabled>Open the recorded office sample <span aria-hidden="true">↗</span></button>
+          <p class="status">Source excerpts from the recorded evaluation. No upload needed.</p>
+        </div>
         <form id="lease-form" class="lease-upload">
-          <label for="lease-file">Choose a commercial lease</label>
+          <label for="lease-file">Or choose a commercial lease</label>
           <input id="lease-file" name="file" type="file" accept=".docx" required aria-describedby="lease-help">
           <p id="lease-help" class="status">Word document (.docx), up to 5 MB. Read in memory; the upload is not saved.</p>
           <button id="lease-submit" class="primary" type="submit" disabled>Read this lease <span aria-hidden="true">↗</span></button>
@@ -55,6 +59,7 @@
     </section>
     <section id="lease-results" class="lease-results" aria-labelledby="lease-results-title" hidden>
       <div class="lease-result-heading"><div><p class="lease-eyebrow">Document record</p><h2 id="lease-results-title">Extracted terms</h2><p id="lease-filename" class="status"></p></div><p id="lease-counts" class="status"></p></div>
+      <p id="lease-provenance" class="status" hidden>Recorded evaluation excerpts; source text may be shortened. <a href="/api/lease/eval" target="_blank" rel="noopener">Open the recorded source data ↗</a></p>
       <p class="status">Open a term to inspect its source text. A missing clause is marked “Not found”; a template blank is marked “Placeholder”.</p>
       <div id="lease-terms" class="lease-terms"></div>
     </section>

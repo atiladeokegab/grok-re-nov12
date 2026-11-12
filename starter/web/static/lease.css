@@ -4,6 +4,8 @@
 .lease-eyebrow { font-size: var(--type-caption); color: var(--color-accent); margin-bottom: var(--space-4); }
 .lease-copy h1 { font-size: var(--type-display); line-height: var(--leading-heading); letter-spacing: var(--tracking-display); }
 .lease-lead { font-size: var(--type-lead); color: var(--color-muted); margin-top: var(--space-5); max-width: 42ch; }
+.lease-sample { margin-top: var(--space-5); }
+.lease-sample .secondary { text-align: left; }
 .lease-upload { margin-top: var(--space-6); }
 .lease-upload input { overflow: hidden; }
 .lease-upload input::file-selector-button { font: inherit; color: var(--color-ink); background: var(--color-raised); border: 0; border-radius: var(--radius-control); padding: var(--space-2) var(--space-3); margin-right: var(--space-3); cursor: pointer; }

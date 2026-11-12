@@ -21,10 +21,27 @@ def test_lease_upload_shows_sourced_terms_and_recorded_evaluation(page: Page, tm
         expect(page.locator("#benchmark-strict")).to_have_text("69 / 80")
         expect(page.locator("#benchmark-content")).to_have_text("74 / 80")
         expect(page.locator("#lease-submit")).to_be_disabled()
+        uploads = []
+        page.on(
+            "request",
+            lambda request: uploads.append(request.url) if request.method == "POST" else None,
+        )
+        page.get_by_role("button", name="Open the recorded office sample").click()
+        expect(page.locator("#lease-results-title")).to_have_text("Recorded office sample")
+        expect(page.locator("#lease-provenance")).to_contain_text("may be shortened")
+        expect(page.locator('[data-field="main_rent"] blockquote')).to_contain_text(
+            "[AMOUNT IN WORDS]"
+        )
+        expect(page.locator("#lease-filename")).to_have_text("MCL-Office-01.docx")
+        assert not uploads, (
+            "recorded sample must use cached evaluation data, with no upload or model call"
+        )
         page.locator("#lease-file").set_input_files(path)
         page.get_by_role("button", name="Read this lease").click()
         expect(page.locator("#lease-results")).to_be_visible()
         expect(page.locator("#lease-filename")).to_have_text("office-lease.docx")
+        expect(page.locator("#lease-results-title")).to_have_text("Extracted terms")
+        expect(page.locator("#lease-provenance")).to_be_hidden()
         expect(page.locator(".lease-term")).to_have_count(10)
         rent = page.locator('[data-field="main_rent"]')
         expect(rent.locator("summary")).to_contain_text("Placeholder")

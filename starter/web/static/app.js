@@ -161,6 +161,8 @@ async function updateGraph() {
     const graph = await request(`/api/place/${encodeURIComponent(current.place_id)}/graph`);
     if (requestId !== graphRequest || runId !== current?.run_id || activeView !== 'connections') return;
     if (graph.run_id !== runId) throw new Error('A newer check has replaced this place’s graph. Start a fresh X-ray to inspect it.');
+    $('graph-query').hidden = graph.engine !== 'surrealdb';  // shown only when SurrealDB really answered
+    $('graph-query').querySelector('code').textContent = graph.query || '';
     if (graphWidget) graphWidget.update(graph);
     else {
       const { mountGraph } = await import('./graph.js');
@@ -431,7 +433,10 @@ $('xray-form').addEventListener('submit', event => {
   startRun({ ...( /^https?:\/\//i.test(listing) ? { url: listing } : { listing_id: listing }), use });
 });
 
-loadGallery($('gallery'), item => { $('listing').value = item.name; startRun({ listing_id: item.name, offline: true }); });
+loadGallery($('gallery'), item => {
+  history.replaceState(null, '', withRun(location.href, item.run_id));
+  loadRun(item.run_id);
+});
 
 async function startRun(payload) {
   stop(); controller = new AbortController();

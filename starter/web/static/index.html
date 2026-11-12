@@ -40,7 +40,7 @@
           <div class="input-row"><input id="listing" name="listing" type="text" value="https://www.auctionhouse.co.uk/london/auction/lot/152478" placeholder="Paste a property listing" required autocomplete="off" spellcheck="false" data-testid="listing-input"><button id="start" class="primary" type="submit" data-testid="xray-submit">X-ray this listing<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
         </form>
         <p id="status" class="status" role="status" aria-live="polite">Every finding opens back to its source.</p>
-        <section id="gallery" class="gallery" aria-labelledby="gallery-title" hidden><h2 id="gallery-title">Try these real listings</h2></section>
+        <section id="gallery" class="gallery" aria-labelledby="gallery-title" hidden><h2 id="gallery-title">Open a saved listing</h2></section>
         <div class="source-line" id="how-it-works"><span>Listing history</span><span>EPC records</span><span>Photo matches</span><span>Tenant reviews</span></div>
       </div>
       <div class="intro-visual" id="intro-visual">
@@ -73,6 +73,7 @@
         <h2 id="connections-title">Follow the evidence</h2>
         <p class="section-description">See how this place, its claims and the source records connect. Select a node to inspect its evidence.</p>
         <div id="connections-graph" aria-live="polite"></div>
+        <details id="graph-query" class="graph-query" data-testid="graph-query" hidden><summary>Answered by one SurrealDB graph query</summary><pre><code></code></pre></details>
       </section>
       <section id="timeline-view" class="extra-view" aria-labelledby="timeline-title" hidden>
         <h2 id="timeline-title">The record over time</h2>

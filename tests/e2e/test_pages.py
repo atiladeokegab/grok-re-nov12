@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from playwright.sync_api import Page, expect
 
+from starter.web.test_analyst_page import seed_reports
 from tests.e2e.app import serve, stub_fonts
 
 pytestmark = pytest.mark.e2e
@@ -17,8 +18,11 @@ pytestmark = pytest.mark.e2e
 @pytest.fixture(scope="session")
 def server(tmp_path_factory):
     """The app on a free port, offline; yields its base URL."""
-    with serve(tmp_path_factory.mktemp("e2e-server"), []) as base:
-        yield base
+    tmp = tmp_path_factory.mktemp("e2e-server")
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        seed_reports(tmp, monkeypatch)
+        with serve(tmp, []) as base:
+            yield base
 
 
 @pytest.fixture
@@ -77,10 +81,14 @@ def test_a_finished_run_opens_by_link_and_survives_a_reload(page: Page, server, 
     expect(page.locator("#error")).to_contain_text('No X-ray run "xr-nope"')
 
 
-def test_starting_a_run_puts_its_link_in_the_url(page: Page, server, errors):
+def test_saved_gallery_opens_its_link_without_starting_a_run(page: Page, server, errors):
+    posts = []
+    page.on(
+        "request", lambda request: posts.append(request.url) if request.method == "POST" else None
+    )
     page.goto(server + "/")
-    page.locator(".gallery-item").first.click()  # gallery runs are offline fixtures
+    page.locator(".gallery-item").first.click()
     expect(page.locator("#run-id")).to_have_text(re.compile(r"^Run xr-"))
     run_id = page.locator("#run-id").inner_text().removeprefix("Run ")
     assert page.url.endswith(f"/?run={run_id}")
-    assert errors == []
+    assert posts == [] and errors == []

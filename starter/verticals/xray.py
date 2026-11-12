@@ -29,6 +29,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel
 
+from starter.core import surreal_graph
 from starter.core.errors import NotFound, SourceOff
 from starter.core.ingest import decoded_text, ground, land, raw_bytes
 from starter.core.store import Store
@@ -576,15 +577,15 @@ async def xray_events(run_id: str, request: Request, store: StoreDep) -> Streami
 
 
 @router.get("/api/place/{place_id}/graph")
-def place_graph(place_id: str, store: StoreDep) -> dict:
+def place_graph(place_id: str, store: StoreDep, run_id: str | None = None) -> dict:
     """Nodes and edges: place->has->claim, claim->checked_by->evidence, finding->cites->evidence,
     place->landed->document, document->contains->evidence."""
-    # shortcut: with STORE=surreal the graph is still computed from the saved report, not from
-    # RELATE edges; write place->document->evidence->finding relations when a query needs them.
-    run_id = store.snapshot().get("xray_places", {}).get(place_id)
+    run_id = run_id or store.snapshot().get("xray_places", {}).get(place_id)  # default: latest
     if run_id is None:
         raise NotFound(f"no X-ray for place {place_id!r}")
     r = get_report(store, run_id)
+    if r["place_id"] != place_id:  # a saved run link names its own place, never another's
+        raise NotFound(f"run {run_id!r} is not an X-ray of place {place_id!r}")
     nodes = [{"id": place_id, "kind": "place", "data": r["place"]}]
     nodes += [{"id": c["id"], "kind": "claim", "data": c} for c in r["claims"]]
     nodes += [{"id": e["id"], "kind": "evidence", "data": e} for e in r["evidence"]]
@@ -604,7 +605,16 @@ def place_graph(place_id: str, store: StoreDep) -> dict:
             edges += [
                 {"from": f["claim_id"], "to": e, "kind": "checked_by"} for e in f["evidence_ids"]
             ]
-    return {"place_id": place_id, "run_id": run_id, "nodes": nodes, "edges": edges}
+    out = {"place_id": place_id, "run_id": run_id, "nodes": nodes, "edges": edges}
+    if (g := surreal_graph.graph()) is not None:
+        try:  # the same graph, stored as RELATE edges and read back by one SurrealQL query
+            out |= g.answer(place_id, run_id, nodes, edges) | {
+                "engine": "surrealdb",
+                "query": surreal_graph.QUERY,
+            }
+        except Exception as e:  # never break the demo: the Python graph above still answers
+            _warn("surreal_graph", run_id, e)
+    return out
 
 
 def _find_document(store: Store, doc_id: str) -> dict:

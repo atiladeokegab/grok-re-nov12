@@ -14,13 +14,15 @@ pytestmark = pytest.mark.e2e
 
 
 def seed_reports(tmp_path, monkeypatch):
+    for key in ("ANTHROPIC_API_KEY", "XAI_API_KEY", "CURSOR_API_KEY", "COMPANIES_HOUSE_API_KEY"):
+        monkeypatch.delenv(key, raising=False)
     monkeypatch.setenv("DOCS_DIR", str(tmp_path / "documents"))
     store = Store(tmp_path / "store.json")
     gateway = build_gateway(store)
     for name, run_id in (
-        ("demo", "xr-191b546b56"),
-        ("kimberley-road", "xr-38a83c9bc1"),
-        ("charlemont-road", "xr-0624b39fbf"),
+        ("demo", "xr-6f65393159"),
+        ("kimberley-road", "xr-131a92ee3b"),
+        ("charlemont-road", "xr-f20b9504d5"),
         ("sleaford-house", "xr-analyst-sleaford"),
     ):
         report = run_xray(gateway, name, offline=True).model_dump()
@@ -61,9 +63,9 @@ def test_saved_comparison_sources_chart_and_all_csv(page: Page, tmp_path, monkey
         with path.open(newline="") as handle:
             rows = list(csv.DictReader(handle))
         assert {row["run_id"] for row in rows} == {
-            "xr-191b546b56",
-            "xr-38a83c9bc1",
-            "xr-0624b39fbf",
+            "xr-6f65393159",
+            "xr-131a92ee3b",
+            "xr-f20b9504d5",
             "xr-analyst-sleaford",
         }
         assert {row["kind"] for row in rows} == {"claim", "evidence", "finding"}
@@ -84,7 +86,7 @@ def test_gallery_failure_retry_and_partial_reports(page: Page, tmp_path, monkeyp
         expect(page.get_by_role("button", name="Download all as CSV")).to_be_disabled()
         page.unroute("**/api/gallery")
         page.route(
-            "**/api/xray/xr-38a83c9bc1",
+            "**/api/xray/xr-131a92ee3b",
             lambda route: route.fulfill(status=503, json={"error": "down"}),
         )
         page.get_by_role("button", name="Reload saved reports").click()
@@ -93,7 +95,7 @@ def test_gallery_failure_retry_and_partial_reports(page: Page, tmp_path, monkeyp
             "No saved report available"
         )
         expect(page.get_by_role("button", name="Download all as CSV")).to_be_enabled()
-        page.unroute("**/api/xray/xr-38a83c9bc1")
+        page.unroute("**/api/xray/xr-131a92ee3b")
         page.get_by_role("button", name="Reload saved reports").click()
         expect(page.locator("#analyst-status")).to_contain_text("4 of 4 saved reports ready")
         page.route(

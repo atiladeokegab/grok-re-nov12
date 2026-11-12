@@ -3,3 +3,8 @@
 .source-status.agent-line span { display: block }
 .source-status.agent-line span:first-child { font-weight: 600; color: var(--color-ink) }
 .source-status.agent-line span + span { color: var(--color-muted); margin-top: var(--space-1); text-align: left }
+
+/* The SurrealQL that answered the Connections graph, printed under it. */
+.graph-query { margin-top: var(--space-4); font-size: var(--type-caption); color: var(--color-muted) }
+.graph-query summary { cursor: pointer; color: var(--color-ink) }
+.graph-query pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: var(--space-2) 0 0 }

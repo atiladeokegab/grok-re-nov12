@@ -1,4 +1,4 @@
-import { fieldName, VERDICTS, safeUrl, valueText, sourcePresent, findingRecords, sourceLabel, timestamp, photoChange, unitFor, hasChangedValue } from './data.js';
+import { fieldName, VERDICTS, safeUrl, valueText, sourcePresent, findingRecords, sourceLabel, timestamp, photoChange, unitFor, hasChangedValue, runFromSearch, withRun } from './data.js';
 import { renderTimeline } from './timeline.js';
 import { mountClients } from './clients.js';
 import { loadGallery } from './gallery.js';
@@ -405,15 +405,8 @@ async function startRun(payload) {
       const started = await request('/api/xray', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       if (generation !== ownGeneration) return;
       if (!started.run_id) throw new Error('The server did not return a run ID. Try again.');
-      const result = await readRun(started.run_id, ownGeneration);
-      if (generation !== ownGeneration) return;
-      render(result);
-      showFlyIn(result);
-      if (result.status === 'running') watch(started.run_id, ownGeneration);
-      else if (result.status === 'error') {
-        $('error').textContent = runError(result.error);
-        $('error').hidden = false;
-      }
+      history.replaceState(null, '', withRun(location.href, started.run_id)); // the tab's URL reopens this run
+      await openRun(started.run_id, ownGeneration, true);
     }
   } catch (error) {
     if (generation === ownGeneration && error.name !== 'AbortError') { $('error').textContent = error.message; $('error').hidden = false; }
@@ -422,8 +415,37 @@ async function startRun(payload) {
   }
 }
 
+async function openRun(runId, ownGeneration, flyIn) {
+  const result = await readRun(runId, ownGeneration);
+  if (generation !== ownGeneration) return;
+  render(result);
+  if (flyIn) showFlyIn(result);
+  if (result.status === 'running') watch(runId, ownGeneration);
+  else if (result.status === 'error') {
+    $('error').textContent = runError(result.error);
+    $('error').hidden = false;
+  } else $('status').textContent = 'The X-ray is complete. Each finding links to its supporting record.';
+}
+
+// /?run=<id>: a saved run, as it finished. No new run starts; a running one is watched.
+async function loadRun(runId) {
+  stop(); controller = new AbortController();
+  const ownGeneration = generation;
+  $('error').hidden = true; $('status').textContent = `Opening X-ray run ${runId}.`;
+  try {
+    await openRun(runId, ownGeneration, false);
+  } catch (error) {
+    if (generation !== ownGeneration || error.name === 'AbortError') return;
+    $('error').textContent = error.status === 404
+      ? `No X-ray run "${runId}" on this server. The link may be from another server or an expired run. Start a new X-ray below.`
+      : `Could not open X-ray run "${runId}": ${error.message}`;
+    $('error').hidden = false; $('status').textContent = 'Every finding opens back to its source.';
+  }
+}
+
 $('new-listing').addEventListener('click', () => {
   stop(); selected = null;
+  history.replaceState(null, '', withRun(location.href, null));
   const flyin = $('flyin'); if (flyin) { flyin.hidden = true; }
   $('intro').hidden = false; $('results').hidden = true; $('start').disabled = false; $('error').hidden = true;
   $('status').textContent = 'Every finding opens back to its source.';
@@ -441,3 +463,6 @@ if (mockup) {
   }
   if (state === 'error') { $('error').textContent = 'The source is unavailable. Check the listing and try again.'; $('error').hidden = false; }
 }
+
+const linkedRun = mockup ? null : runFromSearch(location.search);
+if (linkedRun) loadRun(linkedRun);

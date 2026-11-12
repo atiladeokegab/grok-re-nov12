@@ -1,0 +1,39 @@
+{
+  "listing_id": "auctionhouse-96807e52",
+  "address": "24 Kimberley Road, Brighton, BN2 4EP",
+  "attribution": "Imagery © Google",
+  "tiles": [
+    {
+      "kind": "streetview",
+      "file": "streetview.jpg",
+      "label": "The front, from the street",
+      "source": "Google Street View",
+      "date": "2024-08",
+      "date_note": "captured",
+      "credit": "From the Owner, Photo by: Google",
+      "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=rP8-2b8Xp0ZDXp2ENiN8jg"
+    },
+    {
+      "kind": "satellite",
+      "file": "satellite.jpg",
+      "label": "From above",
+      "source": "Google satellite",
+      "date": "2026-11-12",
+      "date_note": "fetched",
+      "credit": "Imagery © Google",
+      "focus": "21% 62%",
+      "url": "https://www.google.com/maps/@?api=1&map_action=map&center=50.838633,-0.11796&zoom=19&basemap=satellite"
+    },
+    {
+      "kind": "map",
+      "file": "map.jpg",
+      "label": "On the map",
+      "source": "Google Maps",
+      "date": "2026-11-12",
+      "date_note": "fetched",
+      "credit": "Imagery © Google",
+      "focus": "53% 58%",
+      "url": "https://www.google.com/maps/search/?api=1&query=50.838633,-0.11796"
+    }
+  ]
+}

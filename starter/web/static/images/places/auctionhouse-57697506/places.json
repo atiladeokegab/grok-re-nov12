@@ -1,0 +1,39 @@
+{
+  "listing_id": "auctionhouse-57697506",
+  "address": "Flat 94 Sleaford House, Fern Street, Tower Hamlets, London, E3 3PZ",
+  "attribution": "Imagery © Google",
+  "tiles": [
+    {
+      "kind": "streetview",
+      "file": "streetview.jpg",
+      "label": "The front, from the street",
+      "source": "Google Street View",
+      "date": "2022-04",
+      "date_note": "captured",
+      "credit": "From the Owner, Photo by: Google",
+      "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=zxMQk3I9j98DfLkSBbOEWg"
+    },
+    {
+      "kind": "satellite",
+      "file": "satellite.jpg",
+      "label": "From above",
+      "source": "Google satellite",
+      "date": "2026-11-12",
+      "date_note": "fetched",
+      "credit": "Imagery © Google",
+      "focus": "39% 8%",
+      "url": "https://www.google.com/maps/@?api=1&map_action=map&center=51.520675,-0.021019&zoom=19&basemap=satellite"
+    },
+    {
+      "kind": "map",
+      "file": "map.jpg",
+      "label": "On the map",
+      "source": "Google Maps",
+      "date": "2026-11-12",
+      "date_note": "fetched",
+      "credit": "Imagery © Google",
+      "focus": "17% 51%",
+      "url": "https://www.google.com/maps/search/?api=1&query=51.520675,-0.021019"
+    }
+  ]
+}

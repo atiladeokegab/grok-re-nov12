@@ -1,0 +1,39 @@
+{
+  "listing_id": "auctionhouse-243ec1e5",
+  "address": "187 Charlemont Road, East Ham, London, E6 6AG",
+  "attribution": "Imagery © Google",
+  "tiles": [
+    {
+      "kind": "streetview",
+      "file": "streetview.jpg",
+      "label": "The front, from the street",
+      "source": "Google Street View",
+      "date": "2022-03",
+      "date_note": "captured",
+      "credit": "From the Owner, Photo by: Google",
+      "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=7YZuRwHcV3C9NT80rkAj4Q"
+    },
+    {
+      "kind": "satellite",
+      "file": "satellite.jpg",
+      "label": "From above",
+      "source": "Google satellite",
+      "date": "2026-11-12",
+      "date_note": "fetched",
+      "credit": "Imagery © Google",
+      "focus": "46% 91%",
+      "url": "https://www.google.com/maps/@?api=1&map_action=map&center=51.525872,0.063484&zoom=19&basemap=satellite"
+    },
+    {
+      "kind": "map",
+      "file": "map.jpg",
+      "label": "On the map",
+      "source": "Google Maps",
+      "date": "2026-11-12",
+      "date_note": "fetched",
+      "credit": "Imagery © Google",
+      "focus": "56% 99%",
+      "url": "https://www.google.com/maps/search/?api=1&query=51.525872,0.063484"
+    }
+  ]
+}

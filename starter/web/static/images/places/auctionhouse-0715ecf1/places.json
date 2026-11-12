@@ -1,0 +1,39 @@
+{
+  "listing_id": "auctionhouse-0715ecf1",
+  "address": "24 Macquarie Way, Isle of Dogs, London, E14 3AU",
+  "attribution": "Imagery © Google",
+  "tiles": [
+    {
+      "kind": "streetview",
+      "file": "streetview.jpg",
+      "label": "The front, from the street",
+      "source": "Google Street View",
+      "date": "2022-09",
+      "date_note": "captured",
+      "credit": "From the Owner, Photo by: Google",
+      "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=Mrk_kcF-7oDSTVf67ZYlVQ"
+    },
+    {
+      "kind": "satellite",
+      "file": "satellite.jpg",
+      "label": "From above",
+      "source": "Google satellite",
+      "date": "2026-11-12",
+      "date_note": "fetched",
+      "credit": "Imagery © Google",
+      "focus": "26% 1%",
+      "url": "https://www.google.com/maps/@?api=1&map_action=map&center=51.489504,-0.015614&zoom=19&basemap=satellite"
+    },
+    {
+      "kind": "map",
+      "file": "map.jpg",
+      "label": "On the map",
+      "source": "Google Maps",
+      "date": "2026-11-12",
+      "date_note": "fetched",
+      "credit": "Imagery © Google",
+      "focus": "16% 63%",
+      "url": "https://www.google.com/maps/search/?api=1&query=51.489504,-0.015614"
+    }
+  ]
+}

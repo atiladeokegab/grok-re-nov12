@@ -97,9 +97,11 @@ def attribution(sess: str, key: str, places: list, z: int) -> str:
         "east": max(lngs) + 0.01,
         "west": min(lngs) - 0.01,
     }
-    return json.loads(call("viewport", key, {"session": sess, "zoom": z, **bounds})).get(
-        "copyright", ""
-    )
+    try:  # the credit line only; a refused viewport must not lose the images
+        got = call("viewport", key, {"session": sess, "zoom": z, **bounds})
+        return json.loads(got).get("copyright", "") or "Imagery © Google"
+    except SystemExit:
+        return "Imagery © Google"
 
 
 def main(ids: list[str]) -> None:
@@ -145,8 +147,8 @@ def main(ids: list[str]) -> None:
                 {
                     "session": sv,
                     "panoId": pano,
-                    "width": 640,
-                    "height": 400,
+                    "width": 400,
+                    "height": 250,
                     "yaw": yaw,
                     "pitch": 5,
                     "fov": 80,

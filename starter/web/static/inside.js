@@ -103,42 +103,118 @@ function drawFloor(floor) {
 const gbp = n => `£${Math.round(n).toLocaleString('en-GB')}`;
 const listingUrl = result => (result.claims || []).find(c => c.source === 'listing')?.source_url;
 
-function sourceLink(label, url) {
-  const href = safeUrl(url);
-  if (!href) return el('span', label, 'inside-source');
-  const a = el('a', label, 'inside-source'); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer';
-  return a;
-}
-
-export function insideFacts(result, text, schedule) {
+// The numbers a reader asks first, as big figures; each tile links to where it came from.
+export function insideStats(result, text, schedule) {
   const claim = f => (result.claims || []).find(c => c.field === f);
   const epc = f => (result.evidence || []).find(e => e.field === f && e.agent === 'epc');
   const advert = listingUrl(result);
   const m = advertMoney(text);
-  const facts = [];
+  const stats = [];
+  const add = (big, label, url, title, wide = false) => { if (big !== undefined && big !== null && big !== '') stats.push({ big: String(big), label, url, title: title || label, wide }); };
+  add(claim('floor_area')?.value ?? schedule?.stated_m2, 'm² advert', advert);
+  add(schedule?.rooms_m2, 'm² rooms', advert, 'Sum of the advert room schedule');
+  const reg = epc('floor_area');
+  add(reg?.value, 'm² register', reg?.source_url, 'EPC register floor area');
   const price = claim('price');
-  const status = claim('sale_status')?.value;
-  facts.push(['Price', price ? `${gbp(price.value)}${status ? ` · ${status}` : ''}` : 'Not stated in the advert', price ? ['Advert', price.source_url] : ['Advert text', advert]]);
-  facts.push(['Rent', m.rent || 'Not stated in the advert', ['Advert text', advert]]);
-  facts.push(['Deposit', m.deposit || 'Not stated in the advert', ['Advert text', advert]]);
-  facts.push(['Fees', m.fees.length ? m.fees.join(' · ') : 'Not stated in the advert', ['Advert text', advert]]);
-  const tax = text.match(/Council Tax\s*[-:]?\s*Band\s*([A-H])\b/i);
-  facts.push(['Council tax', tax ? `Band ${tax[1].toUpperCase()}` : 'Not stated in the advert', ['Advert text', advert]]);
-  const stated = claim('floor_area')?.value ?? schedule?.stated_m2;
-  const epcArea = epc('floor_area');
-  facts.push(['Floor area', null, null, [
-    ['Advert states', stated ? `${stated} m²` : 'Not stated', ['Advert', advert]],
-    ['Rooms add up to', schedule ? `${schedule.rooms_m2} m²` : 'No room schedule', ['Room schedule', advert]],
-    ['EPC records', epcArea ? `${epcArea.value} m²` : 'No EPC area', ['EPC register', epcArea?.source_url]],
-  ]]);
+  add(price && gbp(price.value), claim('sale_status')?.value || 'price', price?.source_url || advert);
+  const amount = c => c?.match(/£\s?\d[\d,]*/)?.[0]?.replace(/\s/, '');
+  add(amount(m.rent), 'rent pcm', advert, m.rent);
+  add(amount(m.deposit), 'deposit', advert, m.deposit);
+  const fee = m.fees[0];
+  if (fee) add([fee.match(/\d+(?:\.\d+)?%/)?.[0], amount(fee)].filter(Boolean).join(' · ') || 'Yes', 'fees', advert, m.fees.join(' · '), true);
   const rating = epc('energy_rating') || claim('energy_rating');
-  facts.push(['Energy rating', rating ? `EPC ${rating.value}` : 'Not found', [rating?.agent === 'epc' ? 'EPC register' : 'Advert', rating?.source_url]]);
-  const beds = claim('bedrooms');
-  facts.push(['Bedrooms', beds ? beds.value : 'Not stated in the advert', ['Advert', beds?.source_url || advert]]);
-  const type = claim('property_type'), tenure = claim('tenure') || (result.evidence || []).find(e => e.field === 'tenure');
-  if (type || tenure) facts.push(['Type', [type?.value, tenure?.value].filter(Boolean).join(' · '), ['Advert', advert]]);
-  return facts;
+  add(rating?.value, 'energy rating', rating?.source_url, rating?.agent === 'epc' ? 'EPC register' : 'Advert');
+  add(claim('bedrooms')?.value, 'bedrooms', advert);
+  add(text.match(/Council Tax\s*[-:]?\s*Band\s*([A-H])\b/i)?.[1]?.toUpperCase(), 'council tax band', advert);
+  return stats;
 }
+
+// Isometric dollhouse: each room a box of walls, rotated by `angle` about the house centre and projected.
+const WALL = 2.4, GAP = 3, ISO = Math.PI / 6;
+const HUES = [{ re: /living|lounge|reception|sitting|dining/i, h: 34 }, { re: /kitchen|utility/i, h: 12 }, { re: /bath|shower|en-?suite|wc|cloak/i, h: 195 },
+  { re: /bed/i, h: 92 }, { re: /dressing|study|office/i, h: 265 }];
+const hue = name => (HUES.find(x => x.re.test(name)) || { h: 150 }).h;
+
+export function isoScene(floors, angle = 0) {
+  const packs = floors.map(f => packRooms(f.rooms));
+  const cos = Math.cos(angle), sin = Math.sin(angle);
+  const proj = (x, y, z) => { const u = x * cos - y * sin, v = x * sin + y * cos; return { X: (u - v) * Math.cos(ISO), Y: (u + v) * Math.sin(ISO) - z, d: u + v }; };
+  const levels = packs.map((pack, i) => {
+    const z = i * (WALL + GAP), ox = pack.width / 2, oy = pack.height / 2;
+    const faces = [], labels = [];
+    for (const r of pack.rooms) {
+      const c = [[r.x, r.y], [r.x + r.w, r.y], [r.x + r.w, r.y + r.h], [r.x, r.y + r.h]].map(([x, y]) => [x - ox, y - oy]);
+      const h = hue(r.name);
+      const floor = c.map(([x, y]) => proj(x, y, z));
+      faces.push({ kind: 'floor', room: r, h, pts: floor, d: -Infinity });
+      for (let k = 0; k < 4; k++) {
+        const [a, b] = [c[k], c[(k + 1) % 4]];
+        const pts = [proj(a[0], a[1], z), proj(b[0], b[1], z), proj(b[0], b[1], z + WALL), proj(a[0], a[1], z + WALL)];
+        const nx = b[1] - a[1], ny = -(b[0] - a[0]); // outward normal for a clockwise-in-screen ring
+        const facing = (nx * cos - ny * sin) + (nx * sin + ny * cos); // toward the viewer when > 0
+        faces.push({ kind: facing > 0 ? 'near' : 'far', room: r, h, pts, d: (pts[0].d + pts[1].d) / 2 + (facing > 0 ? 0.01 : -0.01), light: (nx * cos - ny * sin) / Math.hypot(nx, ny) });
+      }
+      const mid = proj(r.x + r.w / 2 - ox, r.y + r.h / 2 - oy, z);
+      labels.push({ room: r, X: mid.X, Y: mid.Y, d: mid.d, area: r.area_m2 || r.w * r.h });
+    }
+    const rank = f => (f.kind === 'far' ? 0 : f.kind === 'floor' ? 1 : 2);
+    faces.sort((a, b) => rank(a) - rank(b) || a.d - b.d);
+    labels.sort((a, b) => a.d - b.d);
+    return { name: floors[i].name, z, faces, labels };
+  });
+  return levels;
+}
+
+const S = 46; // pixels per metre in the 3D view
+
+function draw3d(floors) {
+  const r = Math.max(...floors.map(f => { const p = packRooms(f.rooms); return Math.hypot(p.width, p.height) / 2; }));
+  const half = r * Math.SQRT2, top = (floors.length - 1) * (WALL + GAP) + WALL;
+  const vb = [-half * Math.cos(ISO) * S - 20, (-half * Math.sin(ISO) - top) * S - 20, 2 * half * Math.cos(ISO) * S + 40, (2 * half * Math.sin(ISO) + top) * S + 40];
+  const svg = svgEl('svg', { viewBox: vb.join(' '), role: 'img', class: 'inside-iso' });
+  const total = floors.reduce((s, f) => s + f.rooms.length, 0);
+  svg.append(svgEl('title', {}, `Isometric reconstruction: ${floors.map(f => f.name).join(' and ')}, ${total} rooms`));
+  const scene = svgEl('g', {});
+  svg.append(scene);
+  const pt = p => `${(p.X * S).toFixed(1)},${(p.Y * S).toFixed(1)}`;
+  const render = angle => {
+    scene.replaceChildren();
+    const tags = [];
+    for (const level of isoScene(floors, angle)) {
+      const g = svgEl('g', { class: 'iso-level' });
+      for (const f of level.faces) {
+        const light = f.kind === 'floor' ? 30 : 42 + 14 * (f.light || 0);
+        g.append(svgEl('polygon', { points: f.pts.map(pt).join(' '), class: `iso-${f.kind}`, style: `--h:${f.h};--l:${light.toFixed(0)}%` }));
+      }
+      for (const l of level.labels) {
+        const t = svgEl('g', { class: 'iso-label', transform: `translate(${(l.X * S).toFixed(1)} ${(l.Y * S).toFixed(1)})` });
+        t.append(svgEl('text', { y: -5, class: 'iso-name' }, l.room.name), svgEl('text', { y: 15, class: 'iso-area' }, `${l.area.toFixed(1)} m²`));
+        t.append(svgEl('title', {}, `${l.room.name}: ${l.room.width_m} × ${l.room.length_m} m`));
+        g.append(t);
+      }
+      const tag = proj0(level.z + WALL, half);
+      tags.push(svgEl('text', { x: vb[0] + 24, y: (tag * S).toFixed(1), class: 'iso-tag' }, level.name));
+      scene.append(g);
+    }
+    scene.append(...tags); // on top, so the upper floor never hides the ground floor's name
+  };
+  render(0);
+  const still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!still && typeof requestAnimationFrame === 'function') {
+    let angle = 0, last = 0, paused = false;
+    svg.addEventListener('pointerenter', () => { paused = true; });
+    svg.addEventListener('pointerleave', () => { paused = false; });
+    const tick = now => {
+      if (!svg.isConnected && last) return; // the view was replaced
+      if (last && !paused && !document.hidden) { angle += (now - last) * 0.00012; render(angle); }
+      last = now; requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+  return svg;
+}
+// Screen y of a level's label: just above the back corner of its walls.
+const proj0 = (z, half) => -half * Math.sin(ISO) * 0.55 - z;
 
 const cache = new Map();
 async function advertText(result) {
@@ -157,31 +233,34 @@ export async function renderInside(container, result) {
   const planCol = el('figure', null, 'inside-plan-col');
   if (rooms.length) {
     const floors = splitFloors(rooms, text);
+    const stage = el('div', null, 'inside-stage');
+    const iso = draw3d(floors);
     const plans = el('div', null, `inside-plans inside-floors-${floors.length}`);
     for (const floor of floors) plans.append(drawFloor(floor));
-    planCol.append(plans, el('figcaption', `Layout is approximate: drawn from the advert’s room sizes, to scale. ${floors.length > 1 ? 'Floors are inferred from room names. ' : ''}The outline is the rooms’ bounding box; halls, stairs and walls are not in the schedule.`, 'inside-note'));
+    plans.hidden = true;
+    const toggle = el('div', null, 'inside-toggle');
+    toggle.setAttribute('role', 'group'); toggle.setAttribute('aria-label', 'View');
+    for (const [label, show] of [['3D', iso], ['Plan', plans]]) {
+      const b = el('button', label); b.type = 'button'; b.setAttribute('aria-pressed', String(show === iso));
+      b.addEventListener('click', () => {
+        iso.style.display = show === iso ? '' : 'none'; plans.hidden = show !== plans;
+        for (const x of toggle.children) x.setAttribute('aria-pressed', String(x === b));
+      });
+      toggle.append(b);
+    }
+    stage.append(toggle, iso, plans);
+    planCol.append(stage, el('figcaption', 'Approximate, to scale from the advert’s room sizes.', 'inside-note'));
   } else {
     planCol.append(el('p', 'This advert prints no room schedule, so the inside cannot be drawn to scale.', 'inside-empty'));
   }
-  const words = insideDescription(text);
-  if (words) {
-    const quote = el('blockquote', null, 'inside-quote');
-    quote.append(el('p', words), sourceLink('The advert’s description', listingUrl(result)));
-    planCol.append(quote);
-  }
-  const facts = el('dl', null, 'inside-facts');
-  for (const [label, value, source, rows] of insideFacts(result, text, schedule)) {
-    const row = el('div', null, 'inside-fact');
-    row.append(el('dt', label));
-    const dd = el('dd');
-    if (rows) {
-      const list = el('ul', null, 'inside-area');
-      for (const [l, v, [s, u]] of rows) { const li = el('li'); li.append(el('span', l), el('strong', v), sourceLink(s, u)); list.append(li); }
-      dd.append(list);
-    } else {
-      dd.append(el('span', value, /^Not /.test(String(value)) ? 'inside-missing' : 'inside-value'), sourceLink(source[0], source[1]));
-    }
-    row.append(dd); facts.append(row);
+  const facts = el('div', null, 'inside-stats');
+  for (const s of insideStats(result, text, schedule)) {
+    const href = safeUrl(s.url);
+    const tile = el(href ? 'a' : 'div', null, s.wide ? 'inside-stat inside-stat-wide' : 'inside-stat');
+    if (href) { tile.href = href; tile.target = '_blank'; tile.rel = 'noopener noreferrer'; }
+    tile.title = s.title;
+    tile.append(el('strong', s.big), el('span', s.label));
+    facts.append(tile);
   }
   wrap.append(planCol, facts);
   const photos = (result.place?.photos || []).map(p => safeUrl(p.url)).filter(Boolean);
@@ -192,7 +271,6 @@ export async function renderInside(container, result) {
     img.addEventListener('error', () => img.remove(), { once: true });
     strip.append(img);
   }
-  if (!photos.length) strip.append(el('p', 'The advert supplied no photographs.', 'inside-missing'));
-  planCol.append(strip);
+  if (photos.length) planCol.append(strip);
   container.replaceChildren(wrap);
 }

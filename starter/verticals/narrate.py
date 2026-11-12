@@ -13,6 +13,7 @@ import httpx2 as httpx
 
 from starter.core.xray import Claim, Evidence, Finding
 
+TIMEOUT_S = 12  # narration is garnish: past this the rules lines stand, so "done" stays fast
 XAI_URL = "https://api.x.ai/v1/chat/completions"
 XAI_MODEL = "grok-4.7"  # the one default; scripts/grok_session.py imports it
 PROMPT = (
@@ -44,13 +45,13 @@ def _ask(kind: str, model: str, payload: str) -> str:
                     {"role": "user", "content": payload},
                 ],
             },
-            timeout=40,
+            timeout=TIMEOUT_S,
         )
         r.raise_for_status()
         return r.json()["choices"][0]["message"]["content"]
     import anthropic
 
-    msg = anthropic.Anthropic(timeout=40).messages.create(
+    msg = anthropic.Anthropic(timeout=TIMEOUT_S, max_retries=0).messages.create(
         model=model,
         max_tokens=1500,
         system=PROMPT,

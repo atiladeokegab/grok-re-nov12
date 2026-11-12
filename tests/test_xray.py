@@ -202,3 +202,22 @@ def test_a_run_writes_the_store_once_per_step_not_once_per_event(tmp_path):
     assert len(writes) <= 3 + 2 * len(xv.SOURCES) + 2 < len(events)
     seqs = [e["seq"] for e in store.snapshot()["events"]]
     assert seqs == list(range(1, len(seqs) + 1))  # batched and audited events share one sequence
+
+
+def test_score_events_are_never_null_and_never_repeat(tmp_path):
+    import json as _json
+
+    from starter.core.gateway import build_gateway
+    from starter.core.store import Store
+    from starter.verticals import xray as xv
+
+    store = Store(tmp_path / "s.json")
+    xv.run_xray(build_gateway(store), "demo", offline=True)
+    ev = [e for e in store.snapshot()["events"] if e["type"] == "xray"]
+    scores = [e["data"] for e in ev if e["kind"] == "score"]
+    assert scores and all(s["trust_score"] is not None for s in scores)
+    dumps = [_json.dumps(s, sort_keys=True) for s in scores]
+    assert all(a != b for a, b in zip(dumps, dumps[1:], strict=False))  # only on change
+    assert scores[-1]["trust_score"] == 67
+    finds = [_json.dumps(e["data"], sort_keys=True) for e in ev if e["kind"] == "finding"]
+    assert len(finds) == len(set(finds))  # the same finding is never re-sent unchanged

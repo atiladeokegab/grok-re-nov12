@@ -228,6 +228,7 @@ def test_a_denied_bucket_write_keeps_the_document_locally_and_the_run_finishes(
 
 def test_score_shows_while_a_slow_source_is_still_running(tmp_path, monkeypatch):
     import threading
+    import time
     import types
 
     from starter.verticals import xray as xr
@@ -248,7 +249,11 @@ def test_score_shows_while_a_slow_source_is_still_running(tmp_path, monkeypatch)
     worker.start()
     try:
         assert started.wait(10)
-        mid = xr.get_report(store, report.run_id)
+        for _ in range(100):  # sources run in parallel: the others land while slow still waits
+            mid = xr.get_report(store, report.run_id)
+            if mid["trust_score"] is not None and mid["findings"]:
+                break
+            time.sleep(0.05)
         assert mid["status"] == "running" and mid["trust_score"] is not None and mid["findings"]
     finally:
         release.set()

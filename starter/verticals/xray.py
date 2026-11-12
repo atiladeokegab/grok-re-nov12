@@ -19,6 +19,7 @@ import mimetypes
 import threading
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Literal
 
 from fastapi import APIRouter, Request
@@ -273,6 +274,34 @@ def begin(store: Store, ref: str, offline: bool = False, use: str | None = None)
     return report
 
 
+def _fetch(gateway, module, run_id: str):
+    start = time.perf_counter()
+    try:
+        result = gateway.call(f"source_{module.NAME}", {"run_id": run_id}, run_id)
+        claims = [Claim(**c) for c in result["payload"]["claims"]]
+        evidence = [Evidence(**e) for e in result["payload"]["evidence"]]
+        state = "ok" if claims or evidence else "empty"
+        detail = None if evidence or claims else "no record for this address"
+    except SourceOff as e:  # switched off (offline or no key): not a failure
+        claims, evidence, state, detail = [], [], "off", str(e)
+    except Exception as e:  # a failed source is shown as unverifiable, never hidden
+        claims, evidence, state, detail = [], [], "error", f"{type(e).__name__}: {e}"
+    return claims, evidence, state, detail, round((time.perf_counter() - start) * 1000)
+
+
+def _fetch_all(gateway, run_id: str):
+    """Yield (module, outcome) as each source finishes. The advert's own page goes first (later
+    sources read listing["page"]); the rest run in parallel so wall time is the slowest one."""
+    first = [m for m in SOURCES if m.NAME == rec.HISTORY_AGENT]
+    for m in first:
+        yield m, _fetch(gateway, m, run_id)
+    rest = [m for m in SOURCES if m not in first]
+    with ThreadPoolExecutor(max_workers=max(1, len(rest))) as pool:
+        futures = {pool.submit(_fetch, gateway, m, run_id): m for m in rest}
+        for fut in as_completed(futures):
+            yield futures[fut], fut.result()
+
+
 def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None = None):
     """One X-ray, synchronously; every step is saved and published as it lands."""
     store = gateway.store
@@ -280,18 +309,9 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
     run_id = report.run_id
     place, listing = _ctx[run_id]
     try:
-        for module in SOURCES:
-            start = time.perf_counter()
-            try:
-                result = gateway.call(f"source_{module.NAME}", {"run_id": run_id}, run_id)
-                claims = [Claim(**c) for c in result["payload"]["claims"]]
-                evidence = [Evidence(**e) for e in result["payload"]["evidence"]]
-                state = "ok" if claims or evidence else "empty"
-                detail = None if evidence or claims else "no record for this address"
-            except SourceOff as e:  # switched off (offline or no key): not a failure
-                claims, evidence, state, detail = [], [], "off", str(e)
-            except Exception as e:  # a failed source is shown as unverifiable, never hidden
-                claims, evidence, state, detail = [], [], "error", f"{type(e).__name__}: {e}"
+        batches = {}
+        for module, (claims, evidence, state, detail, ms) in _fetch_all(gateway, run_id):
+            batches[module.NAME] = (claims, evidence)
             try:  # provenance is extra: a landing or grounding failure never fails the run
                 _land_known(module.NAME, listing)
             except Exception as e:
@@ -304,7 +324,6 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
                 _ground(store, report, evidence, claims)
             except Exception as e:
                 _warn("ground", module.NAME, e)
-            ms = round((time.perf_counter() - start) * 1000)
             status = SourceStatus(
                 name=module.NAME, status=state, n_evidence=len(evidence), ms=ms, detail=detail
             )
@@ -321,6 +340,11 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
             for e in evidence:
                 _save(store, report, "evidence", e)
             _score(store, report)  # a provisional score after every source, status "running"
+        # sources finish in any order: put them back in SOURCES order so finding ids are stable
+        rank = {m.NAME: i for i, m in enumerate(SOURCES)}
+        report.sources.sort(key=lambda s: rank[s.name])
+        report.claims = [c for m in SOURCES for c in batches.get(m.NAME, ((), ()))[0]]
+        report.evidence = [e for m in SOURCES for e in batches.get(m.NAME, ((), ()))[1]]
         report.history = _history(report.claims, report.evidence)
         for h in report.history:
             _save(store, report, "history", h)

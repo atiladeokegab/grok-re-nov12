@@ -110,11 +110,24 @@ def test_parallel_errors_do_not_look_like_empty_success(response):
 
 def test_live_web_detection_uses_listing_photos_and_cited_provider_match(monkeypatch):
     sys.path.insert(0, "/home/atilade/work/grok-re-nov12/T-1131")
+    import google.auth
+
     from starter.core.xray import Place
 
     image_url = "https://cdn.example/listing.jpg"
     page_url = "https://another.example/old-listing"
     requests = []
+    scopes_seen = []
+
+    class Credentials:
+        def before_request(self, _request, method, url, headers):
+            assert method == "POST"
+            assert url == reverse.VISION_URL
+            headers["Authorization"] = "Bearer test-only-token"
+
+    def default(*, scopes):
+        scopes_seen.extend(scopes)
+        return Credentials(), "test-project"
 
     def post(url, **kwargs):
         requests.append((url, kwargs))
@@ -141,7 +154,7 @@ def test_live_web_detection_uses_listing_photos_and_cited_provider_match(monkeyp
             },
         )
 
-    monkeypatch.setenv("GOOGLE_CLOUD_VISION_API_KEY", "test-only")
+    monkeypatch.setattr(google.auth, "default", default)
     monkeypatch.setattr(httpx2, "post", post)
     place = Place(id="place-one", address="1 Example Road", postcode="E1 1AA")
     claims, evidence = reverse.ingest(
@@ -160,6 +173,9 @@ def test_live_web_detection_uses_listing_photos_and_cited_provider_match(monkeyp
     assert evidence[0].id == "ev-reverse_image-one-photo_reuse-0-0"
     assert requests[0][0] == "https://vision.googleapis.com/v1/images:annotate"
     assert requests[0][1]["timeout"] == 15
+    assert requests[0][1]["headers"]["Authorization"] == "Bearer test-only-token"
+    assert "X-Goog-Api-Key" not in requests[0][1]["headers"]
+    assert scopes_seen == ["https://www.googleapis.com/auth/cloud-platform"]
     assert requests[0][1]["json"]["requests"][0]["image"]["source"]["imageUri"] == image_url
     assert requests[0][1]["json"]["requests"][0]["features"][0]["type"] == "WEB_DETECTION"
 
@@ -213,11 +229,25 @@ def test_parallel_live_search_and_extract_are_bounded_and_only_cited_for_search_
     assert "identity require verification" in evidence[0].value["scope"]
 
 
-def test_missing_live_keys_return_no_fake_evidence(monkeypatch):
+def test_missing_adc_returns_no_fake_evidence(monkeypatch):
     sys.path.insert(0, "/home/atilade/work/grok-re-nov12/T-1131")
+    import google.auth
+    from google.auth.exceptions import DefaultCredentialsError
+
     from starter.core.xray import Place
 
-    monkeypatch.delenv("GOOGLE_CLOUD_VISION_API_KEY", raising=False)
+    monkeypatch.setattr(
+        google.auth,
+        "default",
+        lambda **_kwargs: (_ for _ in ()).throw(
+            DefaultCredentialsError("Application Default Credentials are unavailable")
+        ),
+    )
+    monkeypatch.setattr(
+        httpx2,
+        "post",
+        lambda *_args, **_kwargs: pytest.fail("missing ADC must not make a Vision request"),
+    )
     monkeypatch.delenv("PARALLEL_API_KEY", raising=False)
     place = Place(id="place-one", address="1 Example Road", postcode="E1 1AA")
     assert reverse.ingest(
@@ -232,3 +262,82 @@ def test_missing_live_keys_return_no_fake_evidence(monkeypatch):
         },
     ) == ([], [])
     assert reviews.ingest(place, {"offline": False}) == ([], [])
+
+
+def test_adc_refresh_failure_remains_an_error(monkeypatch):
+    sys.path.insert(0, "/home/atilade/work/grok-re-nov12/T-1131")
+    import google.auth
+    from google.auth.exceptions import RefreshError
+
+    from starter.core.xray import Place
+
+    class BrokenCredentials:
+        def before_request(self, *_args):
+            raise RefreshError("credential refresh failed")
+
+    monkeypatch.setattr(google.auth, "default", lambda **_kwargs: (BrokenCredentials(), None))
+    monkeypatch.setattr(
+        httpx2, "post", lambda *_args, **_kwargs: pytest.fail("no Vision call expected")
+    )
+    place = Place(id="place-one", address="1 Example Road", postcode="E1 1AA")
+    with pytest.raises(RefreshError, match="credential refresh failed"):
+        reverse.ingest(
+            place,
+            {
+                "offline": False,
+                "page": {"photos": ["https://cdn.example/photo.jpg"]},
+                "listing_id": "one",
+            },
+        )
+
+
+def test_offline_vision_fixture_does_not_consult_adc(monkeypatch):
+    sys.path.insert(0, "/home/atilade/work/grok-re-nov12/T-1131")
+    import google.auth
+
+    from starter.core.xray import Place
+
+    monkeypatch.setattr(
+        google.auth,
+        "default",
+        lambda **_kwargs: pytest.fail("offline fixtures must not inspect ADC"),
+    )
+    monkeypatch.setattr(
+        httpx2,
+        "post",
+        lambda *_args, **_kwargs: pytest.fail("offline fixtures must not call Vision"),
+    )
+    image_url = "https://cdn.example/listing.jpg"
+    place = Place(id="place-one", address="1 Example Road", postcode="E1 1AA")
+    claims, evidence = reverse.ingest(
+        place,
+        {
+            "offline": True,
+            "fixture": {
+                "reverse_image": {
+                    "by_image": {
+                        image_url: {
+                            "responses": [
+                                {
+                                    "webDetection": {
+                                        "pagesWithMatchingImages": [
+                                            {
+                                                "url": "https://source.example/old-ad",
+                                                "fullMatchingImages": [
+                                                    {"url": "https://cdn.example/old.jpg"}
+                                                ],
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "page": {"photos": [image_url]},
+            "listing_id": "fixture",
+        },
+    )
+    assert claims == []
+    assert len(evidence) == 1

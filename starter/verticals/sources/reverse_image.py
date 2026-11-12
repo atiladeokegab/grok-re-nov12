@@ -1,7 +1,6 @@
 """Cloud Vision web matches are evidence of reuse, never proof of fraud."""
 
 import ipaddress
-import os
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
@@ -11,6 +10,8 @@ if TYPE_CHECKING:
 
 NAME = "reverse_image"
 FIXTURE = {"by_image": {}}
+VISION_SCOPE = "https://www.googleapis.com/auth/cloud-platform"
+VISION_URL = "https://vision.googleapis.com/v1/images:annotate"
 
 
 def _citation_url(url: str) -> bool:
@@ -63,23 +64,41 @@ def ingest(place: "Place", listing: dict) -> tuple[list["Claim"], list["Evidence
     from starter.core.xray import Evidence
 
     fixture = (listing.get("fixture") or {}).get(NAME) if listing.get("offline") else None
-    key = os.environ.get("GOOGLE_CLOUD_VISION_API_KEY")
-    if fixture is None and (listing.get("offline") or not key):
-        return [], []
     evidence = []
     photos = listing.get("page", {}).get("photos", listing.get("photos", []))[:3]
-    for index, photo in enumerate(photos):
-        image_url = photo if isinstance(photo, str) else photo.get("url", "")
-        if not _citation_url(image_url) or urlsplit(image_url).scheme != "https":
-            continue
+    image_urls = [
+        image_url
+        for photo in photos
+        if (image_url := (photo if isinstance(photo, str) else photo.get("url", "")))
+        and _citation_url(image_url)
+        and urlsplit(image_url).scheme == "https"
+    ]
+    credentials = None
+    auth_request = None
+    if fixture is None:
+        if listing.get("offline") or not image_urls:
+            return [], []
+        import google.auth
+        from google.auth.exceptions import DefaultCredentialsError
+        from google.auth.transport.requests import Request
+
+        try:
+            credentials, _ = google.auth.default(scopes=[VISION_SCOPE])
+        except DefaultCredentialsError:
+            return [], []
+        auth_request = Request()
+
+    for index, image_url in enumerate(image_urls):
         if fixture is not None:
             response = fixture.get("by_image", {}).get(image_url, {"responses": []})
         else:
             import httpx2 as httpx
 
+            headers = {}
+            credentials.before_request(auth_request, "POST", VISION_URL, headers)
             result = httpx.post(
-                "https://vision.googleapis.com/v1/images:annotate",
-                headers={"X-Goog-Api-Key": key},
+                VISION_URL,
+                headers=headers,
                 json={
                     "requests": [
                         {

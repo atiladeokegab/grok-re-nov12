@@ -47,17 +47,26 @@ def test_saved_comparison_sources_chart_and_all_csv(page: Page, tmp_path, monkey
     with serve(tmp_path, []) as base:
         page.goto(base + "/analyst")
         expect(page.locator("#analyst-status")).to_contain_text("4 of 4 saved reports ready")
-        expect(page.locator("#analyst-rows > tr")).to_have_count(4)
-        expect(page.locator("#analyst-chart > li")).to_have_count(4)
-        row = page.locator('[data-listing="kimberley-road"]')
-        expect(row).to_contain_text("81 m²")
-        expect(row).to_contain_text("72 m²")
-        expect(row).to_contain_text("63.1 m²")
-        assert "energy-certificate" in row.get_by_role("link", name="72 m²").get_attribute("href")
+        expect(page.locator("#analyst-cards > li")).to_have_count(4)
+        expect(page.locator("#analyst-rows > tr")).to_have_count(5)
+        expect(page.locator("#analyst-chart > svg[role=img]")).to_have_count(1)
+        headings = page.locator("#analyst-matrix-head th").all_text_contents()
+        column = headings.index("24 Kimberley Road") - 1
+        area_cell = page.locator('#analyst-rows [data-field="floor_area"] td').nth(column)
+        expect(area_cell).to_contain_text("81 m² ≠ 72 m²")
+        assert "energy-certificate" in area_cell.get_by_role("link").get_attribute("href")
+        chart_titles = page.locator("#analyst-chart title").all_text_contents()
+        assert "24 Kimberley Road · Advert: 81 m²" in chart_titles
+        assert "24 Kimberley Road · Floor-plan rooms: 63.1 m²" in chart_titles
+        assert "24 Kimberley Road · EPC: 72 m²" in chart_titles
         expect(page.locator('[data-listing="macquarie-way"] .analyst-score')).to_have_text("67")
+        expect(page.locator('[data-listing="charlemont-road"]')).to_contain_text("Unscored")
+        expect(page.locator('[data-listing="charlemont-road"] .analyst-score')).not_to_have_text(
+            "0"
+        )
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         with page.expect_download() as downloaded:
-            page.get_by_role("button", name="Download all as CSV").click()
+            page.locator("#analyst-download").click()
         path = tmp_path / "all.csv"
         downloaded.value.save_as(path)
         with path.open(newline="") as handle:
@@ -83,25 +92,28 @@ def test_gallery_failure_retry_and_partial_reports(page: Page, tmp_path, monkeyp
         )
         page.goto(base + "/analyst")
         expect(page.locator("#analyst-error")).to_contain_text("503")
-        expect(page.get_by_role("button", name="Download all as CSV")).to_be_disabled()
+        expect(page.locator("#analyst-download")).to_be_disabled()
         page.unroute("**/api/gallery")
         page.route(
             "**/api/xray/xr-131a92ee3b",
             lambda route: route.fulfill(status=503, json={"error": "down"}),
         )
-        page.get_by_role("button", name="Reload saved reports").click()
+        page.locator("#analyst-retry").click()
         expect(page.locator("#analyst-status")).to_contain_text("3 of 4 saved reports ready")
-        expect(page.locator('[data-listing="kimberley-road"]')).to_contain_text(
-            "No saved report available"
+        expect(page.locator('[data-listing="kimberley-road"]')).to_contain_text("503")
+        headings = page.locator("#analyst-matrix-head th").all_text_contents()
+        column = headings.index("24 Kimberley Road") - 1
+        expect(page.locator('#analyst-rows [data-field="floor_area"] td').nth(column)).to_have_text(
+            "No report"
         )
-        expect(page.get_by_role("button", name="Download all as CSV")).to_be_enabled()
+        expect(page.locator("#analyst-download")).to_be_enabled()
         page.unroute("**/api/xray/xr-131a92ee3b")
-        page.get_by_role("button", name="Reload saved reports").click()
+        page.locator("#analyst-retry").click()
         expect(page.locator("#analyst-status")).to_contain_text("4 of 4 saved reports ready")
         page.route(
             "**/export.csv",
             lambda route: route.fulfill(status=200, content_type="text/html", body="unavailable"),
         )
-        page.get_by_role("button", name="Download all as CSV").click()
+        page.locator("#analyst-download").click()
         expect(page.locator("#analyst-error")).to_contain_text("did not return a CSV export")
-        expect(page.get_by_role("button", name="Download all as CSV")).to_be_enabled()
+        expect(page.locator("#analyst-download")).to_be_enabled()

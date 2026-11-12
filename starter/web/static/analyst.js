@@ -106,7 +106,7 @@ export function areas(report) {
     ['advert', 'Advert', data.advertArea],
     ['rooms', 'Floor-plan rooms', typeof rooms === 'number' ? { ...data.rooms, value: rooms } : null],
     ['epc', 'EPC', data.epcArea],
-  ].map(([key, label, record]) => ({ key, label, value: typeof record?.value === 'number' ? record.value : null, href: record?.source_url || null }));
+  ].map(([key, label, record]) => ({ key, label, value: typeof record?.value === 'number' ? record.value : null, href: safeUrl(record?.source_url) }));
 }
 
 function node(tag, text, className) {

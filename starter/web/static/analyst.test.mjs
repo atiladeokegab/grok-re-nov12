@@ -69,3 +69,9 @@ test('a matrix cell carries the verdict, a short value and its source; no eviden
   assert.equal(cell(report, ['photo_reuse', 'image_reuse']).verdict, 'unverifiable');
   assert.deepEqual(areas(report).map(a => a.value), [81, null, 72]);
 });
+
+test('area chart links use the same safe source policy as the matrix', () => {
+  const report = { claims: [{ field: 'floor_area', value: 81, doc_span: 'The advert states 81 m².', source_url: 'javascript:alert(1)' }] };
+  assert.equal(areas(report)[0].value, 81);
+  assert.equal(areas(report)[0].href, null);
+});

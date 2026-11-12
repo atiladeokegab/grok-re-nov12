@@ -8,7 +8,9 @@
   <link rel="stylesheet" href="/static/tokens.css">
   <link rel="stylesheet" href="/static/styles.css">
   <link rel="stylesheet" href="/static/analyst.css">
+  <link rel="stylesheet" href="/static/partner.css">
   <script type="module" src="/static/analyst.js"></script>
+  <script type="module" src="/static/partner.js"></script>
 </head>
 <body>
   <a class="skip" href="#analyst-main">Skip to property comparison</a>
@@ -19,6 +21,23 @@
     <a href="/lease">Lease review</a>
   </header>
   <main id="analyst-main" class="analyst-main" aria-busy="true">
+    <section id="partner-scan" class="partner-review" aria-labelledby="partner-title">
+      <h2 id="partner-title" aria-live="polite">Loading the recorded partner-data scan…</h2>
+      <p class="partner-scope">Offline CSV review: property-type and tenure columns compared with supplied historical HMLR categories on rows labelled high confidence. Flags are differences to review, not verified property discrepancies.</p>
+      <p id="partner-error" class="error" role="alert" hidden></p>
+      <button id="partner-retry" class="secondary" type="button" hidden>Reload partner scan</button>
+      <div id="partner-results" hidden>
+        <div class="partner-controls">
+          <label for="partner-search">Find a listing or matched address<input id="partner-search" type="search" placeholder="Address, listing ID or joined unit" autocomplete="off"></label>
+          <label for="partner-check">Check<select id="partner-check"><option value="">All record differences</option><option value="property_type">Property type</option><option value="tenure">Tenure</option></select></label>
+        </div>
+        <div class="partner-table-scroll" role="region" aria-label="Flagged partner comparisons" tabindex="0">
+          <table class="partner-table"><thead><tr><th scope="col">Listing / open advert</th><th scope="col">Check</th><th scope="col">Advert column</th><th scope="col">Supplied HMLR column / matched address</th></tr></thead><tbody id="partner-rows"></tbody></table>
+        </div>
+        <p id="partner-showing" class="status" role="status" aria-live="polite"></p>
+        <details class="partner-method"><summary>What ran and what remains unverifiable</summary><p id="partner-coverage"></p><p id="partner-missing"></p><p>House/cottage permits D/S/T; flat/apartment F; single commercial categories and land O. Freehold permits F; leasehold and long leasehold L. Other categories and lower-confidence rows are unverifiable. Supplied joins may refer to another unit; inspect the matched address before relying on a flag. Historical price differences are context, not valuations or flags.</p><p id="partner-source" class="partner-source"></p><a href="/static/partner-scan.json" target="_blank" rel="noopener">Open the complete recorded scan ↗</a></details>
+      </div>
+    </section>
     <section class="analyst-heading" aria-labelledby="analyst-title">
       <h1 id="analyst-title">Shortlist</h1>
       <p id="analyst-status" class="status" role="status" aria-live="polite">Loading saved reports…</p>

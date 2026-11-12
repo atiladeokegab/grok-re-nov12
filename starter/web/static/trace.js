@@ -46,7 +46,7 @@ function metadata(documentRecord, evidence) {
     ['Agent', first(documentRecord.agent, evidence.agent, 'Agent not recorded')],
     ['SHA-256', first(documentRecord.sha256, documentRecord.content_sha256, evidence.document_sha256, 'Hash not supplied')],
     ['Content type', first(documentRecord.content_type, 'Not recorded')],
-    ['Original size', Number.isFinite(documentRecord.size) ? `${documentRecord.size.toLocaleString()} bytes` : 'Not recorded'],
+    ['Captured size', Number.isFinite(documentRecord.size) ? `${documentRecord.size.toLocaleString()} bytes` : 'Not recorded'],
   ];
   for (const [label, value] of values) {
     const cell = node('div');
@@ -87,9 +87,9 @@ function sourceLink(documentRecord, evidence, section) {
   section.append(link);
 }
 
-function documentPanel(documentRecord, evidence, text, rawUrl, index, quoteVerified) {
+function documentPanel(documentRecord, evidence, text, rawUrl, index, quoteVerified, title) {
   const section = node('section', null, 'trace-document-card');
-  section.append(node('h5', first(documentRecord.title, documentRecord.name, evidence.source_name, `Source document ${index + 1}`)));
+  section.append(node('h5', first(title, documentRecord.title, documentRecord.name, evidence.source_name, `Source document ${index + 1}`)));
   section.append(metadata(documentRecord, evidence));
   const span = asRecord(evidence.span);
   const quote = typeof span.quote === 'string' ? span.quote : '';
@@ -116,7 +116,7 @@ function documentPanel(documentRecord, evidence, text, rawUrl, index, quoteVerif
     try {
       const raw = new URL(rawUrl, location.origin);
       if (raw.origin === location.origin && raw.pathname === `/api/document/${encodeURIComponent(documentRecord.id)}/raw`) {
-        const download = node('a', 'Download original bytes', 'trace-source');
+        const download = node('a', 'Download captured file', 'trace-source');
         download.href = raw.href; download.rel = 'noopener'; download.download = ''; section.append(download);
       }
     } catch { /* Ignore malformed raw document links. */ }
@@ -141,9 +141,18 @@ export async function renderTrace(container, findingId, { signal, runId } = {}) 
     if (signal?.aborted) return;
     if (runId && String(payload.run_id) !== String(runId)) throw new Error('The trace belongs to a different run, so it was not shown.');
     const trace = payload;
-    const finding = asRecord(trace.finding);
-    const evidence = asArray(trace.steps).map(step => asRecord(asRecord(step).evidence));
     const steps = asArray(trace.steps).map(asRecord);
+    const documentCache = new Map();
+    const fetchDocument = documentId => {
+      if (!documentCache.has(documentId)) {
+        documentCache.set(documentId, getJson(`/api/document/${encodeURIComponent(documentId)}`, signal).then(payload => {
+          const document = asRecord(asRecord(payload).document);
+          if (document.id !== documentId) throw new Error('The document API returned a different document identifier.');
+          return { document, text: payload.text, rawUrl: payload.raw_url };
+        }));
+      }
+      return documentCache.get(documentId);
+    };
     const documents = [];
     for (let index = 0; index < steps.length; index += 1) {
       const step = steps[index];
@@ -153,10 +162,7 @@ export async function renderTrace(container, findingId, { signal, runId } = {}) 
         documents.push({ step, error: new Error('The evidence and document identifiers do not match.') }); continue;
       }
       try {
-        const payload = asRecord(await getJson(`/api/document/${encodeURIComponent(documentId)}`, signal));
-        const document = asRecord(payload.document);
-        if (document.id !== evidenceDocumentId) throw new Error('The document API returned a different document identifier.');
-        documents.push({ step, document, text: payload.text, rawUrl: payload.raw_url });
+        documents.push({ step, ...await fetchDocument(documentId) });
       } catch (error) {
         if (error.name === 'AbortError' || signal?.aborted) return;
         documents.push({ step, error });
@@ -164,12 +170,27 @@ export async function renderTrace(container, findingId, { signal, runId } = {}) 
     }
     if (signal?.aborted) return;
     container.replaceChildren(); heading(container); chain(container, trace);
+    let claimDocument;
+    const claim = asRecord(trace.claim);
+    const claimSource = asRecord(trace.claim_document);
+    const claimDocumentId = idOf(claim.document_id);
+    if (claimDocumentId && (!claimSource.id || claimSource.id === claimDocumentId)) {
+      try { claimDocument = await fetchDocument(claimDocumentId); }
+      catch (error) {
+        if (error.name === 'AbortError' || signal?.aborted) return;
+        claimDocument = { error };
+      }
+    } else if (claimSource.id || claimDocumentId) claimDocument = { error: new Error('The claim and original document identifiers do not match.') };
     if (trace.claim) {
-      const claim = asRecord(trace.claim);
       const claimCard = node('section', null, 'trace-claim');
       claimCard.append(node('h5', 'Claim in the listing'));
       if (claim.field) claimCard.append(node('p', claim.field, 'trace-copy'));
       if (claim.value !== undefined) claimCard.append(node('p', `Claimed value: ${typeof claim.value === 'string' ? claim.value : JSON.stringify(claim.value)}`, 'trace-copy'));
+      if (claimDocument && !claimDocument.error) {
+        claimCard.append(documentPanel(claimDocument.document, claim, claimDocument.text, claimDocument.rawUrl, 'claim', trace.claim_quote_verified === true, 'Captured listing source'));
+      } else {
+        state(claimCard, claimDocument?.error ? `The original listing document is unavailable: ${claimDocument.error.message}` : 'No original listing document was captured for this claim.', claimDocument?.error ? 'error' : 'info');
+      }
       container.append(claimCard);
     }
     for (let index = 0; index < steps.length; index += 1) {
@@ -187,7 +208,7 @@ export async function renderTrace(container, findingId, { signal, runId } = {}) 
       } else section.append(documentPanel(loaded.document, record, loaded.text, loaded.rawUrl, index, step.quote_verified === true));
       container.append(section);
     }
-    if (!evidence.length) state(container, 'No evidence records are linked to this finding.', 'info');
+    if (!steps.length) state(container, 'No evidence records are linked to this finding.', 'info');
   } catch (error) {
     if (error.name === 'AbortError' || signal?.aborted) return;
     container.replaceChildren(); heading(container); state(container, `Trace unavailable: ${error.message}. The finding details remain available.`, 'error');

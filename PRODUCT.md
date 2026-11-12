@@ -26,6 +26,8 @@ Every displayed finding points to the source record or document span, its retrie
 
 The user supplies a listing URL or crawl listing ID, chooses Residential or Office, and reviews source coverage, findings, history, and cited records on desktop or phone. Residential is the main demonstration; Office is a secondary path through the same workflow.
 
+The approved example listing is preloaded so the main action can run a real check immediately. Users can replace it with another listing.
+
 ## Capabilities and Constraints
 
 - The approved residential demonstration may show listing history, EPC records, photo matches, and cited tenant reviews only when each check has actually run and has evidence.

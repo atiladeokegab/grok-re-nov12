@@ -1,0 +1,5 @@
+/* "What renters say": quotes under the listing's history; one quiet rule per quote, link in the caption. */
+.renters { margin-top: var(--space-6) }
+.renter-quotes figure { margin: 0; padding: var(--space-4) 0; border-top: 1px solid var(--color-border) }
+.renter-quotes blockquote { margin: 0; font-style: italic }
+.renter-quotes figcaption { margin-top: var(--space-2); font-size: var(--type-caption); color: var(--color-muted) }

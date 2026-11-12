@@ -2,6 +2,7 @@ import { fieldName, VERDICTS, safeUrl, valueText, sourcePresent, findingRecords,
 import { renderTimeline } from './timeline.js';
 import { mountClients } from './clients.js';
 import { loadGallery } from './gallery.js';
+import { renderRenters } from './renters.js';
 
 const $ = id => document.getElementById(id);
 const mockup = new URLSearchParams(location.search).get('mockup') === '1';
@@ -281,7 +282,7 @@ function render(result) {
     $('findings').append(button);
   }
   if (!(result.findings || []).length) $('findings').append(element('p', 'No findings have arrived. This is not a verified match.', 'empty'));
-  renderMedia(result); renderHistory(result);
+  renderMedia(result); renderHistory(result); renderRenters($('renters'), result);
   $('sources').replaceChildren();
   const notRun = [];
   for (const source of result.sources || []) {

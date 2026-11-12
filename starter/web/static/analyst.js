@@ -1,9 +1,9 @@
 import { safeUrl, sourcePresent, valueText } from './data.js';
 
 const PINNED = {
-  'macquarie-way': 'xr-191b546b56',
-  'kimberley-road': 'xr-38a83c9bc1',
-  'charlemont-road': 'xr-0624b39fbf',
+  'macquarie-way': 'xr-6f65393159',
+  'kimberley-road': 'xr-131a92ee3b',
+  'charlemont-road': 'xr-f20b9504d5',
 };
 const number = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 });
 const reportURL = run => `/?run=${encodeURIComponent(run.run_id)}`;

@@ -1,4 +1,4 @@
-import { safeUrl, sourceLabel, timestamp, valueText } from './data.js';
+import { safeUrl, sourceLabel, timestamp, valueText, fieldName } from './data.js';
 
 const node = (tag, text, className) => {
   const item = document.createElement(tag);
@@ -184,7 +184,7 @@ export async function renderTrace(container, findingId, { signal, runId } = {}) 
     if (trace.claim) {
       const claimCard = node('section', null, 'trace-claim');
       claimCard.append(node('h5', 'Claim in the listing'));
-      if (claim.field) claimCard.append(node('p', claim.field, 'trace-copy'));
+      if (claim.field) claimCard.append(node('p', fieldName(claim.field), 'trace-copy'));
       if (claim.value !== undefined) claimCard.append(node('p', `Claimed value: ${typeof claim.value === 'string' ? claim.value : JSON.stringify(claim.value)}`, 'trace-copy'));
       if (claimDocument && !claimDocument.error) {
         claimCard.append(documentPanel(claimDocument.document, claim, claimDocument.text, claimDocument.rawUrl, 'claim', trace.claim_quote_verified === true, 'Captured listing source'));
@@ -198,7 +198,7 @@ export async function renderTrace(container, findingId, { signal, runId } = {}) 
       const record = asRecord(step.evidence);
       const section = node('section', null, 'trace-evidence');
       section.append(node('h5', first(record.source_name, sourceLabel(record), `Evidence ${index + 1}`)));
-      if (record.field) section.append(node('p', `Field: ${record.field}`, 'trace-copy'));
+      if (record.field) section.append(node('p', `Field: ${fieldName(record.field)}`, 'trace-copy'));
       if (record.value !== undefined) section.append(node('p', `Recorded value: ${valueText(record.value, record.unit)}`, 'trace-copy'));
       const loaded = documents[index];
       if (loaded.error) {

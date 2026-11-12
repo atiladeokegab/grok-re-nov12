@@ -64,6 +64,16 @@
     "Official exact-address EPC fetched independently: rating D, end-terrace house, 84 square metres. Reverse-image, review and photo-history evidence is unavailable in this fixture.",
     "No verified building/doorway coordinate supplied.",
     "Fuzzy HMLR record rejected due to different house number.",
-    "Gallery URLs point to the original publisher; no image bytes redistributed."
-  ]
+    "Gallery URLs point to the original publisher; no image bytes redistributed.",
+    "Offline history uses a recorded factual excerpt of the official certificate; live history lands the complete source HTML. Assessment and certificate dates are copied from the certificate, not its expiry date."
+  ],
+  "epc_history": {
+    "fixture_kind": "recorded_official_certificate_excerpt",
+    "documents": [
+      [
+        "https://find-energy-certificate.service.gov.uk/energy-certificate/8160-7422-6830-1941-6222",
+        "24, Macquarie Way LONDON E14 3AU Energy rating D. energy rating is D. Property type End-terrace house Total floor area 84 square metres. Date of assessment 29 February 2020. Date of certificate 3 March 2020"
+      ]
+    ]
+  }
 }

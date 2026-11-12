@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { safeUrl, safeImageUrl, sourcePresent, findingRecords, valueText, photoChange, unitFor } from './data.js';
+import { safeUrl, safeImageUrl, sourcePresent, findingRecords, valueText, photoChange, unitFor, hasChangedValue } from './data.js';
 
 test('source links reject executable schemes, credentials and malformed URLs', () => {
   for (const value of ['javascript:alert(1)', 'data:text/html,test', 'https://user:password@example.com', '/missing', undefined]) assert.equal(safeUrl(value), null);
@@ -31,4 +31,13 @@ test('finding detail only joins the claim and evidence explicitly cited by the f
   assert.equal(valueText(0, 'm²'), '0 m²');
   assert.equal(valueText(null), 'Not recorded');
   assert.equal(unitFor({ claims: [{ field: 'floor_area', value: 70, unit: 'm²' }], evidence: [] }, 'floor_area', 70), 'm²');
+});
+
+test('identical or initial values are records rather than changes', () => {
+  assert.equal(hasChangedValue({ previous_value: 770000, value: 770000 }), false);
+  assert.equal(hasChangedValue({ previous_value: 'Sold', value: 'Sold' }), false);
+  assert.equal(hasChangedValue({ previous_value: 0, value: 0 }), false);
+  assert.equal(hasChangedValue({ previous_value: null, value: 84 }), false);
+  assert.equal(hasChangedValue({ value: 84 }), false);
+  assert.equal(hasChangedValue({ previous_value: 0, value: 1 }), true);
 });

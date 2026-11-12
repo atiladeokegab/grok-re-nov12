@@ -1,4 +1,4 @@
-import { fieldName, VERDICTS, safeUrl, valueText, sourcePresent, findingRecords, sourceLabel, timestamp, photoChange, unitFor } from './data.js';
+import { fieldName, VERDICTS, safeUrl, valueText, sourcePresent, findingRecords, sourceLabel, timestamp, photoChange, unitFor, hasChangedValue } from './data.js';
 import { renderTimeline } from './timeline.js';
 
 const $ = id => document.getElementById(id);
@@ -155,14 +155,14 @@ function setView(view) {
 
 function renderHistory(result) {
   const history = (result.history || []).filter(sourcePresent);
-  $('history-count').textContent = `${history.length} ${history.length === 1 ? 'record' : 'records'}`;
+  $('history-count').textContent = `${history.length} ${history.length === 1 ? 'record' : 'records'}, ${history.filter(hasChangedValue).length} changes`;
   $('history').replaceChildren();
   for (const record of history) {
     const row = element('article', null, 'history-entry');
     row.append(element('h3', fieldName(record.field)));
     const values = element('p', null, 'history-values');
     const unit = value => record.unit || unitFor(result, record.field, value);
-    if (record.previous_value !== undefined && record.previous_value !== null) values.append(element('del', valueText(record.previous_value, unit(record.previous_value))));
+    if (hasChangedValue(record)) values.append(element('del', valueText(record.previous_value, unit(record.previous_value))));
     values.append(element('span', valueText(record.value, unit(record.value))));
     row.append(values, sourceRecord(record));
     if (record.advert_id) row.append(element('p', `Advert ${record.advert_id}`));

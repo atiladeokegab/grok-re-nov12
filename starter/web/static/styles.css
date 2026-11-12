@@ -568,6 +568,7 @@ input::placeholder {
   margin-top: var(--space-3);
   font-size: var(--type-caption)
 }
+.evidence-record > strong { display: block; }
 
 .evidence-record p {
   color: var(--color-muted);

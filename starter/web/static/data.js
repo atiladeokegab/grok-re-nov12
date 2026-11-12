@@ -17,6 +17,10 @@ export function valueText(value, unit) {
   return unit ? `${text} ${unit}` : text;
 }
 
+export function hasChangedValue(record) {
+  return record.previous_value !== undefined && record.previous_value !== null && !Object.is(record.previous_value, record.value);
+}
+
 export function sourcePresent(record) {
   return Boolean(record && (safeUrl(record.source_url) || (typeof record.doc_span === 'string' && record.doc_span.trim())));
 }

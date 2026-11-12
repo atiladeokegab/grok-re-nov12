@@ -185,3 +185,20 @@ def test_sources_after_the_advert_page_run_in_parallel(monkeypatch):
     order = [m.NAME for m, _ in xv._fetch_all(Slow(), "r")]
     assert order[0] == "listing_history" and sorted(order[1:]) == ["a", "b", "c"]
     assert _time.perf_counter() - t < 0.9  # 0.3 first, then a, b, c together: not 1.2 in series
+
+
+def test_a_run_writes_the_store_once_per_step_not_once_per_event(tmp_path):
+    from starter.core.gateway import build_gateway
+    from starter.core.store import Store
+    from starter.verticals import xray as xv
+
+    store = Store(tmp_path / "s.json")
+    writes = []
+    real = store.mutate
+    store.mutate = lambda fn: (writes.append(1), real(fn))[1]
+    xv.run_xray(build_gateway(store), "demo", offline=True)
+    events = [e for e in store.snapshot()["events"] if e["type"] == "xray"]
+    # start + per source (tool_call audit + one flush) + final score + done: GCS takes ~1 write/s
+    assert len(writes) <= 3 + 2 * len(xv.SOURCES) + 2 < len(events)
+    seqs = [e["seq"] for e in store.snapshot()["events"]]
+    assert seqs == list(range(1, len(seqs) + 1))  # batched and audited events share one sequence

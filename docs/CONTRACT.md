@@ -30,6 +30,8 @@ What every area uses and nobody re-implements (AGENTS.md §1):
 - `GET /api/gallery` -> `[{name, title, discrepancy, listing_id, url}]`: real crawl listings
   recorded offline ("try these"); `discrepancy` is `price_history | photo_reuse | area_type`.
   Run one with `POST /api/xray {"listing_id": name, "offline": true}`. Owner: X-ray pipeline.
+- `GET /lease` -> `static/lease.html` (404 until it exists): the office lease abstractor page,
+  which calls `GET /api/lease/eval` and `POST /api/lease/abstract`. Page owner: front end.
 
 ## Gateway tools
 

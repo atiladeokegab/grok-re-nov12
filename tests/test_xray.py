@@ -221,3 +221,13 @@ def test_score_events_are_never_null_and_never_repeat(tmp_path):
     assert scores[-1]["trust_score"] == 67
     finds = [_json.dumps(e["data"], sort_keys=True) for e in ev if e["kind"] == "finding"]
     assert len(finds) == len(set(finds))  # the same finding is never re-sent unchanged
+
+
+def test_auction_lot_prefix_is_not_part_of_the_address():
+    from starter.verticals.sources import LOT, load_listing
+
+    for raw in ("Lot 8 24 Macquarie Way", "LOT 12 - 24 Macquarie Way", "Lot 3: 24 Macquarie Way"):
+        assert LOT.sub("", raw) == "24 Macquarie Way"
+    assert LOT.sub("", "Lotus House, 1 Lot Street") == "Lotus House, 1 Lot Street"
+    place, _ = load_listing("demo", offline=True)
+    assert place.address == "24 Macquarie Way, Isle of Dogs, London, E14 3AU"

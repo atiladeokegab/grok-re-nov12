@@ -23,6 +23,9 @@ from starter.verticals.sources import companies_house, epc, listing_history, pho
 FIXTURES = Path(__file__).parent / "fixtures"
 # order matters: listing_history fills page
 SOURCES = [listing_history, epc, companies_house, photo_reuse]
+LOT = re.compile(
+    r"^\s*lot\s+\w+\s*[-:–]?\s*", re.I
+)  # an auction's "Lot 8 " / "LOT 12 - " / "Lot 3:"
 
 
 @functools.cache
@@ -61,7 +64,7 @@ def load_listing(ref: str, offline: bool = False) -> tuple[Place, dict]:
 
     place = Place(
         id=f"place-{row['listing_id']}",
-        address=row["address"],
+        address=LOT.sub("", row["address"]),
         postcode=row["postcode"],
         lat=num(row.get("lat", "")),
         lng=num(row.get("lon", "")),

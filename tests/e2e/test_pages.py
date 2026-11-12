@@ -90,6 +90,10 @@ def test_landing_cards_link_saved_runs_without_starting_one(page: Page, server, 
     page.goto(server + "/")
     cards = page.get_by_test_id("landing-card")
     expect(cards).to_have_count(3)
+    ticker = page.locator("[data-testid=scan-ticker] li a").first
+    expect(ticker).to_have_attribute("href", "/analyst#partner-scan")
+    # the count-up ends on the exact text
+    expect(page.get_by_test_id("partner-scan-link")).to_contain_text("7,251")
     hrefs = [cards.nth(i).get_attribute("href") for i in range(3)]
     assert all(re.fullmatch(r"/\?run=xr-[0-9a-f]+", h or "") for h in hrefs), hrefs
     assert posts == [] and errors == []

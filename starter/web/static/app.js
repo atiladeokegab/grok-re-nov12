@@ -6,6 +6,7 @@ import { renderRenters } from './renters.js';
 import { renderPlaces } from './places.js';
 import { agentChips } from './agents.js';
 import { stamp, claimHistory } from './provenance.js';
+import { countUp, mountTicker } from './landing.js';
 
 const $ = id => document.getElementById(id);
 const mockup = new URLSearchParams(location.search).get('mockup') === '1';
@@ -482,6 +483,8 @@ $('xray-form').addEventListener('submit', event => {
   startRun({ ...( /^https?:\/\//i.test(listing) ? { url: listing } : { listing_id: listing }), use });
 });
 
+countUp(document.querySelectorAll('#intro [data-count]:not([data-count-animated])'));
+mountTicker($('scan-ticker'));
 loadGallery($('gallery'), item => {
   history.replaceState(null, '', withRun(location.href, item.run_id));
   loadRun(item.run_id);

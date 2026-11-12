@@ -158,3 +158,23 @@
   .landing-cards { grid-template-columns: 1fr; margin-top: var(--space-6); }
   .landing-cards a { aspect-ratio: 16 / 7; }
 }
+
+/* Ticker of real flagged rows from the partner scan; pauses on hover; reduced motion wraps it as a still list. */
+.scan-ticker { margin-top: var(--space-5); width: 100%; min-width: 0; contain: inline-size; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); font-size: var(--type-caption); }
+.scan-track { display: flex; width: max-content; animation: scan-ticker 90s linear infinite; }
+.scan-ticker:hover .scan-track, .scan-ticker:focus-within .scan-track { animation-play-state: paused; }
+.scan-ticker ul { display: flex; gap: var(--space-6); margin: 0; padding: 0 var(--space-6) 0 0; list-style: none; }
+.scan-ticker li { white-space: nowrap; }
+.scan-ticker a { color: var(--color-muted); text-decoration: none; }
+.scan-ticker a:hover, .scan-ticker a:focus-visible { color: var(--color-ink); }
+.scan-ticker b { color: var(--color-ink); font-weight: var(--weight-medium); }
+@keyframes scan-ticker { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+  .scan-ticker { mask-image: none; }
+  .scan-track { width: auto; animation: none; }
+  .scan-ticker ul { flex-wrap: wrap; gap: var(--space-2) var(--space-5); }
+  .scan-ticker li { white-space: normal; }
+}
+
+/* motion.css glows past the viewport (.landing::after inset -50vw); clip them so the page never scrolls sideways. */
+#main { overflow-x: clip; }

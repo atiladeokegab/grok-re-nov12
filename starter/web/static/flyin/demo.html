@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>X-ray fly-in demo</title>
+  <link rel="icon" href="data:,">
+  <style>html,body{margin:0;background:#080a09}#flyin{height:100vh}</style>
+</head>
+<body>
+  <div id="flyin"></div>
+  <script type="module">
+    // ?fail=1 points the tiles at a dead URL to exercise the fallback card; ?precision=address shows the pin.
+    const q = new URLSearchParams(location.search);
+    if (q.has('fail')) window.XRAY_CONFIG = { flyinTiles: 'http://127.0.0.1:9/nope.json' };
+    const { flyIn } = await import('./flyin.js');
+    const t0 = performance.now();
+    await flyIn(document.getElementById('flyin'), {
+      lat: 51.489504, lng: -0.015614, label: '24 Macquarie Way, Isle of Dogs, E14 3AU',
+      precision: q.get('precision') || 'postcode_centroid', use: 'residential', durationMs: +(q.get('ms') || 7000),
+    });
+    document.title = `resolved ${Math.round(performance.now() - t0)}ms`;
+    console.log(document.title, document.querySelector('.xf-fallback')?.dataset.reason || 'map');
+  </script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+/* X-ray fly-in. Values mirror tokens.css; vars fall back so the module also works standalone. */
+.xf-root {
+  --xf-bg: var(--color-bg, #080a09);
+  --xf-surface: var(--color-surface, #141815);
+  --xf-ink: var(--color-ink, #f2f5ee);
+  --xf-muted: var(--color-muted, #b4beb2);
+  --xf-accent: var(--color-accent, #b8ed81);
+  --xf-border: var(--color-border, #3f4940);
+  --xf-display: var(--font-display, 'Jost', system-ui, sans-serif);
+  --xf-body: var(--font-body, 'IBM Plex Sans', system-ui, sans-serif);
+  position: relative;
+  overflow: hidden;
+  min-height: 60vh;
+  background: var(--xf-bg);
+  color: var(--xf-ink);
+  font-family: var(--xf-body);
+  isolation: isolate;
+}
+.xf-root .xf-map { position: absolute; inset: 0; } /* beats .maplibregl-map { position: relative } */
+.xf-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.xf-vignette {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 45%, transparent 45%, #080a09cc 100%),
+    linear-gradient(to top, #080a09f2 0%, #080a0900 34%),
+    linear-gradient(to bottom, #080a09b3 0%, #080a0900 18%);
+}
+
+/* Thin progress hairline across the top while flying. */
+.xf-progress { position: absolute; top: 0; left: 0; right: 0; height: 2px; background: #b8ed811a; }
+.xf-progress span { display: block; height: 100%; width: 0; background: var(--xf-accent); transition: width linear; box-shadow: 0 0 12px var(--xf-accent); }
+.xf-flying .xf-progress span { width: 100%; }
+.xf-landed .xf-progress { opacity: 0; transition: opacity 600ms 400ms; }
+
+.xf-status {
+  position: absolute; top: 24px; left: 24px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--xf-muted);
+}
+.xf-status i { width: 8px; height: 8px; border-radius: 50%; background: var(--xf-accent); animation: xf-blink 900ms ease-in-out infinite; }
+.xf-landed .xf-status i { animation: none; box-shadow: 0 0 0 4px #b8ed8126; }
+.xf-landed .xf-status { color: var(--xf-ink); }
+
+.xf-hud {
+  position: absolute; left: 24px; bottom: 24px; right: 24px; max-width: 560px;
+  opacity: 0; transform: translateY(8px); transition: opacity 600ms, transform 600ms;
+}
+.xf-landed .xf-hud { opacity: 1; transform: none; }
+.xf-kicker { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--xf-accent); }
+.xf-kicker::before { content: ''; width: 16px; height: 1px; background: currentColor; }
+.xf-label { font: 500 44px/1.05 var(--xf-display); letter-spacing: -0.03em; margin-top: 8px; text-wrap: balance; }
+.xf-coords { margin-top: 12px; font-size: 13px; color: var(--xf-muted); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+
+/* One lime scan sweep on landing. */
+.xf-scan { position: absolute; left: 0; right: 0; top: -2px; height: 2px; opacity: 0; background: linear-gradient(90deg, transparent, var(--xf-accent) 20%, var(--xf-accent) 80%, transparent); box-shadow: 0 0 24px 4px #b8ed8166; }
+.xf-landed .xf-scan { animation: xf-scan 1400ms cubic-bezier(.4, 0, .2, 1) 1 forwards; }
+
+/* Address pin. */
+.xf-pin { position: relative; width: 16px; height: 56px; }
+.xf-pin b { position: absolute; left: 7px; bottom: 0; width: 2px; height: 44px; background: linear-gradient(to top, transparent, var(--xf-accent, #b8ed81)); }
+.xf-pin i { position: absolute; left: 0; top: 0; width: 16px; height: 16px; border-radius: 50%; background: var(--xf-accent, #b8ed81); box-shadow: 0 0 0 4px #b8ed8140, 0 0 24px #b8ed81aa; }
+.xf-pin::after { content: ''; position: absolute; left: -16px; bottom: -8px; width: 48px; height: 16px; border-radius: 50%; border: 1.5px solid #b8ed81; opacity: 0; }
+.xf-pin.is-landed::after { animation: xf-ripple 1800ms ease-out infinite; }
+
+/* Attribution, kept visible and on-brand. */
+.xf-root .maplibregl-ctrl-attrib { background: #080a09b3; color: var(--xf-muted); font: 11px/1.4 var(--xf-body); padding: 2px 8px; border-radius: 6px 0 0 0; }
+.xf-root .maplibregl-ctrl-attrib a { color: var(--xf-muted); }
+.xf-root .maplibregl-ctrl-bottom-right { z-index: 3; }
+
+/* Static fallback card. */
+.xf-fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: 32px 24px; background: radial-gradient(60% 60% at 50% 40%, #141815 0%, #080a09 100%); }
+.xf-fb-grid { position: absolute; inset: 0; opacity: 0.5; background-image: linear-gradient(#3f494033 1px, transparent 1px), linear-gradient(90deg, #3f494033 1px, transparent 1px); background-size: 48px 48px; mask-image: radial-gradient(closest-side, #000, transparent); -webkit-mask-image: radial-gradient(closest-side, #000, transparent); }
+.xf-fb-mark { position: relative; display: grid; place-items: center; width: 160px; height: 160px; margin-bottom: 8px; }
+.xf-fb-mark.is-area span { position: absolute; inset: 24px; border-radius: 50%; border: 1.5px solid var(--xf-accent); background: #b8ed8114; box-shadow: 0 0 32px #b8ed8140; }
+.xf-fb-mark.is-area span + span { inset: 74px; border: 0; background: var(--xf-accent); box-shadow: 0 0 0 6px #b8ed8133; }
+.xf-fb-mark.is-pin svg { filter: drop-shadow(0 0 16px #b8ed8180); }
+.xf-fallback .xf-fb-text { position: relative; text-align: center; max-width: 560px; }
+.xf-fallback .xf-kicker::after { content: ''; width: 16px; height: 1px; background: currentColor; }
+.xf-fallback .xf-label { font-size: 28px; }
+.xf-note { margin-top: 16px; font-size: 13px; color: var(--xf-muted); }
+.xf-fallback { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+@keyframes xf-blink { 50% { opacity: 0.25; } }
+@keyframes xf-scan { 0% { top: -2px; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+@keyframes xf-ripple { 0% { transform: scale(0.4); opacity: 0.9; } 100% { transform: scale(2.4); opacity: 0; } }
+
+@media (max-width: 600px) {
+  .xf-status { top: 16px; left: 16px; }
+  .xf-hud { left: 16px; right: 16px; bottom: 40px; }
+  .xf-label { font-size: 28px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xf-progress, .xf-scan { display: none; }
+  .xf-status i, .xf-pin.is-landed::after { animation: none; }
+  .xf-hud { transition: none; }
+}

@@ -1,18 +1,28 @@
 #!/usr/bin/env bash
 # Deploy the committed HEAD to Cloud Run and prove it answers.
-#   PROJECT=<gcp-project-id> [REGION=europe-west1] [SERVICE=hackathon-starter] \
+#   PROJECT=<gcp-project-id> [REGION=europe-west1] [SERVICE=xray] [MODE=cloud|local] \
 #     [STATE_BUCKET=<PROJECT>-state] [MIN_INSTANCES=0] [DEPLOY_AS_SELF=1] scripts/deploy.sh
+# MODE=local ships the offline FakeProvider build; /health says so. Keys: scripts/secrets.sh.
 # One-time GCP setup: scripts/bootstrap.sh. Rollback: docs/deploy.md.
 set -euo pipefail
 
 : "${PROJECT:?set PROJECT to the GCP project id}"
 REGION="${REGION:-europe-west1}"
-SERVICE="${SERVICE:-hackathon-starter}"
+SERVICE="${SERVICE:-xray}"
+MODE="${MODE:-cloud}"
 STATE_BUCKET="${STATE_BUCKET:-$PROJECT-state}"
 MIN_INSTANCES="${MIN_INSTANCES:-0}"  # the event playbook sets 1 on demo day: no cold start
 # The one list of secrets: each mounts as its upper-cased name (anthropic-api-key is
 # ANTHROPIC_API_KEY), and scripts/bootstrap.sh creates and grants exactly these.
-SECRETS="anthropic-api-key admin-password"
+SECRETS="admin-password"
+# Optional keys mount only when the secret exists (checked as you, before impersonating: the
+# deployer cannot list secrets). OPTIONAL_SECRETS= deploys with none of them.
+OPTIONAL_SECRETS="${OPTIONAL_SECRETS-anthropic-api-key xai-api-key google-maps-api-key
+  google-vision-api-key parallel-api-key surreal-url surreal-user surreal-pass}"
+for s in $OPTIONAL_SECRETS; do
+  if gcloud secrets describe "$s" --project "$PROJECT" >/dev/null 2>&1; then SECRETS+=" $s"; fi
+done
+echo "deploy: MODE=$MODE secrets: $SECRETS"
 
 if [[ -n "$(git status --porcelain)" ]]; then
   echo "deploy: the working tree is dirty; commit first so the commit label names what ships" >&2
@@ -42,7 +52,7 @@ MOUNTS="$(for s in $SECRETS; do printf '%s=%s:latest,' "$(tr 'a-z-' 'A-Z_' <<<"$
 gcloud run deploy "$SERVICE" --source . --region "$REGION" --project "$PROJECT" \
   --allow-unauthenticated \
   --set-secrets "${MOUNTS%,}" \
-  --set-env-vars "MODE=cloud,DATA_PATH=gs://$STATE_BUCKET/store.json" \
+  --set-env-vars "MODE=$MODE,DATA_PATH=gs://$STATE_BUCKET/$SERVICE/store.json" \
   --labels "commit=$COMMIT" \
   --min-instances "$MIN_INSTANCES" \
   --max-instances 3 \

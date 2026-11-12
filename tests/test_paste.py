@@ -36,7 +36,7 @@ def no_network(monkeypatch):
     """Advert sites answer 403, like Rightmove does to a bot; nothing else may be fetched."""
     calls = []
 
-    def get_text(url, params=None):
+    def get_text(url, params=None, allow=None):
         calls.append(url)
         req = httpx2.Request("GET", url)
         raise httpx2.HTTPStatusError("403", request=req, response=httpx2.Response(403, request=req))
@@ -114,3 +114,45 @@ def test_a_hung_source_is_cut_off_and_the_score_still_lands(tmp_path, monkeypatc
     s = next(s for s in r.sources if s.name == slow.NAME)
     assert (s.status, s.detail) == ("error", "timed out after 0.5 s")
     assert r.status == "done" and r.claims  # the advert still read
+
+
+def _redirects(monkeypatch, hops: dict[str, str]):
+    """web's httpx.get answers 302 -> hops[url], else 200 with a small advert."""
+    from starter.verticals.sources import web
+
+    fetched = []
+
+    def get(url, params=None, headers=None, timeout=None, follow_redirects=False):
+        fetched.append(url)
+        assert not follow_redirects
+        req = httpx2.Request("GET", url)
+        if url in hops:
+            return httpx2.Response(302, headers={"location": hops[url]}, request=req)
+        return httpx2.Response(200, text="<p>Guide £250,000. Two Bedrooms</p>", request=req)
+
+    monkeypatch.setattr(web.httpx, "get", get)
+    return fetched
+
+
+def test_an_advert_site_cannot_redirect_the_fetch_to_the_metadata_ip(tmp_path, monkeypatch):
+    start = "https://www.rightmove.co.uk/properties/1"
+    fetched = _redirects(monkeypatch, {start: "http://169.254.169.254/latest/meta-data/"})
+    r = xray.run_xray(build_gateway(Store(tmp_path / "s.json")), start)
+    page = next(s for s in r.sources if s.name == listing_history.NAME)
+    assert (page.status, page.detail) == (
+        "off",
+        "redirected off the advert site, to 169.254.169.254",
+    )
+    assert fetched == [start] and r.message.startswith("Couldn't read this listing")
+
+
+def test_redirects_within_advert_sites_are_followed_up_to_five(tmp_path, monkeypatch):
+    a, b = "https://rightmove.co.uk/p/1", "https://www.rightmove.co.uk/properties/1"
+    _redirects(monkeypatch, {a: b})
+    r = xray.run_xray(build_gateway(Store(tmp_path / "s.json")), a)
+    assert {c.field for c in r.claims} >= {"price", "bedrooms"}
+    loop = {f"https://www.zoopla.co.uk/{i}": f"https://www.zoopla.co.uk/{i + 1}" for i in range(9)}
+    fetched = _redirects(monkeypatch, loop)
+    r = xray.run_xray(build_gateway(Store(tmp_path / "s2.json")), "https://www.zoopla.co.uk/0")
+    page = next(s for s in r.sources if s.name == listing_history.NAME)
+    assert (page.status, page.detail, len(fetched)) == ("off", "more than 5 redirects", 6)

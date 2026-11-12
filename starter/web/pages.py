@@ -34,6 +34,12 @@ def lease_page():
     return FileResponse(page)
 
 
+@router.get("/analyst", response_class=HTMLResponse)
+def analyst_page():
+    """Compare existing property reports and download their source records."""
+    return FileResponse(HERE / "static" / "analyst.html")
+
+
 @router.get("/runs", response_class=HTMLResponse)
 def runs_page(request: Request, store: StoreDep):
     runs = list(reversed(store.snapshot().get("runs", [])))

@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="/static/agents.css">
   <link rel="stylesheet" href="/static/gallery.css">
   <link rel="stylesheet" href="/static/inside.css">
+  <link rel="stylesheet" href="/static/places.css">
   <script type="module" src="/static/app.js"></script>
 </head>
 <body>
@@ -50,6 +51,7 @@
     <section id="results" class="results" aria-labelledby="place-title" hidden>
       <div class="result-heading"><div><h1 id="place-title">Listing X-ray</h1><p id="place-description"></p><p id="run-status" class="status" role="status" aria-live="polite"></p><p id="run-message" class="run-message" role="status" hidden></p></div><button class="secondary" id="new-listing">Check another listing</button></div>
       <div class="summary" aria-live="polite"><div class="score"><span id="score" data-testid="trust-score">—</span><span>Trust Score <span class="score-max">/ 100</span></span></div><div class="summary-copy"><h2 id="summary-title">Checking the records</h2><p id="summary-detail">Sources appear as they arrive. An unavailable source never counts as a match.</p></div></div>
+      <section id="places" class="places" aria-labelledby="places-title" data-testid="places" hidden><div class="places-head"><h2 id="places-title">The place, from every source</h2><p>Each view links to where it came from.</p></div><div class="places-grid"></div></section>
       <div id="flyin" data-enabled="true" data-testid="flyin" hidden aria-label="Property location fly-in"></div>
       <nav class="result-nav" aria-label="Inspect this X-ray">
         <button type="button" data-view="findings" aria-pressed="true" aria-controls="findings-view">Findings</button>

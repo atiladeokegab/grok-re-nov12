@@ -1,0 +1,32 @@
+/* "The place, from every source": one Street View hero, then satellite, map and the advert's photos. */
+.places { margin: var(--space-6) var(--space-0) var(--space-5) }
+.places-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-4); margin-bottom: var(--space-3) }
+.places-head h2 { font-family: var(--font-display); font-size: var(--type-lead); font-weight: var(--weight-medium); letter-spacing: var(--tracking-display) }
+.places-head p { font-size: var(--type-caption); color: var(--color-muted) }
+.places-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; grid-auto-rows: 168px; gap: var(--space-2) }
+.place-tile {
+  position: relative; overflow: hidden; display: block; color: var(--color-ink); text-decoration: none;
+  background: var(--color-surface); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-panel)
+}
+.place-tile.hero { grid-row: span 2 }
+.place-tile.tall { grid-row: span 2 }
+.place-tile.wide { grid-column: span 2 }
+.place-tile img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform var(--duration-fast) ease-out }
+.place-tile:hover img { transform: scale(1.03) }
+.place-tile:focus-visible { outline: var(--focus-width) solid var(--color-accent); outline-offset: 2px }
+.place-tile::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, var(--color-transparent) 35%, var(--color-photo-shade) 92%) }
+.place-caption { position: absolute; z-index: 1; left: var(--space-4); right: var(--space-4); bottom: var(--space-3); display: grid; gap: var(--space-1) }
+.place-label { font-family: var(--font-display); font-size: var(--type-body); font-weight: var(--weight-medium); line-height: var(--leading-heading) }
+.hero .place-label { font-size: var(--type-heading); letter-spacing: var(--tracking-display) }
+.place-meta { font-size: var(--type-caption); color: var(--color-muted) }
+.hero .place-meta { color: var(--color-accent) }
+.place-credit {
+  position: absolute; z-index: 1; top: var(--space-2); right: var(--space-2); padding: var(--space-0) var(--space-2);
+  font-size: 11px; color: var(--color-ink); background: var(--color-photo-shade); border-radius: var(--radius-control)
+}
+@media (max-width: 600px) {
+  .places-grid { grid-template-columns: 1fr 1fr; grid-auto-rows: 132px }
+  .place-tile.hero, .place-tile.wide { grid-column: span 2 }
+  .place-tile.tall { grid-row: auto }
+  .places-head { flex-direction: column; gap: var(--space-1) }
+}

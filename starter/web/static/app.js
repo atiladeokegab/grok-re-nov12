@@ -3,6 +3,7 @@ import { renderTimeline } from './timeline.js';
 import { mountClients } from './clients.js';
 import { loadGallery } from './gallery.js';
 import { renderRenters } from './renters.js';
+import { renderPlaces } from './places.js';
 import { agentLines } from './agents.js';
 
 const $ = id => document.getElementById(id);
@@ -305,7 +306,7 @@ function render(result) {
     $('findings').append(button);
   }
   if (!(result.findings || []).length) $('findings').append(element('p', 'No findings have arrived. This is not a verified match.', 'empty'));
-  renderMedia(result); renderHistory(result); renderRenters($('renters'), result);
+  renderMedia(result); renderHistory(result); renderRenters($('renters'), result); renderPlaces($('places'), result);
   $('sources').replaceChildren();
   const { lines: agentRows, off: notRun } = agentLines(result);
   for (const row of agentRows) {

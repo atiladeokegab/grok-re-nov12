@@ -1,0 +1,69 @@
+{
+  "listing_id": "auctionhouse-0715ecf1",
+  "fixture_kind": "recorded_public_source",
+  "approval": "Lead approved this address; other candidate addresses excluded",
+  "crawl": {
+    "listing_id": "auctionhouse-0715ecf1",
+    "source": "auctionhouse",
+    "agent_firm": "Auction House UK",
+    "url": "https://www.auctionhouse.co.uk/london/auction/lot/152478",
+    "title": "Property for Auction in London - 24 Macquarie Way, Isle of Dogs, London",
+    "postcode": "E14 3AU",
+    "property_type": "house",
+    "sale_or_let": "sale",
+    "price_gbp": "770000.0",
+    "price_basis": "guide/asking",
+    "price_text": "\u00a3770,000 Semi-Detached House 3 Bedroom",
+    "currency": "",
+    "size_sqft": "",
+    "size_unit": "",
+    "tenure": "freehold",
+    "status": "sold",
+    "listed_or_auction_date": "2026-10-07",
+    "crawled_at": "2026-10-24T20:47:45+00:00",
+    "address": "24 Macquarie Way, Isle of Dogs, London, E14 3AU"
+  },
+  "page": {
+    "url": "https://www.auctionhouse.co.uk/london/auction/lot/152478",
+    "fetched_at": "2026-11-12T19:21:20.023362+00:00",
+    "text": "Sold \u00a3770,000 Semi-Detached House 3 Bedrooms Tenure: Freehold Energy Efficiency Rating (EPC) Current Rating D",
+    "photos": [
+      "https://www.auctionhouse.co.uk/lot-image/930671?w=670",
+      "https://www.auctionhouse.co.uk/lot-image/930672?w=670",
+      "https://www.auctionhouse.co.uk/lot-image/930673?w=670",
+      "https://www.auctionhouse.co.uk/lot-image/930674?w=670",
+      "https://www.auctionhouse.co.uk/lot-image/930675?w=670",
+      "https://www.auctionhouse.co.uk/lot-image/930676?w=670",
+      "https://www.auctionhouse.co.uk/lot-image/930677?w=670",
+      "https://www.auctionhouse.co.uk/lot-image/930678?w=670",
+      "https://www.auctionhouse.co.uk/lot-image/930679?w=670",
+      "https://www.auctionhouse.co.uk/lot-image/930680?w=670",
+      "https://www.auctionhouse.co.uk/lot-image/930681?w=670"
+    ]
+  },
+  "epc": {
+    "search_url": "https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=E14+3AU",
+    "rows": [
+      "24, Macquarie Way, LONDON, E14 3AU | /energy-certificate/8160-7422-6830-1941-6222"
+    ],
+    "certificates": {
+      "/energy-certificate/8160-7422-6830-1941-6222": "energy rating is D. Valid until 2 March 2030 Property type End-terrace house Total floor area 84 square metres"
+    },
+    "fetched_at": "2026-11-12T19:28:00+00:00"
+  },
+  "reverse_image": {
+    "by_image": {}
+  },
+  "reviews_parallel": {
+    "results": []
+  },
+  "photo_diff": {
+    "adverts": []
+  },
+  "source_notes": [
+    "Official exact-address EPC fetched independently: rating D, end-terrace house, 84 square metres. Reverse-image, review and photo-history evidence is unavailable in this fixture.",
+    "No verified building/doorway coordinate supplied.",
+    "Fuzzy HMLR record rejected due to different house number.",
+    "Gallery URLs point to the original publisher; no image bytes redistributed."
+  ]
+}

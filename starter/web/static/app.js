@@ -160,6 +160,8 @@ async function updateGraph() {
     const graph = await request(`/api/place/${encodeURIComponent(current.place_id)}/graph`);
     if (requestId !== graphRequest || runId !== current?.run_id || activeView !== 'connections') return;
     if (graph.run_id !== runId) throw new Error('A newer check has replaced this place’s graph. Start a fresh X-ray to inspect it.');
+    $('graph-query').hidden = graph.engine !== 'surrealdb';  // shown only when SurrealDB really answered
+    $('graph-query').querySelector('code').textContent = graph.query || '';
     if (graphWidget) graphWidget.update(graph);
     else {
       const { mountGraph } = await import('./graph.js');

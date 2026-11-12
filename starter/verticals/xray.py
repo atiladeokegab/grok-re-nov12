@@ -29,6 +29,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel
 
+from starter.core import surreal_graph
 from starter.core.errors import NotFound, SourceOff
 from starter.core.ingest import decoded_text, ground, land, raw_bytes
 from starter.core.store import Store
@@ -579,8 +580,6 @@ async def xray_events(run_id: str, request: Request, store: StoreDep) -> Streami
 def place_graph(place_id: str, store: StoreDep) -> dict:
     """Nodes and edges: place->has->claim, claim->checked_by->evidence, finding->cites->evidence,
     place->landed->document, document->contains->evidence."""
-    # shortcut: with STORE=surreal the graph is still computed from the saved report, not from
-    # RELATE edges; write place->document->evidence->finding relations when a query needs them.
     run_id = store.snapshot().get("xray_places", {}).get(place_id)
     if run_id is None:
         raise NotFound(f"no X-ray for place {place_id!r}")
@@ -604,7 +603,16 @@ def place_graph(place_id: str, store: StoreDep) -> dict:
             edges += [
                 {"from": f["claim_id"], "to": e, "kind": "checked_by"} for e in f["evidence_ids"]
             ]
-    return {"place_id": place_id, "run_id": run_id, "nodes": nodes, "edges": edges}
+    out = {"place_id": place_id, "run_id": run_id, "nodes": nodes, "edges": edges}
+    if (g := surreal_graph.graph()) is not None:
+        try:  # the same graph, stored as RELATE edges and read back by one SurrealQL query
+            out |= g.answer(place_id, run_id, nodes, edges) | {
+                "engine": "surrealdb",
+                "query": surreal_graph.QUERY,
+            }
+        except Exception as e:  # never break the demo: the Python graph above still answers
+            _warn("surreal_graph", run_id, e)
+    return out
 
 
 def _find_document(store: Store, doc_id: str) -> dict:

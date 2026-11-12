@@ -1,5 +1,6 @@
 """X-ray scenarios S1, S3, S4, S5 (offline, fixtures) and the HTTP surface."""
 
+import json
 import time
 
 from fastapi.testclient import TestClient
@@ -277,3 +278,21 @@ def test_source_threads_never_wait_on_the_store_and_every_source_call_is_still_a
     calls = [e["tool"] for e in store.snapshot()["events"] if e.get("type") == "tool_call"]
     ran = [f"source_{s.name}" for s in r.sources if s.status != "off"]  # off raises: no audit
     assert ran and sorted(calls) == sorted(ran)
+
+
+def test_place_graph_is_one_surrealql_query_with_python_fallback(tmp_path, monkeypatch):
+    import starter.verticals.xray as xv
+    from starter.core import surreal_graph
+
+    gateway = _gateway(tmp_path)
+    r = run_xray(gateway, "demo", offline=True)
+    monkeypatch.setattr(surreal_graph, "graph", lambda: None)
+    py = xv.place_graph(r.place_id, gateway.store)
+    assert "engine" not in py  # Surreal unavailable: the Python graph still answers
+    g = surreal_graph.Graph()
+    monkeypatch.setattr(surreal_graph, "graph", lambda: g)
+    sq = xv.place_graph(r.place_id, gateway.store)
+    assert sq["engine"] == "surrealdb" and sq["query"].startswith("SELECT (SELECT")
+    key = lambda xs: sorted(json.dumps(x, sort_keys=True) for x in xs)  # noqa: E731
+    assert key(sq["nodes"]) == key(py["nodes"]) and key(sq["edges"]) == key(py["edges"])
+    assert sq["nodes"] and xv.place_graph(r.place_id, gateway.store)["edges"] == sq["edges"]

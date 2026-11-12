@@ -41,3 +41,14 @@ test('identical or initial values are records rather than changes', () => {
   assert.equal(hasChangedValue({ value: 84 }), false);
   assert.equal(hasChangedValue({ previous_value: 0, value: 1 }), true);
 });
+
+test('a run link round-trips through the URL and keeps the other parameters', async () => {
+  const { runFromSearch, withRun } = await import('./data.js');
+  assert.equal(runFromSearch('?run=xr-abc123'), 'xr-abc123');
+  assert.equal(runFromSearch('?run=%20xr-1%20&mockup=1'), 'xr-1');
+  for (const search of ['', '?run=', '?run=%20', '?other=1']) assert.equal(runFromSearch(search), null);
+  assert.equal(runFromSearch(`?run=${'a'.repeat(500)}`).length, 100);
+  assert.equal(withRun('https://x.test/?mockup=1#top', 'xr-9'), '/?mockup=1&run=xr-9#top');
+  assert.equal(withRun('https://x.test/?run=xr-9&a=b', null), '/?a=b');
+  assert.equal(runFromSearch(withRun('https://x.test/', 'xr-a&b=c').split('/')[1]), 'xr-a&b=c');
+});

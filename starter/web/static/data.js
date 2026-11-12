@@ -61,3 +61,15 @@ export function timestamp(value) {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? 'Time not recorded' : `${date.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })} UTC`;
 }
+
+// ?run=<id> opens a finished X-ray by link (the demo fallback); any non-empty value is tried.
+export function runFromSearch(search) {
+  const id = new URLSearchParams(search).get('run')?.trim();
+  return id ? id.slice(0, 100) : null;
+}
+
+export function withRun(href, runId) {
+  const url = new URL(href);
+  if (runId) url.searchParams.set('run', runId); else url.searchParams.delete('run');
+  return url.pathname + url.search + url.hash;
+}

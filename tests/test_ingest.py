@@ -224,3 +224,36 @@ def test_a_denied_bucket_write_keeps_the_document_locally_and_the_run_finishes(
     assert r.status == "done" and r.documents
     assert all(d.bytes_path.startswith(str(tmp_path / "cache")) for d in r.documents)
     assert any(e.span for e in r.evidence)  # grounded from the local copy
+
+
+def test_score_shows_while_a_slow_source_is_still_running(tmp_path, monkeypatch):
+    import threading
+    import types
+
+    from starter.verticals import xray as xr
+
+    started, release = threading.Event(), threading.Event()
+
+    def slow_ingest(place, listing):
+        started.set()
+        assert release.wait(10)
+        return [], []
+
+    slow = types.SimpleNamespace(NAME="slow", ingest=slow_ingest)
+    monkeypatch.setattr(xr, "SOURCES", [*xr.SOURCES, slow])
+    store = Store(tmp_path / "s.json")
+    gateway = build_gateway(store)
+    report = xr.begin(store, "demo", offline=True)
+    worker = threading.Thread(target=xr.run_xray, args=(gateway, "demo", True, report))
+    worker.start()
+    try:
+        assert started.wait(10)
+        mid = xr.get_report(store, report.run_id)
+        assert mid["status"] == "running" and mid["trust_score"] is not None and mid["findings"]
+    finally:
+        release.set()
+        worker.join(10)
+    done = xr.get_report(store, report.run_id)
+    assert done["status"] == "done" and len({f["id"] for f in done["findings"]}) == len(
+        done["findings"]
+    )

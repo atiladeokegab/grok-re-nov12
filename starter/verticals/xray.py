@@ -238,6 +238,20 @@ def _history(claims: list[Claim], evidence: list[Evidence]) -> list[HistoryEntry
     return sorted(out, key=lambda h: h.observed_at or h.fetched_at)
 
 
+def _score(store: Store, report: XRayReport, findings=None) -> None:
+    """Replace the findings wholesale (an id may flip between steps), publish them and the
+    score. Without `findings`, the deterministic rules on what has arrived so far."""
+    if findings is None:
+        findings = rec.reconcile(report.claims, report.evidence, report.sources)
+    report.findings = findings
+    report.counts = count(findings)
+    report.trust_score = trust_score(findings)
+    for f in findings:
+        _save(store, report, "finding", f)
+    data = {"trust_score": report.trust_score, "counts": report.counts.model_dump()}
+    _save(store, report, "score", data)
+
+
 def begin(store: Store, ref: str, offline: bool = False, use: str | None = None) -> XRayReport:
     """Load the listing (NotFound if unknown) and save the run as "running"."""
     run_id = f"xr-{uuid.uuid4().hex[:10]}"
@@ -304,27 +318,20 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
                 _save(store, report, "claim", c)
             for e in evidence:
                 _save(store, report, "evidence", e)
+            _score(store, report)  # a provisional score after every source, status "running"
         report.history = _history(report.claims, report.evidence)
         for h in report.history:
             _save(store, report, "history", h)
-        report.findings = rec.reconcile(report.claims, report.evidence, report.sources)
-        told = narrate(report.findings, report.claims, report.evidence)
+        findings = rec.reconcile(report.claims, report.evidence, report.sources)
+        told = narrate(findings, report.claims, report.evidence)  # once: model calls cost
         if told["provider"] == "xai":
             report.grok_calls += told["calls"]
             report.client_calls.grok += told["calls"]
+        _score(store, report, findings)
         doc_of = {e.id: e.document_id for e in report.evidence}
         for f in report.findings:
-            _save(store, report, "finding", f)
             ids = list(dict.fromkeys(d for i in f.evidence_ids if (d := doc_of.get(i))))
             _save(store, report, "ingestion.linked", {"finding_id": f.id, "document_ids": ids})
-        report.counts = count(report.findings)
-        report.trust_score = trust_score(report.findings)
-        _save(
-            store,
-            report,
-            "score",
-            {"trust_score": report.trust_score, "counts": report.counts.model_dump()},
-        )
         if (summary := cursor_step.summarize(report.model_dump())) is not None:
             report.client_calls.cursor_sdk += 1
             _save(store, report, "cursor_summary", summary)

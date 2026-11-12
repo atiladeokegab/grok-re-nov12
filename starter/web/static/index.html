@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="/static/graph.css">
   <link rel="stylesheet" href="/static/trace.css">
   <link rel="stylesheet" href="/static/clients.css">
+  <link rel="stylesheet" href="/static/gallery.css">
   <script type="module" src="/static/app.js"></script>
 </head>
 <body>
@@ -35,6 +36,7 @@
           <div class="input-row"><input id="listing" name="listing" type="text" value="https://www.auctionhouse.co.uk/london/auction/lot/152478" placeholder="Paste a property listing" required autocomplete="off" spellcheck="false" data-testid="listing-input"><button id="start" class="primary" type="submit" data-testid="xray-submit">X-ray this listing<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
         </form>
         <p id="status" class="status" role="status" aria-live="polite">Every finding opens back to its source.</p>
+        <section id="gallery" class="gallery" aria-labelledby="gallery-title" hidden><h2 id="gallery-title">Try these real listings</h2></section>
         <div class="source-line" id="how-it-works"><span>Listing history</span><span>EPC records</span><span>Photo matches</span><span>Tenant reviews</span></div>
       </div>
       <div class="intro-visual" id="intro-visual">
@@ -43,7 +45,7 @@
       </div>
     </section>
     <section id="results" class="results" aria-labelledby="place-title" hidden>
-      <div class="result-heading"><div><h1 id="place-title">Listing X-ray</h1><p id="place-description"></p><p id="run-status" class="status" role="status" aria-live="polite"></p></div><button class="secondary" id="new-listing">Check another listing</button></div>
+      <div class="result-heading"><div><h1 id="place-title">Listing X-ray</h1><p id="place-description"></p><p id="run-status" class="status" role="status" aria-live="polite"></p><p id="run-message" class="run-message" role="status" hidden></p></div><button class="secondary" id="new-listing">Check another listing</button></div>
       <div class="summary" aria-live="polite"><div class="score"><span id="score" data-testid="trust-score">—</span><span>Trust Score <span class="score-max">/ 100</span></span></div><div class="summary-copy"><h2 id="summary-title">Checking the records</h2><p id="summary-detail">Sources appear as they arrive. An unavailable source never counts as a match.</p></div></div>
       <div id="flyin" data-enabled="true" data-testid="flyin" hidden aria-label="Property location fly-in"></div>
       <nav class="result-nav" aria-label="Inspect this X-ray">

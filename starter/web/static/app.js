@@ -1,5 +1,6 @@
 import { fieldName, VERDICTS, safeUrl, valueText, sourcePresent, findingRecords, sourceLabel, timestamp, photoChange, unitFor, hasChangedValue } from './data.js';
 import { renderTimeline } from './timeline.js';
+import { mountClients } from './clients.js';
 
 const $ = id => document.getElementById(id);
 const mockup = new URLSearchParams(location.search).get('mockup') === '1';
@@ -269,8 +270,8 @@ function render(result) {
   renderMedia(result); renderHistory(result);
   $('sources').replaceChildren();
   for (const source of result.sources || []) {
-    const line = element('p', null, 'source-status');
-    line.append(element('span', source.name), element('span', source.status === 'ok' ? `${source.n_evidence || 0} evidence records` : source.status === 'error' ? 'Source unavailable' : source.status === 'off' ? 'Not enabled for this check' : 'No record found'));
+    const line = element('p', null, `source-status status-${source.status}`);
+    line.append(element('span', source.name), element('span', source.status === 'ok' ? `${source.n_evidence || 0} evidence records` : source.status === 'error' ? 'Source unavailable' : source.status === 'off' ? 'no key' : 'No record found'));
     if (source.detail) line.append(element('small', String(source.detail).slice(0, 240), 'source-detail'));
     $('sources').append(line);
   }
@@ -324,6 +325,7 @@ function watch(runId, ownGeneration) {
   const finish = result => {
     if (finished) return;
     finished = true;
+    clients.refresh();
     source.close();
     if (stream === source) stream = null;
     if (result.status === 'error') {
@@ -374,6 +376,8 @@ function watch(runId, ownGeneration) {
     $('run-id').textContent = `Run ${runId}. Live connection interrupted; reconnecting. Last received records remain visible.`;
   });
 }
+
+const clients = mountClients($('clients'));
 
 $('xray-form').addEventListener('submit', async event => {
   event.preventDefault();

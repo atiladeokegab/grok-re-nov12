@@ -296,6 +296,26 @@ async function showFlyIn(result) {
   }
 }
 
+let seenRun; const seen = new Set();
+let shownScore = null;
+// Count the Trust Score up and sweep its ring (--p); "—" never counts. Ends on the exact value even if frames stall.
+function showScore(value) {
+  const node = $('score');
+  node.style.setProperty('--p', value ?? 0);
+  if (value === null) { shownScore = null; node.textContent = '—'; return; }
+  const from = shownScore ?? 0; shownScore = value;
+  if (from === value || matchMedia('(prefers-reduced-motion: reduce)').matches) { node.textContent = value; return; }
+  const start = performance.now(), ms = 800;
+  const step = now => {
+    if (shownScore !== value) return;
+    const t = Math.min(1, (now - start) / ms);
+    node.textContent = Math.round(from + (value - from) * (1 - (1 - t) ** 3));
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+  setTimeout(() => { if (shownScore === value) node.textContent = value; }, ms + 100);
+}
+
 function render(result) {
   current = result;
   $('intro').hidden = true; $('results').hidden = false;
@@ -308,7 +328,10 @@ function render(result) {
   const counts = result.counts || {};
   const disagreements = counts.disagrees || 0;
   const scored = (counts.matches || 0) + disagreements > 0; // flags alone are no score: never a fake 0
-  $('score').textContent = scored && Number.isFinite(result.trust_score) ? result.trust_score : '—';
+  showScore(scored && Number.isFinite(result.trust_score) ? result.trust_score : null);
+  if (result.run_id !== seenRun) { seenRun = result.run_id; seen.clear(); }
+  let fresh = 0; // entrance stagger, only for items this run has not shown yet (live refreshes re-render everything)
+  const enter = (node, key) => { if (!seen.has(key)) { seen.add(key); node.classList.add('enter'); node.style.setProperty('--i', fresh++); } };
   const flags = counts.flag || 0;
   $('summary-title').textContent = disagreements ? `${disagreements} ${disagreements === 1 ? 'claim doesn’t' : 'claims don’t'} match the records` : flags ? `${flags} ${flags === 1 ? 'claim' : 'claims'} worth a closer look` : (result.findings || []).length ? 'The records are ready to compare' : 'Checking the records';
   $('summary-detail').textContent = (scored || result.status === 'running' ? '' : 'Not scored: no claim had a matching record. ') + `${counts.matches || 0} matched. ${counts.unverifiable || 0} could not be verified. ${flags} worth a closer look. Unverifiable claims are left out of the score.`;
@@ -326,6 +349,7 @@ function render(result) {
     if (who) { const meta = element('span', who, 'finding-stamp'); meta.dataset.testid = 'finding-stamp'; text.append(meta); }
     const statusIcon = icon(verdict); statusIcon.classList.add(`verdict-${verdict}`);
     button.append(statusIcon, text, icon()); button.addEventListener('click', () => showFinding(finding.id, true));
+    enter(button, `finding:${finding.id}:${verdict}`);
     $('findings').append(button);
   }
   if (!(result.findings || []).length) $('findings').append(element('p', 'No findings have arrived. This is not a verified match.', 'empty'));
@@ -337,6 +361,7 @@ function render(result) {
     const item = element('span', null, `agent-chip status-${chip.status}`);
     item.dataset.testid = 'agent-chip';
     item.append(element('b', chip.agent), element('span', chip.text));
+    enter(item, `chip:${chip.agent}:${chip.status}`);
     row.append(item);
   }
   $('sources').append(row);

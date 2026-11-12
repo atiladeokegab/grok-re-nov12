@@ -966,3 +966,53 @@ html {
 .listing-page .summary { margin-block: var(--space-5); padding-block: var(--space-4); }
 .history-earlier { display: block; color: var(--color-muted); font-size: var(--type-caption); margin-bottom: var(--space-2); }
 @media (max-width: 900px) { .header-tools { gap: var(--space-3); } }
+
+/* Report motion. Every entrance uses fill-mode backwards: the resting state is the element's own style,
+   so content is fully visible whether or not an animation ever runs. */
+@property --p { syntax: '<number>'; inherits: true; initial-value: 0; }
+#score {
+  position: relative; display: inline-grid; place-items: center;
+  width: 136px; aspect-ratio: 1; flex: none;
+  transition: --p 800ms cubic-bezier(.2, .8, .2, 1);
+}
+#score::before {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(var(--color-accent) calc(var(--p) * 3.6deg), var(--color-raised) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px));
+}
+@media (max-width: 760px) { #score { width: 104px } }
+.summary { position: relative; overflow: hidden }
+.finding { transition: background var(--duration-fast), transform var(--duration-fast) }
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes xr-rise { from { opacity: 0; transform: translateY(10px) } }
+  @keyframes xr-pop { from { opacity: 0; transform: scale(.6) } }
+  @keyframes xr-fade { from { opacity: 0 } }
+  @keyframes xr-slide { from { opacity: 0; transform: translateX(16px) } }
+  @keyframes xr-scan { from { transform: translateX(-100%) } to { transform: translateX(100vw) } }
+  @keyframes xr-tick { 0% { opacity: 0; transform: scale(.85); border-color: var(--color-border) } 60% { opacity: 1; transform: scale(1.04); border-color: var(--color-accent) } }
+
+  #results:not([hidden]) .result-heading { animation: xr-rise 500ms ease-out backwards }
+  #results:not([hidden]) .summary { animation: xr-rise 500ms 80ms ease-out backwards }
+  #results:not([hidden]) #score { animation: xr-pop 600ms 120ms cubic-bezier(.3, 1.5, .5, 1) backwards }
+  /* one x-ray sweep across the score card */
+  .summary::after {
+    content: ''; position: absolute; inset: 0 auto 0 0; width: 120px; pointer-events: none;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-accent) 22%, transparent), transparent);
+    border-right: 2px solid color-mix(in srgb, var(--color-accent) 70%, transparent);
+    transform: translateX(100vw); animation: xr-scan 900ms 250ms ease-in-out backwards;
+  }
+  .finding.enter { animation: xr-rise 420ms calc(300ms + min(var(--i), 12) * 50ms) ease-out backwards }
+  .finding:hover { transform: translateX(4px) }
+  .finding.enter svg:first-child { animation: xr-pop 420ms calc(380ms + min(var(--i), 12) * 50ms) cubic-bezier(.3, 1.5, .5, 1) backwards }
+  .agent-chip.enter { animation: xr-tick 500ms calc(400ms + min(var(--i), 12) * 60ms) ease-out backwards }
+  .places-grid > * { animation: xr-slide 600ms ease-out backwards }
+  .places-grid > :nth-child(2) { animation-delay: 80ms }
+  .places-grid > :nth-child(3) { animation-delay: 160ms }
+  .places-grid > :nth-child(n+4) { animation-delay: 240ms }
+  .property-media > * { animation: xr-fade 700ms 200ms ease-out backwards }
+  /* tab switch: the shown view fades up whenever it leaves display:none */
+  #findings-view:not([hidden]), .extra-view:not([hidden]) { animation: xr-rise 320ms ease-out backwards }
+  .finding-detail:not([hidden]) { animation: xr-rise 280ms ease-out backwards }
+}

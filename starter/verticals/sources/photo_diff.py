@@ -109,12 +109,16 @@ def ingest(place: "Place", listing: dict) -> tuple[list["Claim"], list["Evidence
             continue
         evidence.append(
             Evidence(
-                id=f"{place.id}:{NAME}:{index}",
+                id=f"ev-{NAME}-{listing['listing_id']}-photo_history-{index}",
                 place_id=place.id,
                 field="photo_history",
                 value=change,
                 source_name="Listing photo history",
                 source_url=url,
+                doc_span=(
+                    f"Dated adverts show {len(change['added'])} added and "
+                    f"{len(change['removed'])} removed photos. The reason is unverified."
+                ),
                 fetched_at=change["captured_at"],
                 agent=NAME,
             )

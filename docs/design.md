@@ -52,6 +52,14 @@ Say **The listing says 70 m². The register records 52 m².** only when both sou
 
 ## Fly-in
 
-The map animates from a city view to the supplied location and hands off to the listing. It shows provider attribution and a skip control. OpenFreeMap with MapLibre is the keyless path. Google Photorealistic 3D Tiles is enabled only when a key and valid location are available. Without a key, location, WebGL support or successful tile load, keep the source photograph and continue to the findings. A postcode-centroid coordinate is low confidence and is not represented as the building entrance. Confirm the map and camera on the lead's laptop; software rendering on the VM is not GPU verification.
+The map animates from a city view to the supplied location. The Trust Score remains above the map. A visible **Skip to findings** control and an 8.5-second ceiling keep the check available; reduced motion skips the opener. OpenFreeMap with MapLibre is the current keyless path. If location, WebGL or tiles are unavailable, keep the source photograph and findings. Postcode-centroid coordinates are low confidence and are not represented as the building entrance. Confirm the map and camera on the lead's laptop; software rendering on the VM is not GPU verification.
 
-The map scene uses MapLibre GL JS and OpenFreeMap buildings with OpenStreetMap attribution (ODbL). Google's attribution stays visible on Google tiles. The promotional film uses Google tile footage for no more than 30 seconds.
+The map scene uses MapLibre GL JS and OpenFreeMap buildings with OpenStreetMap attribution (ODbL). Google tiles are an optional extension; if integrated, their attribution and promotional footage limits must be preserved.
+
+## Connections, time and original documents
+
+Results have three views: **Findings**, **Connections** and **Time machine**. Connections renders the actual graph returned for this run, with a keyboard-accessible record list beside the 3D view. Finding selection returns to its evidence. The renderer is disposed when its view closes.
+
+Time machine uses sourced history only. Cards distinguish **Source event on** from **Retrieved on**, preserve order within each year and state **Date not recorded** when a date is absent. A retrieval timestamp does not establish when a property changed.
+
+Finding details can show the chain back to an original captured document. The trace exposes the source URL, retrieval time, agent and server-supplied SHA-256. It highlights a quote only when the document ID, current run, original text and Unicode codepoint offsets match the attested span. Otherwise the source remains readable without a verified highlight. An unavailable document never becomes reconstructed evidence.

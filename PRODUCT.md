@@ -33,6 +33,9 @@ The user supplies a listing URL or crawl listing ID, chooses Residential or Offi
 - The Trust Score excludes unverifiable claims, which remain visible separately.
 - Grok Bot drives the product through MCP. The product agent uses the configured platform model; do not describe it as a Grok API call. Cursor SDK and MCP counts are shown only when provided by the run.
 - Missing evidence is not a match. Findings without a source remain unverifiable.
+- Connections shows the place, claims, evidence, documents and findings returned by the evidence graph. Selecting a finding returns to its cited records.
+- Time machine presents sourced history in chronological order. A source-attested event date and the time a record was retrieved are shown with different labels.
+- When a captured source document is available, the finding trace shows its source URL, retrieval context and SHA-256. A quote is highlighted only when its document, text and exact offsets agree with the source record.
 - Describe discrepancies in terms of the records. A discrepancy alone does not establish fraud or AI-generated imagery.
 - Sample values may appear only with the visible label: **Illustrative prototype. These values demonstrate the interface; they are not a real property assessment.**
 - Do not place API keys, licensed MSCI data, or personal data in the public project.

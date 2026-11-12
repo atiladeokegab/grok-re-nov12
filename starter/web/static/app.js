@@ -1,4 +1,5 @@
 import { fieldName, VERDICTS, safeUrl, valueText, sourcePresent, findingRecords, sourceLabel, timestamp, photoChange, unitFor } from './data.js';
+import { renderTimeline } from './timeline.js';
 
 const $ = id => document.getElementById(id);
 const mockup = new URLSearchParams(location.search).get('mockup') === '1';
@@ -8,6 +9,11 @@ let stream = null;
 let generation = 0;
 let controller = null;
 let disposeCurrentFlyIn = null;
+let activeView = 'findings';
+let graphWidget = null;
+let graphRequest = 0;
+let traceController = null;
+let traceRoutes;
 
 function element(tag, text, className) {
   const node = document.createElement(tag);
@@ -60,6 +66,7 @@ function photoFigure(url, label, advertId) {
 }
 
 function showFinding(id, moveFocus = false) {
+  traceController?.abort();
   selected = id;
   const finding = (current?.findings || []).find(item => item.id === id);
   const detail = $('finding-detail');
@@ -92,7 +99,58 @@ function showFinding(id, moveFocus = false) {
   if (sourcePresent(claim)) detail.append(sourceRecord(claim));
   for (const record of cited) detail.append(sourceRecord(record));
   if (!cited.length) detail.append(element('p', 'No supporting evidence record is available.', 'empty'));
+  const trace = element('section', null, 'trace-slot'); detail.append(trace);
+  traceController = new AbortController();
+  loadTrace(trace, finding.id, traceController.signal, current.run_id);
   if (moveFocus) { detail.tabIndex = -1; detail.focus({ preventScroll: true }); detail.scrollIntoView({ block: 'nearest', behavior: 'instant' }); }
+}
+
+async function loadTrace(container, findingId, signal, runId) {
+  try {
+    traceRoutes ??= fetch('/openapi.json').then(response => response.ok ? response.json() : {}).then(schema => Object.keys(schema.paths || {}).some(path => /^\/api\/finding\/\{[^}]+\}\/trace$/.test(path))).catch(() => false);
+    if (!await traceRoutes || signal.aborted) {
+      if (!signal.aborted) container.append(element('p', 'Full document trace is not available for this run. Follow the cited source records above.', 'empty'));
+      return;
+    }
+    const { renderTrace } = await import('./trace.js');
+    if (!signal.aborted) await renderTrace(container, findingId, { signal, runId });
+  } catch (error) {
+    if (!signal.aborted) container.replaceChildren(element('p', 'The document trace could not be loaded. The cited records above remain available.', 'empty'));
+  }
+}
+
+async function updateGraph() {
+  if (activeView !== 'connections' || !current) return;
+  const requestId = ++graphRequest;
+  const runId = current.run_id;
+  const container = $('connections-graph');
+  if (!graphWidget) container.replaceChildren(element('p', 'Connecting this check’s source records…', 'view-status'));
+  try {
+    const graph = await request(`/api/place/${encodeURIComponent(current.place_id)}/graph`);
+    if (requestId !== graphRequest || runId !== current?.run_id || activeView !== 'connections') return;
+    if (graph.run_id !== runId) throw new Error('A newer check has replaced this place’s graph. Start a fresh X-ray to inspect it.');
+    if (graphWidget) graphWidget.update(graph);
+    else {
+      const { mountGraph } = await import('./graph.js');
+      if (requestId !== graphRequest || activeView !== 'connections') return;
+      const mounted = await mountGraph(container, graph, { onSelect: node => {
+        if (node.kind === 'finding') { setView('findings'); showFinding(node.id, true); }
+      } });
+      if (requestId !== graphRequest || activeView !== 'connections') mounted.dispose();
+      else graphWidget = mounted;
+    }
+  } catch (error) {
+    if (requestId === graphRequest) container.replaceChildren(element('p', error.message, 'view-status'));
+  }
+}
+
+function setView(view) {
+  activeView = view;
+  for (const button of document.querySelectorAll('[data-view]')) button.setAttribute('aria-pressed', String(button.dataset.view === view));
+  for (const name of ['findings', 'connections', 'timeline']) $(`${name}-view`).hidden = name !== view;
+  if (view !== 'connections') { graphRequest += 1; graphWidget?.dispose(); graphWidget = null; }
+  if (view === 'timeline' && current) renderTimeline($('history-timeline'), current);
+  if (view === 'connections') updateGraph();
 }
 
 function renderHistory(result) {
@@ -141,27 +199,36 @@ async function showFlyIn(result) {
   const container = $('flyin');
   const owner = generation;
   if (!container || container.dataset.enabled !== 'true') return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const { lat, lng, use } = result.place || {};
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+  let ended = false;
+  let module;
+  const skip = element('button', 'Skip to findings', 'secondary flyin-skip'); skip.type = 'button';
+  const finish = () => {
+    if (ended) return;
+    ended = true; clearTimeout(timeout); module?.disposeFlyIn(container); skip.remove();
+    if (generation === owner) { container.hidden = true; disposeCurrentFlyIn = null; }
+  };
+  const timeout = setTimeout(finish, 8500);
+  skip.addEventListener('click', finish); container.append(skip);
+  disposeCurrentFlyIn = finish;
   try {
-    const module = await import('/static/flyin/flyin.js');
+    module = await import('/static/flyin/flyin.js');
     if (!module.flyIn || !module.disposeFlyIn) return;
-    if (owner !== generation) return;
-    disposeCurrentFlyIn = () => module.disposeFlyIn(container);
+    if (owner !== generation || ended) return;
     container.hidden = false;
-    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     await module.flyIn(container, {
       lat, lng,
       label: result.place?.postcode || result.place?.title || 'Approximate property area',
       precision: result.place?.precision === 'address' ? 'address' : 'postcode_centroid',
       use: use === 'office' ? 'office' : 'residential',
-      durationMs: reducedMotion ? 0 : 7000,
+      durationMs: 5000,
     });
     if (owner !== generation) return;
-    module.disposeFlyIn(container); disposeCurrentFlyIn = null;
-    container.hidden = true;
+    finish();
   } catch {
-    if (generation === owner) container.hidden = true;
+    finish();
   }
 }
 
@@ -204,6 +271,8 @@ function render(result) {
   $('run-id').textContent = `Run ${result.run_id || 'not recorded'}`;
   if (selected && (result.findings || []).some(item => item.id === selected)) showFinding(selected);
   else { selected = null; $('finding-detail').hidden = true; $('findings').hidden = false; }
+  if (activeView === 'timeline') renderTimeline($('history-timeline'), result);
+  if (activeView === 'connections') updateGraph();
 }
 
 async function request(url, options = {}) {
@@ -229,6 +298,8 @@ function stop() {
   generation += 1;
   controller?.abort(); controller = null;
   stream?.close(); stream = null;
+  traceController?.abort(); traceController = null;
+  graphRequest += 1; graphWidget?.dispose(); graphWidget = null;
   disposeCurrentFlyIn?.(); disposeCurrentFlyIn = null;
   const flyin = $('flyin'); if (flyin) flyin.hidden = true;
 }
@@ -285,6 +356,7 @@ $('xray-form').addEventListener('submit', async event => {
   const listing = $('listing').value.trim();
   if (!listing) return;
   stop(); controller = new AbortController();
+  setView('findings');
   const ownGeneration = generation;
   $('error').hidden = true; $('start').disabled = true; $('status').textContent = 'Checking the records. Each finding will link to its evidence.';
   try {
@@ -322,6 +394,7 @@ $('new-listing').addEventListener('click', () => {
   $('listing').focus(); window.scrollTo({ top: 0, behavior: 'instant' });
 });
 window.addEventListener('pagehide', stop);
+for (const button of document.querySelectorAll('[data-view]')) button.addEventListener('click', () => setView(button.dataset.view));
 
 if (mockup) {
   $('prototype').hidden = false; $('listing').value = 'illustrative-listing';

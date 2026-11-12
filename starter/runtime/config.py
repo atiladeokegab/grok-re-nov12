@@ -4,7 +4,8 @@ start without its secrets, so a missing key is a failed deploy, never a silent f
 import os
 from dataclasses import dataclass
 
-DEFAULT_MODEL = "claude-opus-5-5"
+DEFAULT_MODEL = "claude-opus-5-5"  # fallback only: Grok is the model whenever XAI_API_KEY is set
+XAI_MODEL = "grok-4.7"  # the one Grok default; narrate and scripts/grok_session.py import it
 MODEL_MAX_RETRIES = 1  # the SDK retries a timed-out call; each try gets the model timeout
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
 REMOTE = ("ws://", "wss://", "http://", "https://")  # a SurrealDB server, not mem:// or a file
@@ -37,6 +38,8 @@ class Settings:
     elevenlabs_phone_number_id: str | None = None
     demo_latency: tuple[float, float] | None = None  # (low, high) s; only the demo recorder sets it
     companies_house_api_key: str | None = None  # the companies_house source; unset = "off"
+    xai_api_key: str | None = None  # Grok: the production model when set; Claude the fallback
+    xai_model: str = XAI_MODEL
 
     @classmethod
     def from_env(cls, env: dict[str, str] | None = None) -> "Settings":
@@ -45,7 +48,9 @@ class Settings:
         if mode not in ("local", "cloud"):
             raise ValueError(f"MODE must be local or cloud, got {mode!r}")
         if mode == "cloud":
-            missing = [k for k in ("ANTHROPIC_API_KEY", "ADMIN_PASSWORD") if not env.get(k)]
+            missing = [k for k in ("ADMIN_PASSWORD",) if not env.get(k)]
+            if not (env.get("XAI_API_KEY") or env.get("ANTHROPIC_API_KEY")):
+                missing.append("XAI_API_KEY (or ANTHROPIC_API_KEY)")
             if missing:
                 raise RuntimeError(f"cloud mode refuses to start without {', '.join(missing)}")
             # shortcut: cloud without MCP_SECRET signs MCP tokens with ADMIN_PASSWORD so a deploy
@@ -104,6 +109,8 @@ class Settings:
             elevenlabs_phone_number_id=env.get("ELEVENLABS_PHONE_NUMBER_ID") or None,
             demo_latency=demo_latency,
             companies_house_api_key=env.get("COMPANIES_HOUSE_API_KEY") or None,
+            xai_api_key=env.get("XAI_API_KEY") or None,
+            xai_model=env.get("XAI_MODEL") or XAI_MODEL,
         )
 
     @property
@@ -115,14 +122,15 @@ class Settings:
         """What is configured, safe to show anyone: never a secret."""
         return {
             "mode": self.mode,
-            "model": self.model,
+            # the model that answers: Grok when its key is set, else Claude (or rules offline)
+            "model": self.xai_model if self.xai_api_key else self.model,
             "effects": self.mode_effects,
             "providers": {
                 "anthropic": "configured" if self.anthropic_api_key else "fake",
-                "xai": "configured" if os.environ.get("XAI_API_KEY") else "off",
+                "xai": "configured" if self.xai_api_key else "off",
             },
             # who writes finding reasoning: xai, else anthropic, else rules (offline)
             "narrator": "xai"
-            if os.environ.get("XAI_API_KEY")
+            if self.xai_api_key
             else ("anthropic" if self.anthropic_api_key else "rules"),
         }

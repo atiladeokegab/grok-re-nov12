@@ -12,7 +12,7 @@ def test_local_defaults_need_no_keys():
 
 
 def test_cloud_refuses_missing_secrets():
-    with pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY, ADMIN_PASSWORD"):
+    with pytest.raises(RuntimeError, match="ADMIN_PASSWORD, XAI_API_KEY"):
         Settings.from_env({"MODE": "cloud"})
 
 
@@ -79,3 +79,18 @@ def test_demo_latency_is_off_unless_set_and_parses_low_high():
     for bad in ("1-0.5", "-1", "fast"):
         with pytest.raises(ValueError):
             Settings.from_env({"DEMO_LATENCY": bad})
+
+
+def test_grok_is_the_production_model_whenever_its_key_is_set():
+    s = Settings.from_env({"XAI_API_KEY": "x", "ANTHROPIC_API_KEY": "k"})
+    pub = s.public()
+    assert (pub["model"], pub["narrator"], pub["providers"]["xai"]) == (
+        "grok-4.7",
+        "xai",
+        "configured",
+    )
+    assert Settings.from_env({"ANTHROPIC_API_KEY": "k"}).public()["model"] == "claude-opus-5-5"
+    cloud = {"MODE": "cloud", "ADMIN_PASSWORD": "pw", "DATA_PATH": "gs://b/s"}
+    assert Settings.from_env({**cloud, "XAI_API_KEY": "x"}).public()["model"] == "grok-4.7"
+    with pytest.raises(RuntimeError, match="XAI_API_KEY"):
+        Settings.from_env(cloud)

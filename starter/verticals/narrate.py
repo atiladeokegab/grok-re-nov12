@@ -12,10 +12,10 @@ import re
 import httpx2 as httpx
 
 from starter.core.xray import Claim, Evidence, Finding
+from starter.runtime.config import XAI_MODEL
 
 TIMEOUT_S = 12  # narration is garnish: past this the rules lines stand, so "done" stays fast
 XAI_URL = "https://api.x.ai/v1/chat/completions"
-XAI_MODEL = "grok-4.7"  # the one default; scripts/grok_session.py imports it
 PROMPT = (
     "You explain property-listing checks to a renter. For each finding, write ONE plain sentence "
     "(max 30 words) saying what the advert claims and what the cited source records. Use only "

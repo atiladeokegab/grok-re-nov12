@@ -7,7 +7,8 @@ yields no claims (status "empty"), never guessed ones.
 """
 
 import re
-from urllib.parse import urljoin
+from html.parser import HTMLParser
+from urllib.parse import urljoin, urlsplit
 
 from starter.core.xray import Claim, Evidence, Place, now
 from starter.verticals.sources.web import get_text, visible_text
@@ -65,8 +66,29 @@ def _page(listing: dict) -> dict:
     if listing["offline"]:
         return listing["fixture"]["page"]
     html = get_text(listing["url"])
-    found = re.findall(r"(?:https://www\.auctionhouse\.co\.uk)?(/lot-image/\d+)", html)
-    photos = [urljoin(listing["url"], p) for p in dict.fromkeys(found)]  # gallery order, once
+
+    class GalleryImages(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.sources = []
+
+        def handle_starttag(self, tag, attrs):
+            attrs = dict(attrs)
+            if tag == "img" and attrs.get("alt") == "Lot Image" and attrs.get("src"):
+                self.sources.append(attrs["src"])
+
+    parser = GalleryImages()
+    parser.feed(html)
+    photos = []
+    for source in parser.sources:
+        image = urlsplit(urljoin(listing["url"], source))
+        if image.scheme != "https" or image.netloc != "www.auctionhouse.co.uk":
+            continue
+        if not re.fullmatch(r"/lot-image/\d+", image.path):
+            continue
+        canonical = f"{image.scheme}://{image.netloc}{image.path}"
+        if canonical not in photos:
+            photos.append(canonical)
     return {
         "url": listing["url"],
         "fetched_at": now(),

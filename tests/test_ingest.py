@@ -95,6 +95,10 @@ def test_trace_and_document_routes(tmp_path):
         assert "bytes_path" not in doc["document"]
         raw = client.get(doc["raw_url"])
         assert raw.status_code == 200 and raw.content
+        assert raw.headers["content-disposition"] == f'attachment; filename="{doc_id}.txt"'
+        assert raw.headers["x-content-type-options"] == "nosniff"
+        assert raw.headers["content-security-policy"] == "sandbox"
+        assert raw.headers["content-type"].startswith(doc["document"]["content_type"])
         assert client.get(f"/api/finding/{t['finding']['id']}/trace").json()["run_id"] == run_id
         graph = client.get(f"/api/place/{report['place_id']}/graph").json()
         assert {e["kind"] for e in graph["edges"]} >= {"landed", "contains"}

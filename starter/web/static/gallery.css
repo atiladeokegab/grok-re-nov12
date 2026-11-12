@@ -9,6 +9,7 @@
   border: var(--border-width) solid var(--color-border); border-radius: var(--radius-control)
 }
 .gallery-item:hover { background: var(--color-raised) }
+.gallery-item:disabled { cursor: default; }
 .gallery-item:focus-visible { outline: var(--focus-width) solid var(--color-accent); outline-offset: 2px }
 .gallery-kind { font-size: var(--type-caption); color: var(--color-muted); text-align: right }
 .run-message {

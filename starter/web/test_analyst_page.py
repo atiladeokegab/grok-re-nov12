@@ -14,6 +14,8 @@ pytestmark = pytest.mark.e2e
 
 
 def seed_reports(tmp_path, monkeypatch):
+    for key in ("ANTHROPIC_API_KEY", "XAI_API_KEY", "CURSOR_API_KEY", "COMPANIES_HOUSE_API_KEY"):
+        monkeypatch.delenv(key, raising=False)
     monkeypatch.setenv("DOCS_DIR", str(tmp_path / "documents"))
     store = Store(tmp_path / "store.json")
     gateway = build_gateway(store)

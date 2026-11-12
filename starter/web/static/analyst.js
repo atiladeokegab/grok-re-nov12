@@ -1,10 +1,6 @@
 import { safeUrl, sourcePresent, valueText } from './data.js';
+import { savedGalleryItems } from './gallery.js';
 
-const PINNED = {
-  'macquarie-way': 'xr-6f65393159',
-  'kimberley-road': 'xr-131a92ee3b',
-  'charlemont-road': 'xr-f20b9504d5',
-};
 const number = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 });
 const reportURL = run => `/?run=${encodeURIComponent(run.run_id)}`;
 
@@ -159,7 +155,7 @@ async function request(url, csv = false) {
 }
 
 async function savedReport(listing) {
-  const pinned = listing.run_id || PINNED[listing.name];
+  const pinned = listing.run_id;
   let report;
   if (pinned) {
     try { report = await request(`/api/xray/${encodeURIComponent(pinned)}`); }
@@ -185,8 +181,7 @@ async function start() {
     try {
       const gallery = await request('/api/gallery');
       if (!Array.isArray(gallery)) throw new Error('The saved gallery could not be read.');
-      const items = gallery.filter(item => item && typeof item.listing_id === 'string' && typeof item.title === 'string');
-      if (!items.some(item => item.name === 'macquarie-way')) items.unshift({ name: 'macquarie-way', title: '24 Macquarie Way, E14', listing_id: 'auctionhouse-0715ecf1' });
+      const items = savedGalleryItems(gallery).filter(item => typeof item.listing_id === 'string');
       entries = await Promise.all(items.map(async listing => {
         try { return { listing, report: await savedReport(listing) }; }
         catch (error) { return { listing, error: error.message }; }

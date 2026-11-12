@@ -430,7 +430,10 @@ $('xray-form').addEventListener('submit', event => {
   startRun({ ...( /^https?:\/\//i.test(listing) ? { url: listing } : { listing_id: listing }), use });
 });
 
-loadGallery($('gallery'), item => { $('listing').value = item.name; startRun({ listing_id: item.name, offline: true }); });
+loadGallery($('gallery'), item => {
+  history.replaceState(null, '', withRun(location.href, item.run_id));
+  loadRun(item.run_id);
+});
 
 async function startRun(payload) {
   stop(); controller = new AbortController();

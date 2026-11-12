@@ -7,6 +7,7 @@ import zipfile
 import pytest
 from playwright.sync_api import Page, expect
 
+from starter.web.test_analyst_page import seed_reports
 from tests.e2e.app import serve, stub_fonts
 
 pytestmark = pytest.mark.e2e
@@ -15,8 +16,11 @@ W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 
 @pytest.fixture(scope="module")
 def server(tmp_path_factory):
-    with serve(tmp_path_factory.mktemp("demo-server"), []) as base:
-        yield base
+    tmp = tmp_path_factory.mktemp("demo-server")
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        seed_reports(tmp, monkeypatch)
+        with serve(tmp, []) as base:
+            yield base
 
 
 @pytest.fixture
@@ -30,10 +34,9 @@ def errors(page: Page) -> list[str]:
 
 def test_demo_listing_walkthrough(page: Page, server, errors):
     page.goto(server + "/")
-    expect(page.locator("#gallery li")).to_have_count(3)  # "Try these real listings"
+    expect(page.locator("#gallery li")).to_have_count(4)
 
-    page.fill("#listing", "demo")
-    page.click("#start")
+    page.locator(".gallery-item").first.click()
     expect(page.get_by_test_id("trust-score")).to_have_text("67", timeout=30_000)
 
     findings = page.get_by_test_id("finding")

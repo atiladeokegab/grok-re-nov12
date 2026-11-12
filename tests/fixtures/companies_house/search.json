@@ -1,0 +1,30 @@
+{
+  "kind": "search#companies",
+  "items_per_page": 20,
+  "start_index": 0,
+  "total_results": 2,
+  "items": [
+    {
+      "kind": "searchresults#company",
+      "title": "EXAMPLE LETTINGS LTD",
+      "company_number": "00000001",
+      "company_status": "active",
+      "company_type": "ltd",
+      "date_of_creation": "2015-04-01",
+      "address_snippet": "1 Example Street, Exampletown, ZZ99 9ZZ",
+      "description": "00000001 - Incorporated on  1 April 2015",
+      "links": {"self": "/company/00000001"}
+    },
+    {
+      "kind": "searchresults#company",
+      "title": "EXAMPLE LETTINGS (NORTH) LIMITED",
+      "company_number": "00000002",
+      "company_status": "active",
+      "company_type": "ltd",
+      "date_of_creation": "2018-09-12",
+      "address_snippet": "2 Example Road, Exampletown, ZZ99 9ZY",
+      "description": "00000002 - Incorporated on 12 September 2018",
+      "links": {"self": "/company/00000002"}
+    }
+  ]
+}

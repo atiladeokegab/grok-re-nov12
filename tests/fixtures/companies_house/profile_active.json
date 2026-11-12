@@ -1,0 +1,17 @@
+{
+  "company_name": "EXAMPLE LETTINGS LTD",
+  "company_number": "00000001",
+  "company_status": "active",
+  "type": "ltd",
+  "jurisdiction": "england-wales",
+  "date_of_creation": "2015-04-01",
+  "has_charges": false,
+  "has_insolvency_history": false,
+  "registered_office_address": {
+    "address_line_1": "1 Example Street",
+    "locality": "Exampletown",
+    "postal_code": "ZZ99 9ZZ"
+  },
+  "sic_codes": ["68310"],
+  "links": {"self": "/company/00000001", "officers": "/company/00000001/officers"}
+}

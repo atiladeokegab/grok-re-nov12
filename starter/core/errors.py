@@ -13,5 +13,9 @@ class ProviderNotConfigured(Exception):
     """503: a provider this call needs has no credentials. Never fake a success instead."""
 
 
+class SourceOff(Exception):
+    """A source that is switched off (offline, or its key unset): status "off", never "error"."""
+
+
 class CaseCancelled(Exception):
     """The case was given up on (timed out or out of budget): no further tool call or write."""

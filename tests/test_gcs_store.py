@@ -2,6 +2,7 @@
 A fake client stands in for google-cloud-storage, so no test touches the network."""
 
 import json
+import time
 
 import pytest
 from google.api_core.exceptions import NotFound, PreconditionFailed
@@ -144,3 +145,34 @@ def test_parallel_source_threads_all_land(fake, monkeypatch):
         t.join()
     assert errors == []
     assert len(store.snapshot()["events"]) == 45
+
+
+class SlowBucket(FakeBucket):
+    """GCS round trips take time, so threads in one process interleave read and write."""
+
+    def blob(self, name):
+        blob = FakeBlob(self, name)
+        real = blob.upload_from_string
+
+        def slow(*a, **k):
+            time.sleep(0.003)
+            return real(*a, **k)
+
+        blob.upload_from_string = slow
+        return blob
+
+
+def test_xray_with_nine_parallel_sources_on_a_cas_store_finishes(monkeypatch):
+    from types import SimpleNamespace
+
+    from starter.core.gateway import build_gateway
+    from starter.verticals import xray as xv
+
+    def nothing(place, listing):
+        return [], []
+
+    extra = [SimpleNamespace(NAME=f"dummy{i}", ingest=nothing) for i in range(6)]
+    monkeypatch.setattr(xv, "SOURCES", [*xv.SOURCES, *extra][:9])
+    store = GcsStore(URL, client=SlowBucket(), tries=2)
+    report = xv.run_xray(build_gateway(store), "demo", offline=True)
+    assert report.status == "done" and report.trust_score == 67

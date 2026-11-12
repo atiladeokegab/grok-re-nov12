@@ -39,6 +39,9 @@ def test_recorded_partner_scan_filters_without_network_effects(page: Page, tmp_p
         map_select = page.get_by_role("combobox", name="Explore a flagged listing")
         map_select.select_option(target["listing_id"])
         expect(page.locator(".partner-map-selection")).to_contain_text(target["address"])
+        expect(page.locator(".partner-map-selection")).to_contain_text(target["listing_id"])
+        expect(page.locator(".partner-map-selection")).to_contain_text(target["record_address"])
+        expect(page.locator(".partner-map-selection")).to_contain_text(target["record_date"])
         expect(page.locator(".partner-map-selection a")).to_have_attribute("href", target["url"])
         circle = page.locator("#partner-map .is-flagged").last
         circle.click()

@@ -311,17 +311,42 @@ def _fetch(gateway, module, run_id: str):
     return claims, evidence, state, detail, round((time.perf_counter() - start) * 1000)
 
 
+BUDGET_S = 10.0  # a whole run's sources; one still running then is reported, not waited for
+
+
 def _fetch_all(gateway, run_id: str):
     """Yield (module, outcome) as each source finishes. The advert's own page goes first (later
-    sources read listing["page"]); the rest run in parallel so wall time is the slowest one."""
+    sources read listing["page"]); the rest run in parallel so wall time is the slowest one.
+    Past BUDGET_S every unfinished source yields status "error", "timed out"."""
+    budget, start = BUDGET_S, time.monotonic()
     first = [m for m in SOURCES if m.NAME == rec.HISTORY_AGENT]
-    for m in first:
-        yield m, _fetch(gateway, m, run_id)
-    rest = [m for m in SOURCES if m not in first]
-    with ThreadPoolExecutor(max_workers=max(1, len(rest))) as pool:
-        futures = {pool.submit(_fetch, gateway, m, run_id): m for m in rest}
-        for fut in as_completed(futures):
-            yield futures[fut], fut.result()
+    pool = ThreadPoolExecutor(max_workers=len(SOURCES))
+    try:
+        for group in (first, [m for m in SOURCES if m not in first]):
+            futures = {pool.submit(_fetch, gateway, m, run_id): m for m in group}
+            try:
+                left = max(0.0, start + budget - time.monotonic())
+                for fut in as_completed(futures, timeout=left):
+                    yield futures.pop(fut), fut.result()
+            except TimeoutError:
+                ms = round((time.monotonic() - start) * 1000)
+                for m in futures.values():
+                    yield m, ([], [], "error", f"timed out after {budget:g} s", ms)
+    finally:
+        pool.shutdown(wait=False, cancel_futures=True)  # a straggler finishes unobserved
+
+
+def _unreadable(report: XRayReport, place) -> str | None:
+    """Couldn't read this listing: why, and what was read anyway. None when the advert read."""
+    if report.claims:
+        return None
+    page = next((s for s in report.sources if s.name == rec.HISTORY_AGENT), None)
+    if page is None or page.status in ("ok", "empty"):
+        why = "no price, bedrooms, floor area, tenure or energy rating found in it"
+    else:
+        why = page.detail or page.status
+    read = sorted({e.field for e in report.evidence}) + (["postcode"] if place.postcode else [])
+    return f"Couldn't read this listing: {why}. Read anyway: {', '.join(read) or 'nothing'}."
 
 
 def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None = None):
@@ -353,7 +378,7 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
             report.sources.append(status)
             report.claims += claims
             report.evidence += evidence
-            if module.NAME == rec.HISTORY_AGENT and "page" in listing:
+            if module.NAME == rec.HISTORY_AGENT and listing.get("page"):
                 report.place.photos = [
                     Photo(url=u, advert_id=listing["listing_id"]) for u in listing["page"]["photos"]
                 ]
@@ -387,12 +412,14 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
             report.client_calls.cursor_sdk += 1
             _save(store, report, "cursor_summary", summary)
         report.status = "done"
-    except Exception as e:
+    except Exception as e:  # saved as status "error", returned: a paste never crashes a caller
         report.status, report.error = "error", f"{type(e).__name__}: {e}"
-        raise
+        _warn("run", run_id, e)
     finally:
         _ctx.pop(run_id, None)
-        _save(store, report, "done", {"status": report.status, "error": report.error})
+        report.message = _unreadable(report, place)
+        data = {"status": report.status, "message": report.message, "error": report.error}
+        _save(store, report, "done", data)
         _flush(store, report)
         _buffers.pop(run_id, None)
     return report

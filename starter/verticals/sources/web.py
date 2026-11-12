@@ -6,7 +6,7 @@ import re
 import httpx2 as httpx
 
 UA = {"User-Agent": "Mozilla/5.0 (X-ray provenance check; hackathon)"}
-TIMEOUT = 15
+TIMEOUT = 8  # under the X-ray's 10 s budget (xray.BUDGET_S)
 
 
 def get_text(url: str, params: dict | None = None) -> str:

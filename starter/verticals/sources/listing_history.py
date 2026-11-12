@@ -7,8 +7,9 @@ yields no claims (status "empty"), never guessed ones.
 """
 
 import re
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
+from starter.core.errors import SourceOff
 from starter.core.xray import Claim, Evidence, Place, now
 from starter.verticals.sources.web import get_text, visible_text
 
@@ -29,12 +30,18 @@ PATTERNS = {
     ),
     "bedrooms": (r"\b(\w+) Bedrooms?\b", None, "count"),
     "floor_area": (
-        r"(\d[\d,]*(?:\.\d+)?)\s*(sq\.?\s?ft|square feet|sq\.?\s?m\b|m2|m²|square met)",
+        # starts only where a number starts, possessive: linear on a long run of digits
+        r"(?<![\d,.])(\d[\d,]*+(?:\.\d++)?)"
+        r"\s*(sq\.?\s?ft|square feet|sq\.?\s?m\b|m2|m²|square met)",
         None,
         "area",
     ),
     "tenure": (r"Tenure\s*:?\s*(Leasehold|Freehold|Share of Freehold)", None, "str"),
 }
+# A pasted URL is fetched only on advert sites: never a way to make the server call anything
+# (crawl URLs are the organisers' and trusted).
+HOSTS = ("auctionhouse.co.uk", "rightmove.co.uk", "zoopla.co.uk", "openrent.co.uk")
+MAX_TEXT = 200_000  # characters of an advert's text the patterns read
 WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "studio": 0}
 
 
@@ -51,6 +58,7 @@ def _value(raw: str, kind: str):
 def parse_advert(text: str) -> dict[str, tuple]:
     """field -> (value, unit, the matched words)."""
     out = {}
+    text = text[:MAX_TEXT]
     for field, (pattern, unit, kind) in PATTERNS.items():
         if m := re.search(pattern, text, re.I):
             value = _value(m.group(1), kind)
@@ -64,6 +72,11 @@ def parse_advert(text: str) -> dict[str, tuple]:
 def _page(listing: dict) -> dict:
     if listing["offline"]:
         return listing["fixture"]["page"]
+    if "page" in listing:  # pasted text: the advert is the paste
+        return listing["page"]
+    host = (urlparse(listing["url"]).hostname or "").lower()
+    if not listing["crawl"] and not any(host == h or host.endswith("." + h) for h in HOSTS):
+        raise SourceOff("not an advert site we read (Rightmove, Zoopla, OpenRent, Auction House)")
     html = get_text(listing["url"])
     found = re.findall(r"(?:https://www\.auctionhouse\.co\.uk)?(/lot-image/\d+)", html)
     photos = [urljoin(listing["url"], p) for p in dict.fromkeys(found)]  # gallery order, once

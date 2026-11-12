@@ -30,8 +30,10 @@ and X-ray then reads each claim against them.
 The result is a **trust score** and a ledger of findings. Each finding shows its source, when that source was fetched,
 and which agent fetched it. When X-ray can't tie a record to the exact flat, it says **unverifiable** rather than guess.
 
+Example, from public records: for 24 Macquarie Way, E14 (EPC certificate 8160-7422-6830-1941-6222), the energy rating D **matches** the advert. The advert says "semi-detached", but the EPC register says "end-terrace house", so that claim **disagrees**. Tenure is **unverifiable** because no source yet covers it. Trust score: 67.
+
 **Grok Bot drives it.** X-ray runs an MCP server. Ask Grok Bot to "X-ray 24 Macquarie Way" and it starts the run, then
-answers "why is the score what it is?" with the cited findings. Cursor uses the same tools.
+answers "why is the score 67?" with the cited findings. Cursor uses the same tools.
 
 ## See it
 
@@ -39,20 +41,7 @@ answers "why is the score what it is?" with the cited findings. Cursor uses the 
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    A["Listing link<br/>or Grok Bot via MCP"] --> B["Place resolver<br/>address, postcode, lat/lng"]
-    B --> C{{"Source agents, in parallel"}}
-    C --> D1["EPC register"]
-    C --> D2["Reverse image search"]
-    C --> D3["Listing history<br/>archive captures"]
-    C --> D4["Past-tenant reviews<br/>Parallel, cited"]
-    D1 & D2 & D3 & D4 --> E[("Evidence graph<br/>SurrealDB<br/>claims · evidence · findings")]
-    E --> F["Reconciler<br/>pairs each claim with its evidence"]
-    F --> G["Trust score<br/>+ sourced findings"]
-    G --> H["Web app: 3D fly-in,<br/>live ledger over SSE"]
-    G --> I["MCP: xray_listing ·<br/>explain_finding · get_place_graph"]
-```
+<p align="center"><img src="docs/assets/flow.png" alt="How X-ray reaches a verdict: listing, place, four source agents, evidence graph, reconcile, trust score" width="100%"></p>
 
 **Why it works this way:**
 - **Claims and evidence are kept apart.** The listing's words are claims, and each record is evidence with a source URL,

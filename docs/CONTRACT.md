@@ -27,6 +27,9 @@ What every area uses and nobody re-implements (AGENTS.md §1):
 - Errors: 409 conflict, 404 not found, 422 bad input (`ValueError`), 503 provider not configured.
 - Every request is logged with a trace id.
 - <One line per endpoint: method, path, request shape, response shape, owning area.>
+- `GET /api/gallery` -> `[{name, title, discrepancy, listing_id, url}]`: real crawl listings
+  recorded offline ("try these"); `discrepancy` is `price_history | photo_reuse | area_type`.
+  Run one with `POST /api/xray {"listing_id": name, "offline": true}`. Owner: X-ray pipeline.
 
 ## Gateway tools
 

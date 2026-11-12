@@ -231,3 +231,14 @@ def test_auction_lot_prefix_is_not_part_of_the_address():
     assert LOT.sub("", "Lotus House, 1 Lot Street") == "Lotus House, 1 Lot Street"
     place, _ = load_listing("demo", offline=True)
     assert place.address == "24 Macquarie Way, Isle of Dogs, London, E14 3AU"
+
+
+def test_sale_status_quote_carries_the_amount():
+    from starter.core.ingest import ground
+    from starter.verticals.sources.listing_history import parse_advert
+
+    text = "Lot 8 Sold £750,000 End-terrace house"
+    value, _, quote = parse_advert(text)["sale_status"]
+    assert (value, quote) == ("Sold", "Sold £750,000")
+    span = ground(text, quote)
+    assert text[span.start : span.end] == span.quote == "Sold £750,000"

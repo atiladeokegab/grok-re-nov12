@@ -19,7 +19,11 @@ CRAWL = "Organisers' listings crawl"
 # field -> (pattern on the advert's visible text, unit, value parser)
 PATTERNS = {
     "price": (r"(?:Sold|Guide|Unsold|Sold Prior|Sold After)\s*\*?\s*£([\d,]+)", "GBP", "money"),
-    "sale_status": (r"\b(Sold Prior|Sold After|Sold|Unsold|Withdrawn|Postponed)\s*£", None, "str"),
+    "sale_status": (  # the span runs through the amount: "Sold £750,000"
+        r"\b(Sold Prior|Sold After|Sold|Unsold|Withdrawn|Postponed)\s*\*?\s*£[\d,]*",
+        None,
+        "str",
+    ),
     "rent_pcm": (r"rent of £([\d,]+) per calendar month", "GBP/month", "money"),
     "rent_pa": (r"Producing £([\d,]+) Per Annum", "GBP/year", "money"),
     "energy_rating": (r"Energy Efficiency Rating \(EPC\) Current Rating ([A-G])\b", None, "str"),

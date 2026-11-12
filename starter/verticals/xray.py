@@ -43,7 +43,7 @@ from starter.core.xray import (
     trust_score,
 )
 from starter.runtime.deps import StoreDep
-from starter.verticals import cursor_step
+from starter.verticals import cursor_step, xray_limit
 from starter.verticals import reconcile as rec
 from starter.verticals.narrate import narrate
 from starter.verticals.sources import FIXTURES, SOURCES, load_listing
@@ -460,15 +460,17 @@ def gallery() -> list[dict]:
 
 @router.post("/api/xray", status_code=202)
 def start_xray(body: XRayRequest, request: Request) -> dict:
-    # shortcut: open route, one thread per run, no rate limit; add a per-IP budget before any
-    # paid model or search key is behind it on a public URL.
     ref = body.listing_id or body.url
     if not ref:
         raise ValueError("give listing_id or url")
     gateway = request.app.state.gateway
+    if cached := xray_limit.cached_demo(gateway.store, body):  # a demo repeat: no new run
+        return {"run_id": cached}
+    xray_limit.check(request)  # 429 over the per-IP or global budget
     report = begin(
         gateway.store, ref, body.offline, body.use
     )  # unknown listing: 404 now, saved run else
+    xray_limit.remember_demo(body, report.run_id)
 
     def work():
         try:

@@ -9,6 +9,7 @@ from starter.core.tracing import EXPORTER
 from starter.runtime.config import Settings
 from starter.runtime.deps import session_token
 from starter.runtime.factory import create_app
+from starter.verticals import xray_limit
 
 LIVE_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")  # read before offline_env clears it
 
@@ -33,8 +34,11 @@ def offline_env(monkeypatch):
         "MODEL",
         "DEMO_LATENCY",
         "COMPANIES_HOUSE_API_KEY",
+        "XRAY_PER_IP_PER_MIN",
+        "XRAY_GLOBAL_PER_MIN",
     ):
         monkeypatch.delenv(name, raising=False)
+    xray_limit.reset()  # POST /api/xray budgets start empty in every test
     monkeypatch.setattr(EXPORTER, "echo", False)  # create_app turns it on; off between tests
 
 

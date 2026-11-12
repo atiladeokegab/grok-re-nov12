@@ -1,22 +1,35 @@
 """Similar listings: the five most comparable listings in the organisers' crawl, for an analyst's
 comparables table. Same postcode district first (then the same postcode area), same property
 type and price basis, same bedrooms where the advert says, nearest price. Offline: reads the local
-crawl (LISTINGS_CSV) once and keeps a small index in memory. One `comparables` context finding.
+crawl (LISTINGS_CSV, else the gitignored SLICE that deploy uploads) once and keeps a small index in
+memory. One `comparables` context finding. A price is called above or below the median only
+against at least MIN_LIKE comparables in the same postcode district.
+
+Make the slice before a deploy (only the columns and rows this source uses):
+    uv run python -m starter.verticals.sources.similar_listings <organisers' listings.csv>
 
 shortcut: bedrooms come from the crawl's price text and title ("3 Bedroom"), which most rows lack;
 the advert pages are the upgrade when a firm needs bed-for-bed comparables.
 """
 
+import csv
 import functools
 import math
+import os
 import re
 import statistics
+import sys
+from pathlib import Path
 
 from starter.core.errors import SourceOff
 from starter.core.xray import Evidence, Place, now
 
 NAME = "similar_listings"
 TOP = 5
+MIN_LIKE = 3  # same-district comparables needed before a price is compared
+SLICE = Path(__file__).parent / "comparables.csv"  # gitignored; .gcloudignore uploads it
+COLUMNS = "listing_id url title address postcode property_type sale_or_let price_gbp price_basis"
+COLUMNS = [*COLUMNS.split(), "price_text", "size_sqft", "lat", "lon"]
 SQFT_M2 = 0.09290304
 MIN_SALE = 10_000  # shortcut: lower "guide" prices in the crawl are fees or ground rents
 BEDS = re.compile(r"(\d{1,2})\s*-?\s*bed(?:room)?s?\b", re.I)
@@ -81,14 +94,20 @@ def _row(r: dict) -> dict:
 @functools.cache
 def _index() -> dict[str, list[dict]]:
     """Comparable rows by postcode area, built once from the local crawl."""
-    from starter.verticals.sources import _crawl  # the package imports this module
-
+    path = Path(os.environ.get("LISTINGS_CSV") or SLICE)
+    if not path.is_file():
+        return {}
     out: dict[str, list[dict]] = {}
-    for r in _crawl().values():
-        row = _row(r)
-        if row["area"] and row["price"] and row["type"]:
-            out.setdefault(row["area"], []).append(row)
+    with open(path, newline="") as f:
+        for r in csv.DictReader(f):
+            row = _row(r)
+            if _usable(row):
+                out.setdefault(row["area"], []).append(row)
     return out
+
+
+def _usable(row: dict) -> bool:
+    return bool(row["area"] and row["price"] and row["type"])
 
 
 def _km(a: dict, b: dict) -> float:
@@ -101,8 +120,10 @@ def _km(a: dict, b: dict) -> float:
 def find(me: dict, index: dict[str, list[dict]]) -> list[dict]:
     def key(c: dict) -> tuple:
         beds = 1 if None in (me["beds"], c["beds"]) else 2 * (me["beds"] != c["beds"])
-        gap = abs(math.log(c["price"] / me["price"])) if me["price"] else _km(me, c)
-        return (c["district"] != me["district"], beds, gap)
+        price = abs(math.log(c["price"] / me["price"])) if me["price"] else 0
+        if c["district"] == me["district"]:
+            return (0, beds, price)
+        return (1, beds, _km(me, c), price)  # outside the district: nearest first
 
     pool = [
         c
@@ -119,6 +140,10 @@ def find(me: dict, index: dict[str, list[dict]]) -> list[dict]:
     return out
 
 
+def _kinds(kind: str, n: int) -> str:
+    return kind if n == 1 or kind.endswith("s") else f"{kind}s"
+
+
 def _gbp(v: float, basis: str) -> str:
     return f"£{v:,.0f}" + ("" if basis == "sale" else f" {BASIS_WORDS[basis]}")
 
@@ -128,41 +153,50 @@ def ingest(place: Place, listing: dict) -> tuple[list, list[Evidence]]:
         raise SourceOff("a pasted advert has no crawl row to compare")
     index = _index()
     if not index:
-        raise SourceOff("no local crawl to compare against (LISTINGS_CSV unset)")
+        raise SourceOff("no local crawl to compare against (LISTINGS_CSV or SLICE)")
     me = _row(listing["crawl"])
     comps = find(me, index)
     if not comps:
         raise SourceOff(f"no comparable {me['type'] or 'listing'} in {me['area'] or 'its area'}")
 
-    prices = [c["price"] for c in comps]
-    median = statistics.median(prices)
+    local = [c for c in comps if c["district"] == me["district"]]
     beds = (
-        f"{me['beds']}-bed " if me["beds"] and all(c["beds"] == me["beds"] for c in comps) else ""
-    )
-    where = {c["district"] for c in comps}
-    where = next(iter(where)) if len(where) == 1 else f"the {me['area']} postcode area"
-    kind = me["type"] if me["type"].endswith("s") else f"{me['type']}s"
-    said = (
-        f"{len(comps)} similar {beds}{kind} in {where} list at "
-        f"{_gbp(min(prices), 'sale')}–{_gbp(max(prices), me['basis'])}; "
+        f"{me['beds']}-bed " if me["beds"] and all(c["beds"] == me["beds"] for c in local) else ""
     )
     raw = _num(listing["crawl"].get("price_gbp", ""))
-    if me["price"]:
-        side = (
-            "above" if me["price"] > median else "below" if me["price"] < median else "level with"
+    if len(local) >= MIN_LIKE:
+        prices = [c["price"] for c in local]
+        said = (
+            f"{len(local)} similar {beds}{_kinds(me['type'], len(local))} in {me['district']} "
+            f"list at {_gbp(min(prices), 'sale')}–{_gbp(max(prices), me['basis'])}"
         )
-        said += (
-            f"this one asks {_gbp(me['price'], me['basis'])}, {side} the median of "
-            f"{_gbp(median, me['basis'])}."
-        )
-    elif raw:
-        said += (
-            f"the crawl's price for this one ({_gbp(raw, 'sale')}) is too low to be a guide "
-            f"(likely a fee), so it is not compared; the median is {_gbp(median, me['basis'])}."
-        )
+        if me["price"]:
+            median = statistics.median(prices)
+            side = "above" if me["price"] > median else "below" if me["price"] < median else "at"
+            said += (
+                f"; this one asks {_gbp(me['price'], me['basis'])}, {side} the median of "
+                f"{_gbp(median, me['basis'])}"
+            )
+        said += "."
     else:
+        n = len(local)
+        said = (
+            f"No other similar {me['type']} in {me['district']} is in the crawl"
+            if n == 0
+            else f"Only {n} other similar {_kinds(me['type'], n)} in {me['district']} "
+            f"{'is' if n == 1 else 'are'} in the crawl"
+        )
+        away = list(dict.fromkeys(c["district"] for c in comps if c not in local))
+        if away:
+            joined = ", ".join(away[:-1]) + " and " + away[-1] if len(away) > 1 else away[0]
+            said += f"; the nearest {'others ' if n else ''}are in {joined}"
+        said += ", so this is not a like-for-like price comparison."
+    if not me["price"]:  # never compared: a fee is not a guide price
         said += (
-            f"the crawl records no price for this one; the median is {_gbp(median, me['basis'])}."
+            f" The crawl's price for this one ({_gbp(raw, 'sale')}) is too low to be a guide "
+            "price (likely a fee), so it is not compared."
+            if raw
+            else " The crawl records no price for this one, so it is not compared."
         )
 
     value = [
@@ -185,9 +219,19 @@ def ingest(place: Place, listing: dict) -> tuple[list, list[Evidence]]:
             value=value,
             unit="GBP",
             source_name="Organisers' listings crawl (comparable listings)",
-            source_url=listing.get("url"),
+            # a fragment, so the run never "grounds" this sentence in the advert's crawl row
+            source_url=f"{listing.get('url')}#comparables",
             doc_span=said,
             fetched_at=listing["crawl"].get("crawled_at") or now(),
             agent=NAME,
         )
     ]
+
+
+if __name__ == "__main__":  # write SLICE from the organisers' full crawl CSV
+    with open(sys.argv[1], newline="") as src, open(SLICE, "w", newline="") as out:
+        w = csv.DictWriter(out, COLUMNS, extrasaction="ignore")
+        w.writeheader()
+        rows = [r for r in csv.DictReader(src) if _usable(_row(r))]
+        w.writerows(rows)
+    print(f"{SLICE}: {len(rows)} rows")

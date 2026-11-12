@@ -21,6 +21,24 @@ export function validateScan(data) {
   return data;
 }
 
+export function countPartnerTotals(elements) {
+  for (const element of elements) {
+    element.dataset.countAnimated = 'true';
+    if (!globalThis.matchMedia?.('(prefers-reduced-motion: no-preference)').matches) continue;
+    const final = element.textContent;
+    const target = Number(element.dataset.count);
+    const start = performance.now();
+    element.textContent = '0';
+    function step(now) {
+      const progress = Math.min(1, Math.max(0, (now - start) / 1000));
+      element.textContent = progress < 1
+        ? format(Math.round(target * (1 - (1 - progress) ** 3))) : final;
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+}
+
 function node(tag, text, className) {
   const element = document.createElement(tag);
   if (text != null) element.textContent = text;
@@ -62,6 +80,7 @@ async function start() {
       const total = node('span', format(data.rows_scanned)); total.dataset.count = data.rows_scanned;
       const flagged = node('span', format(data.flagged_listings)); flagged.dataset.count = data.flagged_listings;
       $('partner-title').replaceChildren('Ran across all ', total, ' partner listings · flagged ', flagged);
+      countPartnerTotals([total, flagged]);
       renderMap(data);
       $('partner-coverage').textContent = `Property type: ${format(data.checks?.property_type?.comparable)} comparisons, ${format(data.checks?.property_type?.flagged)} flags. Tenure: ${format(data.checks?.tenure?.comparable)} comparisons, ${format(data.checks?.tenure?.flagged)} flags. ${format(data.confidence_rows?.high)} rows were labelled high confidence.`;
       $('partner-missing').textContent = `${format(data.price_context?.context)} dated sale-price comparisons retained as context, never flags. Unverifiable price fields: ${format(data.unverifiable_missing_values?.price)}; size fields: ${format(data.unverifiable_missing_values?.size)}.`;

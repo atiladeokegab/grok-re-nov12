@@ -15,7 +15,7 @@ def test_offline_run_takes_a_simulated_action_and_answers(store):
     first = result.trace[0]
     assert first["type"] == "model_input" and first["provider"] == "fake"
     assert "sample-1" in first["messages"][0]["content"]
-    assert {"send_message", "list_items", "get_skill"} <= {t["name"] for t in first["tools"]}
+    assert {"send_message", "get_skill"} <= {t["name"] for t in first["tools"]}
 
 
 def test_every_trace_step_has_tool_status_and_error(store):

@@ -21,7 +21,7 @@ def missing_body(case: str) -> dict:
     }
 
 
-OK = {"type": "tool_call", "tool": "list_items", "status": "OK", "error": None}
+OK = {"type": "tool_call", "tool": "get_skill", "status": "OK", "error": None}
 FINAL = {"type": "final", "tool": None, "status": "ERROR", "error": "no STATE line"}
 
 
@@ -43,7 +43,7 @@ def test_an_error_in_three_cases_is_a_system_bug(tmp_path, capsys):
     [row] = [line for line in out.splitlines() if "send_message" in line]
     assert row.split()[:2] == ["3", "3"]  # 3 cases, 3 calls: one row despite differing input
     assert "Missing required argument" in row and "input_value" not in row
-    assert "list_items" not in out and "no STATE line" not in out  # OK calls, final steps
+    assert "get_skill" not in out and "no STATE line" not in out  # OK calls, final steps
 
 
 def test_repeats_inside_two_cases_stay_below_the_bar(tmp_path, capsys):

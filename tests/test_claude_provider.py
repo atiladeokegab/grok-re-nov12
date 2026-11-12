@@ -50,7 +50,7 @@ def test_claude_provider_drives_gateway_tools(store):
     assert (result.final_answer, result.final_state) == ("Done.", "DONE")
     assert [(a["tool"], a["status"]) for a in result.actions] == [("send_message", "SIMULATED")]
     assert requests[0]["model"] == "claude-opus-5-5"
-    assert {"send_message", "list_items", "get_skill"} <= {t["name"] for t in requests[0]["tools"]}
+    assert {"send_message", "get_skill"} <= {t["name"] for t in requests[0]["tools"]}
     assert requests[0]["system"] == system_prompt()
     tool_result = requests[1]["messages"][-1]["content"][0]
     assert json.loads(tool_result["content"])["status"] == "SIMULATED"

@@ -71,17 +71,6 @@ def test_error_map(store):
     assert client.get("/raise/conflict").json() == {"error": "x"}
 
 
-def test_local_start_seeds_and_mounts_example_vertical(client, auth):
-    assert client.get("/api/example/items").json() == [{"id": "1", "name": "Example item"}]
-    assert client.get("/api/example/items/nope").status_code == 404
-    item = {"id": "1", "name": "dup"}
-    assert client.post("/api/example/items", json=item).status_code == 401
-    assert client.post("/api/example/items", json=item, headers=auth).status_code == 409
-    new = {"id": "2", "name": "Second"}
-    assert client.post("/api/example/items", json=new, headers=auth).status_code == 201
-
-
-def test_cloud_mode_does_not_seed(store):
-    cloud = Settings(mode="cloud", anthropic_api_key="k", admin_password="pw")
-    client = TestClient(create_app(cloud, store))
-    assert client.get("/api/example/items").json() == []
+def test_app_is_titled_x_ray_and_has_no_starter_example(client):
+    assert client.app.title == client.get("/openapi.json").json()["info"]["title"] == "X-ray"
+    assert client.get("/api/example/items").status_code == 404

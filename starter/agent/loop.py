@@ -106,7 +106,7 @@ class FakeProvider:
     name = "fake"
 
     def run(self, system, messages, tools, trace, seconds_left):
-        # ponytail: always the example vertical's send_message; teach it your tools if the
+        # ponytail: always notify's send_message; teach it your tools if the
         # offline demo needs a different first action.
         tool = next(t for t in tools if t.name == "send_message")
         tool.call({"to": "case-owner", "body": "We have your case and are working on it."})

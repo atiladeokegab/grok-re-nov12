@@ -18,7 +18,7 @@ def test_effect_tool_is_simulated_and_audited_for_any_case(store):
 
 def test_read_tool_is_ok_not_simulated(store):
     gateway = build_gateway(store)
-    assert gateway.call("list_items", {}, case_id="c1")["status"] == "OK"
+    assert gateway.call("get_skill", {"name": "escalation"}, case_id="c1")["status"] == "OK"
 
 
 def test_bad_args_raise_value_error_and_are_not_audited(store):
@@ -114,5 +114,5 @@ def test_latency_waits_before_a_simulated_effect_only(store, monkeypatch):
     monkeypatch.setattr("starter.core.gateway.time.sleep", waits.append)
     gateway = build_gateway(store, latency=(0.35, 1.0))
     gateway.call("send_message", {"to": "ann", "body": "hi"}, case_id="c1")
-    gateway.call("list_items", {}, case_id="c1")
+    gateway.call("get_skill", {"name": "escalation"}, case_id="c1")
     assert len(waits) == 1 and 0.35 <= waits[0] <= 1.0

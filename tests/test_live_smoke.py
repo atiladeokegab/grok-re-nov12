@@ -19,6 +19,6 @@ def test_live_tests_sweep_the_server_at_base_url(tmp_path):
     lines = [ln for ln in (tmp_path / "server.log").read_text().splitlines() if ln.startswith("{")]
     requests = [r for r in map(json.loads, lines) if "method" in r]  # not the span lines
     hits = {(r["method"], r["path"], r["status"]) for r in requests}
-    assert ("GET", "/", 200) in hits and ("GET", "/api/example/items", 200) in hits
+    assert ("GET", "/", 200) in hits and ("GET", "/api/clients", 200) in hits
     assert ("POST", "/api/runs", 401) in hits
     assert ("POST", "/api/mcp/token", 200) in hits  # the token came from ADMIN_PASSWORD

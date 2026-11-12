@@ -36,7 +36,7 @@ def create_app(settings: Settings | None = None, store: Store | None = None) -> 
     gateway = build_gateway(store, settings.mode_effects, settings.demo_latency)
     mcp = mcp_door.build_mcp(gateway)
     mcp_app = mcp_door.asgi_app(mcp)
-    app = FastAPI(title="starter", lifespan=lambda app: mcp.session_manager.run())
+    app = FastAPI(title="X-ray", lifespan=lambda app: mcp.session_manager.run())
     app.state.settings = settings
     app.state.store = store
     app.state.gateway = gateway

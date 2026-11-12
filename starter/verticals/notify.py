@@ -1,6 +1,7 @@
-"""Notifications: send_email through Resend and place_call through an ElevenLabs agent. Both are
-effect tools, so the gateway simulates them (SIMULATED, no network) unless EFFECTS=live. Live
-without the provider's settings raises ProviderNotConfigured (HTTP 503): never a faked send."""
+"""Notifications: send_message (echoed, never delivered: the offline agent's one action),
+send_email through Resend and place_call through an ElevenLabs agent. All are effect tools, so
+the gateway simulates them (SIMULATED, no network) unless EFFECTS=live. Live without the
+provider's settings raises ProviderNotConfigured (HTTP 503): never a faked send."""
 
 import hashlib
 import json
@@ -38,6 +39,16 @@ def _post(url: str, headers: dict, body: dict) -> dict:
 
 
 def register_tools(gateway) -> None:
+    @gateway.register
+    def send_message(to: str, body: str) -> dict:
+        """Send a message to a person about their case.
+
+        Args:
+            to: Who receives the message.
+            body: The message text.
+        """
+        return {"to": to, "body": body}
+
     @gateway.register(idempotent=True)
     def send_email(to: Email, subject: str, body: str) -> dict:
         """Email a person about their case.

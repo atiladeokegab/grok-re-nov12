@@ -34,7 +34,7 @@ def test_a_cancelled_case_reaches_no_tool_and_writes_nothing(store):
     cancel = threading.Event()
     cancel.set()
     with pytest.raises(CaseCancelled):
-        build_gateway(store).call("list_items", {}, "c1", cancel)
+        build_gateway(store).call("get_skill", {"name": "escalation"}, "c1", cancel)
     assert tool_calls(store) == []
 
 
@@ -59,13 +59,18 @@ def test_a_late_tool_call_after_cancel_is_refused(store):
 
 
 def endless_claude(settings: Settings, delay: float):
-    """A ClaudeProvider whose API asks for list_items forever, each reply taking `delay`."""
+    """A ClaudeProvider whose API asks for get_skill forever, each reply taking `delay`."""
     requests = []
 
     def handler(request: httpx2.Request) -> httpx2.Response:
         requests.append({**json.loads(request.content), "timeout": request.extensions["timeout"]})
         time.sleep(delay)
-        use = {"type": "tool_use", "id": f"tu_{len(requests)}", "name": "list_items", "input": {}}
+        use = {
+            "type": "tool_use",
+            "id": f"tu_{len(requests)}",
+            "name": "get_skill",
+            "input": {"name": "escalation"},
+        }
         return httpx2.Response(
             200,
             json={

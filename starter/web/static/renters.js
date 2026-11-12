@@ -1,4 +1,4 @@
-// "What renters say": tenant quotes from the tenant_voices source, each linked to where it was said.
+// "Area comments": tenant quotes from the tenant_voices source, each linked to where it was said.
 import { safeUrl, timestamp } from './data.js';
 
 const FIELDS = new Set(['tenant_reviews', 'tenant_voices', 'reviews']);

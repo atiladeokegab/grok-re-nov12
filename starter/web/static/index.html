@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="/static/trace.css">
   <link rel="stylesheet" href="/static/clients.css">
   <link rel="stylesheet" href="/static/gallery.css">
+  <link rel="stylesheet" href="/static/inside.css">
   <script type="module" src="/static/app.js"></script>
 </head>
 <body>
@@ -52,6 +53,7 @@
         <button type="button" data-view="findings" aria-pressed="true" aria-controls="findings-view">Findings</button>
         <button type="button" data-view="connections" aria-pressed="false" aria-controls="connections-view">Connections</button>
         <button type="button" data-view="timeline" aria-pressed="false" aria-controls="timeline-view">Time machine</button>
+        <button type="button" data-view="inside" aria-pressed="false" aria-controls="inside-view">Inside</button>
       </nav>
       <div class="result-layout" id="findings-view">
         <section class="property-column" aria-label="Listing images and history">
@@ -71,6 +73,11 @@
         <h2 id="timeline-title">The record over time</h2>
         <p class="section-description">Explore sourced records in time. A retrieval date tells you when a record was fetched, rather than when the property changed.</p>
         <div id="history-timeline"></div>
+      </section>
+      <section id="inside-view" class="extra-view" aria-labelledby="inside-title" hidden>
+        <h2 id="inside-title">Inside the property</h2>
+        <p class="section-description">The rooms redrawn from the advert’s own measurements, beside the costs and facts a renter or buyer asks first. Every fact links to its source.</p>
+        <div id="inside-plan" aria-live="polite"><p class="view-status">Reading the advert…</p></div>
       </section>
       <div class="run-receipt"><section aria-label="Source status"><h2>Sources checked</h2><div id="sources"></div></section><section aria-label="Agent activity"><h2>This run’s calls</h2><dl id="activity"></dl><p id="run-id"></p><a id="export-csv" data-testid="export-csv" hidden download>Download as CSV</a></section><section aria-labelledby="clients-title"><h2 id="clients-title">X-ray over MCP</h2><div id="clients"></div></section></div>
     </section>

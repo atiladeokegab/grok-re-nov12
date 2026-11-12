@@ -2,6 +2,7 @@
 the three spoken findings, the Property type evidence with its highlighted quote, the Time machine,
 the "Try these" gallery and the lease beat. If this fails, the demo is broken. Run by `make e2e`."""
 
+import re
 import zipfile
 
 import pytest
@@ -38,6 +39,9 @@ def test_demo_listing_walkthrough(page: Page, server, errors):
 
     page.locator(".gallery-item").first.click()
     expect(page.get_by_test_id("trust-score")).to_have_text("67", timeout=30_000)
+    expect(page.locator("#connections-view")).to_be_visible()  # a run opens on the graph
+    expect(page).to_have_title(re.compile(r"Macquarie.* \| X-ray$"))
+    page.locator('[data-view="findings"]').click()
 
     findings = page.get_by_test_id("finding")
     expect(findings.filter(has_text="Energy rating")).to_contain_text("Matches the record")

@@ -1,8 +1,8 @@
-/* "What each agent did": the agent's name above its plain sentence, so long names never squeeze into a column. */
-.source-status.agent-line { display: block; margin-bottom: var(--space-4) }
-.source-status.agent-line span { display: block }
-.source-status.agent-line span:first-child { font-weight: 600; color: var(--color-ink) }
-.source-status.agent-line span + span { color: var(--color-muted); margin-top: var(--space-1); text-align: left }
+/* "What each agent did": one compact chip per agent, name then its facts. */
+.agent-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3) }
+.agent-chip { display: inline-flex; gap: var(--space-2); align-items: baseline; padding: 2px var(--space-3); border: var(--border-width) solid var(--color-border); border-radius: 999px; font-size: var(--type-caption); color: var(--color-muted); max-width: 100% }
+.agent-chip b { font-weight: 600; color: var(--color-ink); white-space: nowrap }
+.agent-chip.status-error { border-style: dashed }
 
 /* The SurrealQL that answered the Connections graph, printed under it. */
 .graph-query { margin-top: var(--space-4); font-size: var(--type-caption); color: var(--color-muted) }

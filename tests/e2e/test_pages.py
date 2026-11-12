@@ -70,6 +70,7 @@ def test_a_finished_run_opens_by_link_and_survives_a_reload(page: Page, server, 
             page.reload()
         expect(page.locator("#run-id")).to_have_text(f"Run {run_id}")
         expect(page.locator("#score")).not_to_have_text("—")
+        page.locator('[data-view="findings"]').click()
         expect(page.get_by_test_id("finding").first).to_be_visible()
     page.get_by_role("button", name="Property type").click()
     expect(page.locator("#finding-detail")).to_be_visible()

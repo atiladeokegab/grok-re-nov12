@@ -1,0 +1,9 @@
+{
+  "name": "cursor-step",
+  "private": true,
+  "type": "module",
+  "description": "One X-ray pipeline step run by a Cursor SDK agent: report JSON on stdin, summary JSON on stdout.",
+  "engines": { "node": ">=23.6" },
+  "scripts": { "step": "node index.ts" },
+  "dependencies": { "@cursor/sdk": "^1.3.1" }
+}

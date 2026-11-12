@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "engine_commit": "68f1c5be5336ff9a55285903d81d2b71b46e779a",
+  "evaluation_kind": "real_pipeline_independent_partial_adjudication",
+  "selection": {
+    "schema_version": 1,
+    "selection": "first20 IDs sorted by SHA256(seed+colon+listing_id), deduplicated",
+    "seed": "grok-re-nov12:independent-eval:v1",
+    "crawl_sha256": "cf8042e61a7a3e4d62a50b31107ebf3fface9329021b1d69f10b8235f1cf17ce",
+    "listing_ids": [
+      "auctionhouse-c1c51a2d",
+      "lsh-b6847c00",
+      "auctionhouse-96807e52",
+      "auctionhouse-1690dc70",
+      "auctionhouse-b33988c3",
+      "auctionhouse-48f16383",
+      "carterjonas-084a9a3f",
+      "bondwolfe-868826df",
+      "lsh-6daf2cd1",
+      "auctionhouse-57697506",
+      "lsh-e0bc83ae",
+      "btg-55f9d6c2",
+      "auctionhouse-39fd0f84",
+      "btg-bc0430ff",
+      "auctionhouse-175077ca",
+      "bondwolfe-eb41ad52",
+      "lsh-2277589b",
+      "struttparker-1f5493aa",
+      "carterjonas-269be1e3",
+      "pugh-9edd403c"
+    ],
+    "labels_status": "not yet independently adjudicated; missing labels are not negatives"
+  },
+  "crawl_source_url": "https://drive.google.com/uc?export=download&id=1xnoP9yW-AkYaul7-IAuFh_Ztkg6BM7BA",
+  "reports_sha256": "e8e024a54121b5090d1e38270d1f9d3f1f758d9fe5b6be29c58193aac3362a86",
+  "labels_sha256": "2a3eff439b063b63fcf2f45518fb9e5be5e85154f152f6dc5dcb5573fd74dbdd",
+  "headline": "Caught 2 of 2 confirmed discrepancies; 0 false flags in 2 confirmed negative comparisons.",
+  "coverage": {
+    "sampled_listings": 20,
+    "completed_pipeline_runs": 20,
+    "independently_adjudicated_listings": 4,
+    "unadjudicated_listings": 16,
+    "independently_labelled_field_comparisons": 6,
+    "scored_negative_comparisons": 2,
+    "other_unadjudicated_flags": 6
+  },
+  "limitations": [
+    "This is a small partially adjudicated sample, not population accuracy.",
+    "Two independently matching field labels had no scored matching prediction and are not true negatives.",
+    "Six additional emitted flags have not been adjudicated.",
+    "No Google Cloud Vision or Parallel evidence was available in this run; their checks are unverifiable.",
+    "Listing-source observations and EPC certificate values do not establish a chronological price change."
+  ],
+  "method": "Blind manual comparison of sampled listing source statements against exact-address official EPC certificate pages. Labels record only directly comparable claimed fields; absent or ambiguous evidence is not a negative.",
+  "labels": [
+    {
+      "listing_id": "auctionhouse-1690dc70",
+      "source": "epc",
+      "field": "energy_rating",
+      "expected": "disagrees",
+      "source_url": "https://find-energy-certificate.service.gov.uk/energy-certificate/0380-2122-7580-2695-3325",
+      "observed_claim": "Energy Efficiency Rating (EPC) Current Rating G",
+      "observed_evidence": "The source advertisement names Flat 2, 32 Bispham Road, Thornton-Cleveleys, FY5 1DG and claims current rating G. The official certificate page names Flat 2, 32 Bispham Road, Thornton-Cleveleys, FY5 1DG and states energy rating C; valid until 13 August 2035.",
+      "reason": "Exact flat number, building, street, town and postcode match. The advertiser\u2019s explicit EPC grade G differs from the official certificate grade C."
+    },
+    {
+      "listing_id": "auctionhouse-96807e52",
+      "source": "epc",
+      "field": "energy_rating",
+      "expected": "matches",
+      "source_url": "https://find-energy-certificate.service.gov.uk/energy-certificate/8741-6922-6299-5996-2992",
+      "observed_claim": "EPC Rating - D",
+      "observed_evidence": "The advertisement names 24 Kimberley Road, Brighton, BN2 4EP and claims D. The official certificate names 24 Kimberley Road, Brighton, BN2 4EP and states energy rating D; valid until 15 December 2029.",
+      "reason": "Exact street number, street, town and postcode match; both state EPC grade D."
+    },
+    {
+      "listing_id": "auctionhouse-57697506",
+      "source": "epc",
+      "field": "energy_rating",
+      "expected": "matches",
+      "source_url": "https://find-energy-certificate.service.gov.uk/energy-certificate/0340-2354-4640-2696-1025",
+      "observed_claim": "Energy Efficiency Rating (EPC) Current Rating C",
+      "observed_evidence": "The advertisement names Flat 94, Sleaford House, Fern Street, London, E3 3PZ and claims C. The official certificate names Flat 94, Sleaford House, Fern Street, London, E3 3PZ and states energy rating C; valid until 14 April 2036.",
+      "reason": "Exact flat, building, street, city and postcode match; both state EPC grade C."
+    },
+    {
+      "listing_id": "auctionhouse-48f16383",
+      "source": "epc",
+      "field": "energy_rating",
+      "expected": "matches",
+      "source_url": "https://find-energy-certificate.service.gov.uk/energy-certificate/1634-4729-8409-0458-3202",
+      "observed_claim": "Energy Efficiency Rating (EPC) Current Rating E",
+      "observed_evidence": "The advertisement names 18 Wolseley Road, Great Yarmouth, NR31 0EJ and claims E. The official certificate names 18 Wolseley Road, Great Yarmouth, NR31 0EJ and states energy rating E; valid until 9 November 2034.",
+      "reason": "Exact street number, street, town and postcode match; both state EPC grade E."
+    },
+    {
+      "listing_id": "auctionhouse-96807e52",
+      "source": "epc",
+      "field": "floor_area",
+      "expected": "disagrees",
+      "source_url": "https://find-energy-certificate.service.gov.uk/energy-certificate/8741-6922-6299-5996-2992",
+      "observed_claim": "Total Floor Area - 81 sq.m, (TAKEN FROM THE EPC)",
+      "observed_evidence": "The advertisement for 24 Kimberley Road, Brighton, BN2 4EP states 81 sq.m taken from the EPC. The exact-address official certificate reports total floor area 72 square metres.",
+      "reason": "Same exact address and same field with both values represented in square metres; the stated area differs by 9 square metres."
+    },
+    {
+      "listing_id": "auctionhouse-48f16383",
+      "source": "epc",
+      "field": "floor_area",
+      "expected": "matches",
+      "source_url": "https://find-energy-certificate.service.gov.uk/energy-certificate/1634-4729-8409-0458-3202",
+      "observed_claim": "Taken from the current EPC for the property, the total floor area is shown as 128 m2.",
+      "observed_evidence": "The advertisement for 18 Wolseley Road, Great Yarmouth, NR31 0EJ states 128 m2 from the current EPC. The exact-address official certificate reports total floor area 128 square metres.",
+      "reason": "Exact address and same area field/unit; both state 128 square metres."
+    }
+  ],
+  "metrics": {
+    "selected_listings": 20,
+    "reported_listings": 20,
+    "missing_reports": [],
+    "run_errors": {},
+    "ungrounded_findings": 0,
+    "listing_scores": {
+      "auctionhouse-c1c51a2d": null,
+      "lsh-b6847c00": null,
+      "auctionhouse-96807e52": 0,
+      "auctionhouse-1690dc70": 0,
+      "auctionhouse-b33988c3": null,
+      "auctionhouse-48f16383": 80,
+      "carterjonas-084a9a3f": null,
+      "bondwolfe-868826df": null,
+      "lsh-6daf2cd1": null,
+      "auctionhouse-57697506": 0,
+      "lsh-e0bc83ae": null,
+      "btg-55f9d6c2": null,
+      "auctionhouse-39fd0f84": null,
+      "btg-bc0430ff": null,
+      "auctionhouse-175077ca": null,
+      "bondwolfe-eb41ad52": null,
+      "lsh-2277589b": null,
+      "struttparker-1f5493aa": null,
+      "carterjonas-269be1e3": null,
+      "pugh-9edd403c": null
+    },
+    "per_source": {
+      "epc": {
+        "unverifiable": 16,
+        "checked": 4,
+        "disagrees": 4,
+        "flag": 2,
+        "matches": 2
+      },
+      "listing_history": {
+        "checked": 18,
+        "unverifiable": 2,
+        "flag": 2
+      },
+      "photo_diff": {
+        "unverifiable": 20
+      },
+      "reverse_image": {
+        "unverifiable": 20
+      },
+      "reviews_parallel": {
+        "unverifiable": 20
+      }
+    },
+    "labelled_comparisons": 6,
+    "insufficient_evidence_labels": 2,
+    "unresolved_flags": 6,
+    "confusion_matrix": {
+      "tp": 2,
+      "fn": 0,
+      "fp": 0,
+      "tn": 2
+    },
+    "confirmed_discrepancies": 2,
+    "confirmed_negative_comparisons": 2,
+    "detection_rate": 1.0,
+    "false_positive_rate": 0.0,
+    "measurement_note": "Rates are unavailable without independently confirmed denominators. Source checked/unverifiable counts are listing/source runs; verdict counts are findings. Missing or ungrounded citations remain unresolved. This sample does not establish population accuracy."
+  }
+}

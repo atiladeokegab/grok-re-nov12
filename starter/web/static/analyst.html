@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Analyst workspace · X-ray</title>
+  <meta name="description" content="Compare saved property reports alongside the records behind their claims.">
+  <link rel="stylesheet" href="/static/tokens.css">
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/analyst.css">
+  <script type="module" src="/static/analyst.js"></script>
+</head>
+<body>
+  <a class="skip" href="#analyst-main">Skip to property comparison</a>
+  <header class="header analyst-header">
+    <a class="brand" href="/" aria-label="X-ray home">X-ray</a>
+    <span class="header-purpose">The property dossier</span>
+    <a class="header-link" href="/">Listing X-ray</a>
+    <a href="/lease">Lease review</a>
+  </header>
+  <main id="analyst-main" class="analyst-main" aria-busy="true">
+    <section class="analyst-heading" aria-labelledby="analyst-title">
+      <div>
+        <p class="analyst-eyebrow">Analyst workspace / saved reports</p>
+        <h1 id="analyst-title">The shortlist, with its evidence.</h1>
+        <p class="analyst-lead">Compare saved property reports and follow each value to its source.</p>
+      </div>
+      <div class="analyst-actions">
+        <button id="analyst-download" class="primary" type="button" disabled>Download all as CSV <span aria-hidden="true">↓</span></button>
+        <p class="status">Saved reports only. Opening this view starts no new checks.</p>
+      </div>
+    </section>
+    <div class="analyst-state">
+      <p id="analyst-status" class="status" role="status" aria-live="polite">Loading saved reports…</p>
+      <button id="analyst-retry" class="secondary" type="button" hidden>Reload saved reports</button>
+    </div>
+    <p id="analyst-error" class="error" role="alert" hidden></p>
+    <section class="analyst-comparison" aria-labelledby="comparison-title">
+      <h2 id="comparison-title">Compare the records</h2>
+      <p id="comparison-help" class="status">Values open their recorded sources. Scores and counts open the saved report. Missing evidence is never a match.</p>
+      <div class="analyst-table-scroll" role="region" aria-label="Property comparison, scroll horizontally for all columns" tabindex="0">
+        <table class="analyst-table" aria-describedby="comparison-help area-help">
+          <caption>Recorded claims and independent evidence for the saved gallery listings</caption>
+          <thead>
+            <tr><th scope="col" rowspan="2">Listing</th><th scope="col" rowspan="2">Advert price</th><th scope="col" rowspan="2">Trust score</th><th scope="colgroup" colspan="3">Findings</th><th scope="colgroup" colspan="3">Floor area / m²</th><th scope="col" rowspan="2">Energy rating</th><th scope="col" rowspan="2">Photo reuse</th></tr>
+            <tr><th scope="col">Matches</th><th scope="col">Disagrees</th><th scope="col">Unverifiable</th><th scope="col">Advert</th><th scope="col">EPC</th><th scope="col">Rooms only</th></tr>
+          </thead>
+          <tbody id="analyst-rows"></tbody>
+        </table>
+      </div>
+      <p id="area-help" class="status">Room totals come from the advert’s room schedule and exclude halls, stairs and walls. They are not a measurement of total floor area.</p>
+    </section>
+    <section class="analyst-chart-section" aria-labelledby="chart-title">
+      <div><p class="analyst-eyebrow">At a glance</p><h2 id="chart-title">Trust score by listing</h2><p class="status">Recorded scores out of 100. An unscored property stays unscored.</p></div>
+      <ol id="analyst-chart" class="analyst-chart" aria-label="Trust scores, out of 100"></ol>
+    </section>
+  </main>
+</body>
+</html>

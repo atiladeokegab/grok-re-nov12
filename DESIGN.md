@@ -94,7 +94,7 @@ The palette pairs dark neutral reading surfaces with one pale green action accen
 
 ## Typography
 
-**Display Font:** Jost Medium (`starter/web/static/fonts/OFL-Jost.txt`).  
+**Display Font:** Jost Medium (`starter/web/static/fonts/OFL-Jost.txt`).
 **Body Font:** IBM Plex Sans Regular and Semibold (`starter/web/static/fonts/OFL-IBM-Plex-Sans.txt`).
 
 Jost gives the short opening statement a human, firm shape. IBM Plex Sans keeps source details and controls easy to scan. Figures use tabular numerals for direct comparison.

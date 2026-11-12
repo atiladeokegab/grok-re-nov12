@@ -8,20 +8,21 @@ rules over the Word paragraphs, no model.
 | field | n | strict correct | strict | content correct | content |
 |---|---|---|---|---|---|
 | parties | 8 | 6 | 75% | 8 | 100% |
-| premises | 8 | 6 | 75% | 8 | 100% |
-| permitted_use | 8 | 5 | 62% | 8 | 100% |
+| premises | 8 | 8 | 100% | 8 | 100% |
+| permitted_use | 8 | 6 | 75% | 8 | 100% |
 | contractual_term | 8 | 7 | 88% | 7 | 88% |
 | main_rent | 8 | 7 | 88% | 7 | 88% |
 | rent_review | 8 | 7 | 88% | 8 | 100% |
 | break_clause | 8 | 8 | 100% | 8 | 100% |
-| alienation | 8 | 6 | 75% | 6 | 75% |
-| insurance | 8 | 4 | 50% | 4 | 50% |
+| alienation | 8 | 7 | 88% | 7 | 88% |
+| insurance | 8 | 5 | 62% | 5 | 62% |
 | lr_prescribed_clauses | 8 | 8 | 100% | 8 | 100% |
-| **overall** | 80 | 64 | **80%** | 72 | **90%** |
+| **overall** | 80 | 69 | **86%** | 74 | **92%** |
 
 ## Scoring rule
 
-- Gold is **placeholder** when the label starts with "Placeholder"; **absent** when it starts
+- Gold is **placeholder** when the label starts with "Placeholder" or quotes a template blank
+  itself ([DESCRIPTION], [ADDRESS OF PREMISES], [ ]); **absent** when it starts
   with "Not " or "No "; **optional** when it starts with "Optional"; **present** when it starts
   with "Yes".
 - Absent gold is correct when the extractor finds nothing (or only an optional clause).
@@ -46,5 +47,7 @@ rules over the Word paragraphs, no model.
 - In-sample: 8 documents, all MCL templates from one drafting group, and the
   rules were written while reading these same templates. There is no held-out set, so
   read this as a 15-template gold-set score, not accuracy on arbitrary executed leases.
+- Remaining insurance misses are mostly labels that describe a neighbouring clause
+  (service charge on leases of part) or the agreement-for-lease wording; not chased.
 - The Legal-lease_datasets zips (CUAD/DocLayNet) are not UK leases and are not used.
 - Per-document results and short source spans: `docs/lease-eval.json`.

@@ -10,12 +10,12 @@
     },
     "premises": {
       "n": 8,
-      "strict": 6,
+      "strict": 8,
       "content": 8
     },
     "permitted_use": {
       "n": 8,
-      "strict": 5,
+      "strict": 6,
       "content": 8
     },
     "contractual_term": {
@@ -40,13 +40,13 @@
     },
     "alienation": {
       "n": 8,
-      "strict": 6,
-      "content": 6
+      "strict": 7,
+      "content": 7
     },
     "insurance": {
       "n": 8,
-      "strict": 4,
-      "content": 4
+      "strict": 5,
+      "content": 5
     },
     "lr_prescribed_clauses": {
       "n": 8,
@@ -56,8 +56,8 @@
   },
   "overall": {
     "n": 80,
-    "strict": 64,
-    "content": 72
+    "strict": 69,
+    "content": 74
   },
   "per_document": [
     {
@@ -121,11 +121,11 @@
           "doc_span": "LR8. Prohibitions or restrictions on disposing of this lease: This Lease contain"
         },
         "insurance": {
-          "strict": false,
-          "content": false,
+          "strict": true,
+          "content": true,
           "placeholder": false,
           "source": "Insurance; Insurance and Damage Provisions",
-          "doc_span": "Insurance: The Tenant must comply with its obligations in Schedule 3. | Insuranc"
+          "doc_span": "Insurance: The Tenant must comply with its obligations in Schedule 3. / The Land"
         },
         "lr_prescribed_clauses": {
           "strict": true,
@@ -201,7 +201,7 @@
           "content": false,
           "placeholder": false,
           "source": "Insurance; Insurance and Damage Provisions",
-          "doc_span": "Insurance: The Tenant must comply with its obligations in Schedule 4. | Insuranc"
+          "doc_span": "Insurance: The Tenant must comply with its obligations in Schedule 4. / The Land"
         },
         "lr_prescribed_clauses": {
           "strict": true,
@@ -277,7 +277,7 @@
           "content": true,
           "placeholder": false,
           "source": "Insurance; Insurance and Damage Provisions",
-          "doc_span": "Insurance: The Tenant must comply with its obligations in Schedule 3. | Insuranc"
+          "doc_span": "Insurance: The Tenant must comply with its obligations in Schedule 3. / The Land"
         },
         "lr_prescribed_clauses": {
           "strict": true,
@@ -353,7 +353,7 @@
           "content": false,
           "placeholder": false,
           "source": "Insurance; Insurance and Damage Provisions",
-          "doc_span": "Insurance: The Tenant must comply with its obligations in Schedule 4. | Insuranc"
+          "doc_span": "Insurance: The Tenant must comply with its obligations in Schedule 4. / The Land"
         },
         "lr_prescribed_clauses": {
           "strict": true,
@@ -383,7 +383,7 @@
           "doc_span": "the premises known as [ADDRESS OF PREMISES] and shown [edged][coloured] [COLOUR]"
         },
         "permitted_use": {
-          "strict": false,
+          "strict": true,
           "content": true,
           "placeholder": true,
           "source": "definition “Permitted Use”",
@@ -429,7 +429,7 @@
           "content": true,
           "placeholder": false,
           "source": "Insurance; Insurance and Damage Provisions",
-          "doc_span": "Insurance: The Tenant must comply with its obligations in Schedule 3. | Insuranc"
+          "doc_span": "Insurance: The Tenant must comply with its obligations in Schedule 3. / The Land"
         },
         "lr_prescribed_clauses": {
           "strict": true,
@@ -505,7 +505,7 @@
           "content": true,
           "placeholder": false,
           "source": "Insurance; Insurance and Damage Provisions",
-          "doc_span": "Insurance: The Tenant must comply with its obligations in Schedule 3. | Insuranc"
+          "doc_span": "Insurance: The Tenant must comply with its obligations in Schedule 3. / The Land"
         },
         "lr_prescribed_clauses": {
           "strict": true,
@@ -528,7 +528,7 @@
           "doc_span": "[          ] [(company registration number [     ]) whose registered office is a"
         },
         "premises": {
-          "strict": false,
+          "strict": true,
           "content": true,
           "placeholder": true,
           "source": "definition “Premises”",
@@ -604,7 +604,7 @@
           "doc_span": "1.[LANDLORD] (incorporated and registered in [England and Wales] [the United Kin"
         },
         "premises": {
-          "strict": false,
+          "strict": true,
           "content": true,
           "placeholder": true,
           "source": "definition “Premises”",
@@ -646,11 +646,11 @@
           "doc_span": null
         },
         "alienation": {
-          "strict": false,
-          "content": false,
+          "strict": true,
+          "content": true,
           "placeholder": false,
           "source": "Disposals",
-          "doc_span": "Disposals: Following a Disposal the Landlord must:"
+          "doc_span": "Disposals: Following a Disposal the Landlord must: notify the Tenant of the name"
         },
         "insurance": {
           "strict": true,

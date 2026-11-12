@@ -14,7 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from starter.verticals.lease import FIELDS, abstract  # noqa: E402
+from starter.verticals.lease import FIELDS, PLACEHOLDER, abstract  # noqa: E402
 
 CACHE = Path.home() / "hub/projects/grok-re-nov12/data-cache"
 LEASES_DIR = Path(os.environ.get("LEASES_DIR", CACHE / "leases/Official and public leases"))
@@ -31,7 +31,8 @@ STOP = set(
 )
 
 RULE = f"""\
-- Gold is **placeholder** when the label starts with "Placeholder"; **absent** when it starts
+- Gold is **placeholder** when the label starts with "Placeholder" or quotes a template blank
+  itself ([DESCRIPTION], [ADDRESS OF PREMISES], [ ]); **absent** when it starts
   with "Not " or "No "; **optional** when it starts with "Optional"; **present** when it starts
   with "Yes".
 - Absent gold is correct when the extractor finds nothing (or only an optional clause).
@@ -63,7 +64,7 @@ def score(gold: str, got: dict) -> tuple[bool, bool]:
         return ok, ok
     if g.startswith("Yes"):
         return found, found
-    gold_ph = g.lower().startswith("placeholder")
+    gold_ph = g.lower().startswith("placeholder") or bool(PLACEHOLDER.search(g))
     gw = words(g)
     overlap = found and len(gw & words(f"{got['value']} {got['source']}")) >= THRESHOLD * len(gw)
     flag_ok = got["placeholder"] == gold_ph
@@ -156,6 +157,8 @@ def main() -> int:
         f"- In-sample: {len(docs)} documents, all MCL templates from one drafting group, and the",
         "  rules were written while reading these same templates. There is no held-out set, so",
         "  read this as a 15-template gold-set score, not accuracy on arbitrary executed leases.",
+        "- Remaining insurance misses are mostly labels that describe a neighbouring clause",
+        "  (service charge on leases of part) or the agreement-for-lease wording; not chased.",
         "- The Legal-lease_datasets zips (CUAD/DocLayNet) are not UK leases and are not used.",
         "- Per-document results and short source spans: `docs/lease-eval.json`.",
     ]

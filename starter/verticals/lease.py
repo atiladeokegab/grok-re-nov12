@@ -44,28 +44,58 @@ def paragraphs(path: str | Path) -> list[str]:
     return out
 
 
+def _run_on(paras: list[str], i: int) -> str:
+    """Paragraph i, plus its list items when it ends "including:", "; or" or "and"."""
+    text = [paras[i]]
+    for q in paras[i + 1 : i + 5]:
+        if _DEF.match(q) or not re.search(r"(:|\bor|\band)$", text[-1]):
+            break
+        text.append(q)
+    return " ".join(text)
+
+
 def _definition(paras: list[str], *terms: str) -> tuple[str, str, bool] | None:
     """(term, meaning, optional) for the first defined term found; optional = bracketed."""
     for term in terms:
         for i, p in enumerate(paras[:-1]):
             m = _DEF.match(p)
             if m and m.group(2).strip().lower() == term.lower():
-                meaning = [paras[i + 1]]
-                # a meaning ending "including:" or "; or" runs on into list items
-                for q in paras[i + 2 : i + 6]:
-                    if _DEF.match(q) or not re.search(r"(:|\bor|\band)$", meaning[-1]):
-                        break
-                    meaning.append(q)
-                return term, " ".join(meaning), bool(m.group(1))
+                return term, _run_on(paras, i + 1), bool(m.group(1))
     return None
 
 
 def _heading(paras: list[str], *headings: str) -> tuple[str, str, bool] | None:
-    """(heading, following lines, optional) for the first paragraph equal to a heading."""
+    """(heading, body, optional) for every paragraph equal to the first heading that occurs.
+
+    A lease repeats a heading per party (tenant's and landlord's "Insurance"), so all
+    occurrences are kept.
+    """
     for h in headings:
-        for i, p in enumerate(paras[:-1]):
-            if p.lstrip("[").strip().lower() == h.lower():
-                return p.lstrip("["), paras[i + 1], p.startswith("[")
+        idx = [i for i, p in enumerate(paras[:-1]) if p.lstrip("[").strip().lower() == h.lower()]
+        if idx:
+            body = " / ".join(_run_on(paras, i + 1) for i in idx)
+            return paras[idx[0]].lstrip("["), body, paras[idx[0]].startswith("[")
+    return None
+
+
+def _schedule(paras: list[str], title: str) -> tuple[str, str, bool] | None:
+    """(title, its sub-headings) for a schedule: short unpunctuated lines that follow it.
+
+    Skips "Interpretation"/"Definitions", which say nothing about the subject.
+    shortcut: the window is a fixed 50 paragraphs, since schedule ends are not marked in the
+    body text; upgrade by reading the Word heading styles if schedules run together.
+    """
+    for i, p in enumerate(paras):
+        if p.lower() == title.lower():
+            subs = [
+                q
+                for q in paras[i + 1 : i + 51]
+                if len(q) <= 60
+                and q[0].isupper()
+                and not re.search(r"[.;:,\]]$", q)
+                and q not in ("Interpretation", "Definitions")
+            ]
+            return p, "; ".join(subs), False
     return None
 
 
@@ -129,7 +159,7 @@ def abstract(path: str | Path) -> dict:
         ),
         "insurance": (
             _heading(paras, "Insurance", "Insurance and risk"),
-            _heading(paras, "Insurance and Damage Provisions"),
+            _schedule(paras, "Insurance and Damage Provisions"),
         ),
     }
     for name, hits in composite.items():

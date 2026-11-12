@@ -35,9 +35,10 @@ def errors(page: Page) -> list[str]:
 
 def test_demo_listing_walkthrough(page: Page, server, errors):
     page.goto(server + "/")
-    expect(page.locator("#gallery li")).to_have_count(4)
+    expect(page.get_by_test_id("landing-card")).to_have_count(3)  # the saved demo runs
 
-    page.locator(".gallery-item").first.click()
+    page.fill("#listing", "demo")
+    page.click("#start")
     expect(page.get_by_test_id("trust-score")).to_have_text("67", timeout=30_000)
     expect(page.locator("#connections-view")).to_be_visible()  # a run opens on the graph
     expect(page).to_have_title(re.compile(r"Macquarie.* \| X-ray$"))

@@ -82,14 +82,14 @@ def test_a_finished_run_opens_by_link_and_survives_a_reload(page: Page, server, 
     expect(page.locator("#error")).to_contain_text('No X-ray run "xr-nope"')
 
 
-def test_saved_gallery_opens_its_link_without_starting_a_run(page: Page, server, errors):
+def test_landing_cards_link_saved_runs_without_starting_one(page: Page, server, errors):
     posts = []
     page.on(
         "request", lambda request: posts.append(request.url) if request.method == "POST" else None
     )
     page.goto(server + "/")
-    page.locator(".gallery-item").first.click()
-    expect(page.locator("#run-id")).to_have_text(re.compile(r"^Run xr-"))
-    run_id = page.locator("#run-id").inner_text().removeprefix("Run ")
-    assert page.url.endswith(f"/?run={run_id}")
+    cards = page.get_by_test_id("landing-card")
+    expect(cards).to_have_count(3)
+    hrefs = [cards.nth(i).get_attribute("href") for i in range(3)]
+    assert all(re.fullmatch(r"/\?run=xr-[0-9a-f]+", h or "") for h in hrefs), hrefs
     assert posts == [] and errors == []

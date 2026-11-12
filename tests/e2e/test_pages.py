@@ -41,7 +41,7 @@ def shots(tmp_path) -> Path:
 
 
 def test_runs_page_shows_every_run(page: Page, server, errors, shots):
-    page.goto(server + "/")
+    page.goto(server + "/runs")
     expect(page.get_by_role("heading", name="Runs", exact=True)).to_be_visible()
     for case in CASES:
         card = page.locator("[data-run]", has_text=f"Case {case}")
@@ -54,7 +54,7 @@ def test_runs_page_shows_every_run(page: Page, server, errors, shots):
 
 
 def test_one_case_filtered_shows_only_its_run(page: Page, server, errors, shots):
-    page.goto(server + "/")
+    page.goto(server + "/runs")
     page.get_by_label("Filter runs").fill("Case 001")
     expect(page.locator("[data-run]", has_text="Case 001")).to_be_visible()
     expect(page.locator("[data-run]", has_text="Case 002")).to_be_hidden()

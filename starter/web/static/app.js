@@ -39,6 +39,7 @@ function sourceRecord(record) {
   if (link) {
     const a = element('a', 'Open source');
     a.href = link; a.target = '_blank'; a.rel = 'noopener noreferrer';
+    a.dataset.testid = 'source-link';
     block.append(a);
   }
   if (record.doc_span) block.append(element('p', typeof record.doc_span === 'string' ? record.doc_span : JSON.stringify(record.doc_span)));
@@ -205,9 +206,12 @@ async function showFlyIn(result) {
   let ended = false;
   let module;
   const skip = element('button', 'Skip to findings', 'secondary flyin-skip'); skip.type = 'button';
+  let landingTimer;
+  let releaseLanding;
   const finish = () => {
     if (ended) return;
-    ended = true; clearTimeout(timeout); module?.disposeFlyIn(container); skip.remove();
+    ended = true; clearTimeout(timeout); clearTimeout(landingTimer); module?.disposeFlyIn(container); skip.remove();
+    releaseLanding?.(); releaseLanding = null;
     if (generation === owner) { container.hidden = true; disposeCurrentFlyIn = null; }
   };
   const timeout = setTimeout(finish, 8500);
@@ -225,7 +229,12 @@ async function showFlyIn(result) {
       use: use === 'office' ? 'office' : 'residential',
       durationMs: 5000,
     });
-    if (owner !== generation) return;
+    if (owner !== generation || ended) return;
+    await new Promise(resolve => {
+      releaseLanding = resolve;
+      landingTimer = setTimeout(() => { landingTimer = null; releaseLanding = null; resolve(); }, 1500);
+    });
+    if (owner !== generation || ended) return;
     finish();
   } catch {
     finish();
@@ -237,6 +246,7 @@ function render(result) {
   $('intro').hidden = true; $('results').hidden = false;
   $('place-title').textContent = result.place?.title || result.place?.address || 'Listing X-ray';
   $('place-description').textContent = result.place?.title && result.place?.address ? result.place.address : result.listing_id || '';
+  $('run-status').textContent = result.status === 'running' ? 'Checking sources. Findings update as records arrive.' : result.status === 'done' ? 'Check complete.' : result.status === 'error' ? 'Check incomplete. Review the source details below.' : 'Source records from this check.';
   $('score').textContent = Number.isFinite(result.trust_score) ? result.trust_score : '—';
   const counts = result.counts || {};
   const disagreements = counts.disagrees || 0;
@@ -248,7 +258,7 @@ function render(result) {
     const { evidence } = findingRecords(finding, result);
     const verdict = finding.verdict === 'unverifiable' || evidence.some(sourcePresent) ? finding.verdict : 'unverifiable';
     const button = element('button', null, 'finding');
-    button.type = 'button'; button.dataset.id = finding.id; button.setAttribute('aria-expanded', String(finding.id === selected)); button.setAttribute('aria-controls', 'finding-detail');
+    button.type = 'button'; button.dataset.id = finding.id; button.dataset.testid = 'finding'; button.setAttribute('aria-expanded', String(finding.id === selected)); button.setAttribute('aria-controls', 'finding-detail');
     const text = element('span');
     text.append(element('span', fieldName(finding.field), 'finding-name'), element('span', VERDICTS[verdict] || 'Verdict not recorded', `finding-verdict verdict-${verdict}`));
     const statusIcon = icon(verdict); statusIcon.classList.add(`verdict-${verdict}`);
@@ -260,7 +270,7 @@ function render(result) {
   $('sources').replaceChildren();
   for (const source of result.sources || []) {
     const line = element('p', null, 'source-status');
-    line.append(element('span', source.name), element('span', source.status === 'ok' ? `${source.n_evidence || 0} evidence records` : source.status === 'error' ? 'Source unavailable' : 'No record found'));
+    line.append(element('span', source.name), element('span', source.status === 'ok' ? `${source.n_evidence || 0} evidence records` : source.status === 'error' ? 'Source unavailable' : source.status === 'off' ? 'Not enabled for this check' : 'No record found'));
     if (source.detail) line.append(element('small', String(source.detail).slice(0, 240), 'source-detail'));
     $('sources').append(line);
   }
@@ -305,9 +315,10 @@ function stop() {
 }
 
 function watch(runId, ownGeneration) {
-  let refreshing = false;
-  let again = false;
+  let refreshPromise = null;
+  let refreshAgain = false;
   let finished = false;
+  let lastRefreshError = null;
   const source = new EventSource(`/api/xray/${encodeURIComponent(runId)}/events`);
   stream = source;
   const finish = result => {
@@ -320,33 +331,46 @@ function watch(runId, ownGeneration) {
       $('error').hidden = false;
     } else $('status').textContent = 'The X-ray is complete. Each finding links to its supporting record.';
   };
-  const refresh = async () => {
-    if (finished) return;
-    if (generation !== ownGeneration) return;
-    if (refreshing) { again = true; return; }
-    refreshing = true;
-    try {
+  const refresh = () => {
+    if (finished || generation !== ownGeneration) return Promise.resolve(null);
+    if (refreshPromise) { refreshAgain = true; return refreshPromise; }
+    refreshPromise = (async () => {
+      let latest = null;
       do {
-        again = false;
+        refreshAgain = false;
         const result = await readRun(runId, ownGeneration);
-        if (generation !== ownGeneration) return;
+        if (generation !== ownGeneration || finished) return null;
+        latest = result; lastRefreshError = null;
         render(result);
         if (result.status === 'done' || result.status === 'error') finish(result);
-      } while (again && !finished);
-    } catch (error) {
-      if (generation === ownGeneration && error.name !== 'AbortError') { $('error').textContent = `Live update failed: ${error.message}`; $('error').hidden = false; }
-    } finally { refreshing = false; }
+      } while (refreshAgain && !finished && generation === ownGeneration);
+      return latest;
+    })().catch(error => {
+      if (generation === ownGeneration && error.name !== 'AbortError' && !finished) {
+        lastRefreshError = error;
+        $('error').textContent = `Live update failed: ${error.message}`; $('error').hidden = false;
+      }
+      return null;
+    }).finally(() => { refreshPromise = null; });
+    return refreshPromise;
   };
   for (const name of ['message', 'source', 'claim', 'evidence', 'finding', 'history', 'score']) source.addEventListener(name, refresh);
   source.addEventListener('done', async event => {
-    await refresh();
-    if (generation !== ownGeneration) return;
+    const latest = await refresh();
+    if (generation !== ownGeneration || finished) return;
     let terminal;
     try { terminal = JSON.parse(event.data); } catch { terminal = {}; }
-    finish(terminal);
+    if (lastRefreshError || !latest || (latest.status !== 'done' && latest.status !== 'error')) {
+      finished = true; source.close(); if (stream === source) stream = null;
+      const reason = lastRefreshError ? ` ${lastRefreshError.message}` : typeof terminal.error === 'string' ? ` ${terminal.error.slice(0, 400)}` : '';
+      $('error').textContent = `The live stream ended before a final report could be loaded.${reason}`;
+      $('error').hidden = false;
+      return;
+    }
+    finish(latest);
   });
   source.addEventListener('error', () => {
-    if (generation !== ownGeneration) return;
+    if (generation !== ownGeneration || finished) return;
     $('run-id').textContent = `Run ${runId}. Live connection interrupted; reconnecting. Last received records remain visible.`;
   });
 }

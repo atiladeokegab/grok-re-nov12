@@ -29,8 +29,8 @@ CASES = ["001", "002"]  # sample cases run before the camera rolls
 # One shot each: (page, what must be on screen before the shot counts, seconds it holds then).
 # The film waits on the selector, never on the clock; the hold is screen time for the viewer.
 SCENES = [
-    ("/", "[data-run]:has-text('Case 001')", 3),
-    ("/?theme=refinery", "[data-run]:has-text('Case 002')", 3),
+    ("/runs", "[data-run]:has-text('Case 001')", 3),
+    ("/runs?theme=refinery", "[data-run]:has-text('Case 002')", 3),
 ]
 # Playwright pads a small viewport into a larger video size, never scales it; ffmpeg scales
 # the 1280x720 recording to 1920x1080 instead, so the page reads 1.5x larger.

@@ -1,0 +1,19 @@
+/* "Grok Bot & Cursor" live card: reuses the run receipt's list styles (styles.css .run-receipt dl). */
+.clients-note {
+  font-size: var(--type-caption);
+  color: var(--color-muted);
+  margin-top: var(--space-4)
+}
+
+#clients[data-state="error"] .clients-note {
+  color: var(--color-warning)
+}
+
+/* A source that is switched off: muted and labelled "no key", never colour alone. */
+.source-status.status-off span {
+  color: var(--color-muted)
+}
+
+.source-status.status-off span+span {
+  font-style: italic
+}

@@ -91,6 +91,15 @@ def _save(store: Store, report: XRayReport, kind: str | None = None, data=None) 
 
 def _land_known(name: str, listing: dict) -> None:
     """Land what existing sources fetched without calling land() themselves."""
+    if name == "listing_history" and (row := listing.get("crawl")):
+        land(  # key=value lines, so the crawl evidence's "price_gbp=770000.0" grounds verbatim
+            listing,
+            raw="\n".join(f"{k}={v}" for k, v in row.items()),
+            source_url=row["url"] + "#crawl",
+            agent=name,
+            content_type="text/plain",
+            fetched_at=row.get("crawled_at") or None,
+        )
     if name == "listing_history" and (page := listing.get("page")):
         land(
             listing,
@@ -115,8 +124,17 @@ def _land_known(name: str, listing: dict) -> None:
     # epc.py needs one land() call there (Atlas owns it).
 
 
-def _ground(store: Store, report: XRayReport, evidence: list[Evidence]) -> None:
-    """Link each evidence to its document (by id, else by url) and ground its quote there."""
+def _ground_in(text: str, doc: Document, quote: str):
+    if (span := ground(text, quote)) or not doc.url.endswith("#crawl"):
+        return span
+    # crawl quotes read "price_gbp=770000.0 (guide/asking)": the key=value is the row's words
+    return ground(text, quote.split(" ", 1)[0])
+
+
+def _ground(
+    store: Store, report: XRayReport, evidence: list[Evidence], claims: list[Claim] = ()
+) -> None:
+    """Link each evidence and claim to its document (by id, else by url) and ground its quote."""
     docs = report.documents
     by_id = {d.id: d for d in docs}
     texts: dict[str, str | None] = {}
@@ -127,23 +145,27 @@ def _ground(store: Store, report: XRayReport, evidence: list[Evidence]) -> None:
             texts[doc.id] = decoded_text(doc)
         return texts[doc.id] or ""
 
-    for e in evidence:
+    for e in [*claims, *evidence]:
         if e.document_id is None and e.source_url:
             # A url match alone is a guess (the crawl row cites the advert's url but is not its
             # text), so an inferred link is kept only when the quote is found in that document.
             for d in reversed(docs):
-                if d.url == e.source_url and (span := ground(text(d), e.doc_span or "")):
+                if d.url in (e.source_url, e.source_url + "#crawl") and (
+                    span := _ground_in(text(d), d, e.doc_span or "")
+                ):
                     e.document_id, e.span = d.id, span
                     break
         doc = by_id.get(e.document_id or "")
         if doc is None:
             continue
         if e.span is None and e.doc_span:
-            e.span = ground(text(doc), e.doc_span)  # None: the quote is dropped
+            e.span = _ground_in(text(doc), doc, e.doc_span)  # None: the quote is dropped
         if e.doc_span:
             t = tally.setdefault(doc.id, [0, 0])
             t[0 if e.span else 1] += 1
-        _save(store, report, "ingestion.extracted", {"evidence_id": e.id, "document_id": doc.id})
+        if isinstance(e, Evidence):
+            data = {"evidence_id": e.id, "document_id": doc.id}
+            _save(store, report, "ingestion.extracted", data)
     for doc_id, (n_spans, n_dropped) in tally.items():
         data = {"document_id": doc_id, "n_spans": n_spans, "n_dropped": n_dropped}
         _save(store, report, "ingestion.parsed", data)
@@ -169,9 +191,10 @@ def _history(claims: list[Claim], evidence: list[Evidence]) -> list[HistoryEntry
                 previous_value=None,
                 source_name=e.source_name,
                 source_url=e.source_url,
-                fetched_at=e.observed_at or e.fetched_at,
+                fetched_at=e.fetched_at,
                 agent=e.agent,
                 document_id=e.document_id,
+                observed_at=e.observed_at,
             )
         )
         if c := now_by_field.get(e.field):
@@ -184,6 +207,7 @@ def _history(claims: list[Claim], evidence: list[Evidence]) -> list[HistoryEntry
                     source_url=c.source_url,
                     fetched_at=c.captured_at,
                     agent=rec.HISTORY_AGENT,
+                    document_id=c.document_id,
                 )
             )
     last: dict[str, object] = {}
@@ -198,13 +222,15 @@ def _history(claims: list[Claim], evidence: list[Evidence]) -> list[HistoryEntry
                 previous_value=last.get(e.field),
                 source_name=e.source_name,
                 source_url=e.source_url,
-                fetched_at=e.observed_at,
+                fetched_at=e.fetched_at,
                 agent=e.agent,
                 document_id=e.document_id,
+                observed_at=e.observed_at,
             )
         )
         last[e.field] = out[-1].value
-    return sorted(out, key=lambda h: h.fetched_at)  # stable: a crawl pair keeps its order
+    # stable: a crawl pair keeps its order
+    return sorted(out, key=lambda h: h.observed_at or h.fetched_at)
 
 
 def begin(store: Store, ref: str, offline: bool = False, use: str | None = None) -> XRayReport:
@@ -250,7 +276,7 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
             report.documents += landed
             for d in landed:
                 _save(store, report, "ingestion.landed", {"document": _public(d.model_dump())})
-            _ground(store, report, evidence)
+            _ground(store, report, evidence, claims)
             ms = round((time.perf_counter() - start) * 1000)
             status = SourceStatus(
                 name=module.NAME, status=state, n_evidence=len(evidence), ms=ms, detail=detail
@@ -374,7 +400,7 @@ def place_graph(place_id: str, store: StoreDep) -> dict:
     edges += [{"from": place_id, "to": d["id"], "kind": "landed"} for d in docs]
     edges += [
         {"from": e["document_id"], "to": e["id"], "kind": "contains"}
-        for e in r["evidence"]
+        for e in [*r["claims"], *r["evidence"]]
         if e.get("document_id")
     ]
     for f in r["findings"]:
@@ -427,23 +453,34 @@ def finding_trace(finding_id: str, store: StoreDep, run_id: str | None = None) -
     docs = {d["id"]: d for d in run.get("documents", [])}
     evidence = {e["id"]: e for e in run["evidence"]}
     texts: dict[str, str | None] = {}
+
+    def check(item: dict) -> tuple[dict | None, bool]:
+        """(its document, whether text[span.start:span.end] == span.quote)."""
+        doc = docs.get(item.get("document_id") or "")
+        if doc is None or (span := item.get("span")) is None:
+            return doc, False
+        if doc["id"] not in texts:
+            texts[doc["id"]] = decoded_text(doc)
+        return doc, (texts[doc["id"]] or "")[span["start"] : span["end"]] == span["quote"]
+
     steps, chain_docs = [], []
     for eid in finding["evidence_ids"]:
-        e = evidence.get(eid)
-        if e is None:
+        if (e := evidence.get(eid)) is None:
             continue
-        doc, verified = docs.get(e.get("document_id") or ""), False
+        doc, verified = check(e)
         if doc:
             chain_docs.append(doc["id"])
-            if (span := e.get("span")) is not None:
-                if doc["id"] not in texts:
-                    texts[doc["id"]] = decoded_text(doc)
-                verified = (texts[doc["id"]] or "")[span["start"] : span["end"]] == span["quote"]
         steps.append(
             {"evidence": e, "document": _public(doc) if doc else None, "quote_verified": verified}
         )
     claim = next((c for c in run["claims"] if c["id"] == finding["claim_id"]), None)
+    claim_doc, claim_verified = check(claim) if claim else (None, False)
+    # place -> document(advert) -> claim -> finding <- evidence <- document(source), flattened
     chain = [{"kind": "place", "id": run["place_id"]}]
+    if claim_doc:
+        chain.append({"kind": "document", "id": claim_doc["id"]})
+    if claim:
+        chain.append({"kind": "claim", "id": claim["id"]})
     chain += [{"kind": "document", "id": d} for d in dict.fromkeys(chain_docs)]
     chain += [{"kind": "evidence", "id": s["evidence"]["id"]} for s in steps]
     chain += [{"kind": "finding", "id": finding_id}]
@@ -452,6 +489,8 @@ def finding_trace(finding_id: str, store: StoreDep, run_id: str | None = None) -
         "place": run["place"],
         "finding": finding,
         "claim": claim,
+        "claim_document": _public(claim_doc) if claim_doc else None,
+        "claim_quote_verified": claim_verified,
         "steps": steps,
         "chain": chain,
     }

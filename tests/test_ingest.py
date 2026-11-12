@@ -53,6 +53,17 @@ def test_demo_run_lands_documents_and_grounds_evidence(tmp_path):
     assert r.documents and {d.agent for d in r.documents} >= {"listing_history", "epc"}
     grounded = [e for e in r.evidence if e.span]
     assert grounded and all(e.document_id for e in grounded)
+    crawl = next(d for d in r.documents if d.url.endswith("#crawl"))
+    price = next(e for e in r.evidence if e.id.startswith("ev-crawl-") and e.field == "price")
+    assert price.document_id == crawl.id and price.span.quote == "price_gbp=770000.0"
+    assert all(c.span and c.document_id for c in r.claims)  # every advert quote grounds
+
+
+def test_undated_area_context_is_an_info_flag():
+    ev = _observed("area_context", "Flood zone 1")
+    ev.observed_at = None
+    [f] = reconcile([], [ev], [SourceStatus(name="wayback", status="ok")])
+    assert (f.verdict, f.severity) == ("flag", "info")
 
 
 def test_trace_and_document_routes(tmp_path):
@@ -73,8 +84,10 @@ def test_trace_and_document_routes(tmp_path):
             for f in report["findings"]
         ]
         t = next(t for t in traces if any(s["quote_verified"] for s in t["steps"]))
-        assert [c["kind"] for c in t["chain"]] == ["place", "document", "evidence", "finding"]
-        doc_id = t["chain"][1]["id"]
+        kinds = [c["kind"] for c in t["chain"]]
+        assert kinds == ["place", "document", "claim", "document", "evidence", "finding"]
+        assert t["claim_quote_verified"] and t["claim"]["document_id"] == t["chain"][1]["id"]
+        doc_id = t["chain"][3]["id"]
         doc = client.get(f"/api/document/{doc_id}").json()
         step = next(s for s in t["steps"] if s["quote_verified"])
         span = step["evidence"]["span"]
@@ -112,7 +125,8 @@ def test_observed_evidence_is_history_not_a_current_check():
     assert not any(set(f.evidence_ids) & {e.id for e in evidence} for f in findings)
     assert [f.verdict for f in findings if f.field == "energy_rating"] == ["unverifiable"]
     history = _history(claims, evidence)
-    assert [h.fetched_at for h in history] == ["2019-04-02", "2019-04-02"]
+    assert [h.observed_at for h in history] == ["2019-04-02", "2019-04-02"]
+    assert all(h.fetched_at != "2019-04-02" for h in history)  # retrieved now, true then
 
 
 def test_smoke_counts_a_history_only_source_as_covered(tmp_path, monkeypatch):

@@ -43,18 +43,6 @@ class PlaceView(Place):
     photos: list[Photo] = []
 
 
-class Claim(BaseModel):
-    id: str
-    place_id: str
-    field: str
-    value: str | float | int | None
-    unit: str | None = None
-    source: Literal["listing", "application", "rent_roll"] = "listing"
-    source_url: str | None = None  # the advert the claim was read from
-    doc_span: str | None = None  # the exact words the value was read from
-    captured_at: str = Field(default_factory=now)
-
-
 class Span(BaseModel):
     """A verbatim quote in a Document's decoded text: text[start:end] == quote, always."""
 
@@ -74,6 +62,20 @@ class Document(BaseModel):
     agent: str
     size: int
     bytes_path: str  # server-side only; never served
+
+
+class Claim(BaseModel):
+    id: str
+    place_id: str
+    field: str
+    value: str | float | int | None
+    unit: str | None = None
+    source: Literal["listing", "application", "rent_roll"] = "listing"
+    source_url: str | None = None  # the advert the claim was read from
+    doc_span: str | None = None  # the exact words the value was read from
+    captured_at: str = Field(default_factory=now)
+    document_id: str | None = None  # the landed advert this was read from
+    span: Span | None = None  # doc_span grounded in that document's decoded text
 
 
 class Evidence(BaseModel):
@@ -123,6 +125,7 @@ class HistoryEntry(BaseModel):
     agent: str
     advert_id: str | None = None
     document_id: str | None = None
+    observed_at: str | None = None  # when the value was true; fetched_at is when it was retrieved
 
 
 class Counts(BaseModel):

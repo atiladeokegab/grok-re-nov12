@@ -27,7 +27,12 @@ SEVERITY = {
 }
 CHECKABLE = set(SEVERITY)  # claims an independent source is expected to check
 CHECKED_BY = {"energy_rating": "epc", "floor_area": "epc", "property_type": "epc"}
-CONTEXT = {"photo_reuse": "warn", "photo_history": "warn", "tenant_reviews": "info"}
+CONTEXT = {
+    "photo_reuse": "warn",
+    "photo_history": "warn",
+    "tenant_reviews": "info",
+    "area_context": "info",
+}
 UNCLAIMED_INFO = {"floor_area"}
 AREA_TOLERANCE = 0.10  # an advert's size within 10% of the register's is a match
 SQFT_PER_M2 = 10.7639

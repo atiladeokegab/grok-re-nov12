@@ -56,6 +56,8 @@ def capture(listing: dict) -> dict:
 
 
 def ingest(place: Place, listing: dict) -> tuple[list, list[Evidence]]:
+    if not listing["crawl"]:  # a pasted advert
+        raise SourceOff("not in the crawl: no other adverts to compare photos with")
     if listing["offline"]:
         data = (listing["fixture"] or {}).get("photo_reuse")
         if data is None:

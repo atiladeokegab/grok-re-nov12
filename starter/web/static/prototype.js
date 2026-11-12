@@ -19,9 +19,7 @@ export const prototype = {
     { id: 'postcode', field: 'postcode', verdict: 'matches', claim_id: 'postcode-claim', evidence_ids: ['postcode-record'], reasoning: 'The postcode matches in the two illustrative records.', model: 'Illustrative reasoning' },
     { id: 'review', field: 'reviews', verdict: 'unverifiable', evidence_ids: [], reasoning: 'No attributable tenant review has been retrieved. This is not evidence that reviews are positive.', model: 'Illustrative reasoning' },
   ],
-  history: [
-    { field: 'rent', previous_value: '£2,100 / month', value: '£2,450 / month', source_name: 'Illustrative advert history', doc_span: 'Illustrative fixture, advert snapshots A and B.', fetched_at: '2026-11-12T19:00:00Z', agent: 'Listing history', advert_id: 'example-B' },
-  ],
-  sources: [{ name: 'Listing history', status: 'ok', n_evidence: 1 }, { name: 'EPC records', status: 'ok', n_evidence: 2 }, { name: 'Photo matches', status: 'empty', n_evidence: 0 }, { name: 'Tenant reviews', status: 'error', n_evidence: 0 }],
+  history: [],
+  sources: [{ name: 'Listing history', status: 'empty', n_evidence: 0 }, { name: 'EPC records', status: 'ok', n_evidence: 2 }, { name: 'Photo matches', status: 'empty', n_evidence: 0 }, { name: 'Tenant reviews', status: 'error', n_evidence: 0 }],
   grok_calls: 0, client_calls: { grok: 0, cursor_sdk: 0, mcp: { grok_bot: 0, cursor: 0, other: 0 } },
 };

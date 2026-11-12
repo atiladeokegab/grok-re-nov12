@@ -36,7 +36,7 @@ function sourceRecord(record) {
     block.append(a);
   }
   if (record.doc_span) block.append(element('p', typeof record.doc_span === 'string' ? record.doc_span : JSON.stringify(record.doc_span)));
-  block.append(element('p', `${timestamp(record.fetched_at || record.captured_at)} · ${record.agent || 'Agent not recorded'}`));
+  block.append(element('p', `${timestamp(record.fetched_at || record.captured_at)}. ${record.agent ? `Retrieved by ${record.agent}.` : 'Agent not recorded.'}`));
   return block;
 }
 
@@ -55,7 +55,7 @@ function photoFigure(url, label, advertId) {
   const figure = element('figure', null, 'evidence-photo');
   const link = element('a'); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer';
   const image = element('img'); image.src = url; image.alt = `${label} photograph from listing ${advertId}`; image.loading = 'lazy';
-  link.append(image); figure.append(link, element('figcaption', `${label} · advert ${advertId}`));
+  link.append(image); figure.append(link, element('figcaption', `${label} in advert ${advertId}.`));
   return figure;
 }
 
@@ -174,7 +174,7 @@ function render(result) {
   const counts = result.counts || {};
   const disagreements = counts.disagrees || 0;
   $('summary-title').textContent = disagreements ? `${disagreements} ${disagreements === 1 ? 'claim doesn’t' : 'claims don’t'} match the records` : (result.findings || []).length ? 'The records are ready to compare' : 'Checking the records';
-  $('summary-detail').textContent = `${counts.matches || 0} matched · ${counts.unverifiable || 0} could not be verified · ${counts.flag || 0} worth a closer look. Unverifiable claims are excluded from the score.`;
+  $('summary-detail').textContent = `${counts.matches || 0} matched. ${counts.unverifiable || 0} could not be verified. ${counts.flag || 0} worth a closer look. Unverifiable claims are excluded from the score.`;
   $('finding-count').textContent = `${(result.findings || []).length} findings`;
   $('findings').replaceChildren();
   for (const finding of result.findings || []) {
@@ -276,7 +276,7 @@ function watch(runId, ownGeneration) {
   });
   source.addEventListener('error', () => {
     if (generation !== ownGeneration) return;
-    $('run-id').textContent = `Run ${runId} · Live connection interrupted; reconnecting. Last received records remain visible.`;
+    $('run-id').textContent = `Run ${runId}. Live connection interrupted; reconnecting. Last received records remain visible.`;
   });
 }
 

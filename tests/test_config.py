@@ -17,7 +17,12 @@ def test_cloud_refuses_missing_secrets():
 
 
 def test_cloud_with_secrets_starts_and_public_hides_them():
-    env = {"MODE": "cloud", "ANTHROPIC_API_KEY": "sk-secret", "ADMIN_PASSWORD": "pw"}
+    env = {
+        "MODE": "cloud",
+        "ANTHROPIC_API_KEY": "sk-secret",
+        "ADMIN_PASSWORD": "pw",
+        "MCP_SECRET": "m",
+    }
     s = Settings.from_env({**env, "DATA_PATH": "gs://b/store.json"})
     assert s.mode == "cloud" and s.data_path == "gs://b/store.json"
     shown = json.dumps(s.public())
@@ -26,7 +31,7 @@ def test_cloud_with_secrets_starts_and_public_hides_them():
 
 
 def test_cloud_refuses_a_store_that_does_not_survive_a_restart():
-    cloud = {"MODE": "cloud", "ANTHROPIC_API_KEY": "k", "ADMIN_PASSWORD": "pw"}
+    cloud = {"MODE": "cloud", "ANTHROPIC_API_KEY": "k", "ADMIN_PASSWORD": "pw", "MCP_SECRET": "m"}
     for path in (None, "/tmp/store.json", "data/store.json"):
         env = cloud if path is None else {**cloud, "DATA_PATH": path}
         with pytest.raises(RuntimeError, match="DATA_PATH=gs://"):
@@ -50,6 +55,7 @@ def test_effects_default_to_simulate_everywhere_and_live_is_opt_in():
         "MODE": "cloud",
         "ANTHROPIC_API_KEY": "k",
         "ADMIN_PASSWORD": "pw",
+        "MCP_SECRET": "m",
         "DATA_PATH": "gs://b/s",
     }
     assert Settings().mode_effects == "simulate"

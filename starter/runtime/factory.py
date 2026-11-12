@@ -77,9 +77,9 @@ def create_app(settings: Settings | None = None, store: Store | None = None) -> 
 
     @app.post("/api/mcp/token", dependencies=[Depends(require_token)])
     def mcp_token() -> dict:
-        return {"token": mcp_door.issue_token(settings.admin_password)}
+        return {"token": mcp_door.issue_token(settings.mcp_key)}
 
-    app.add_route("/mcp", mcp_door.TokenGuard(mcp_app, settings.admin_password))
+    app.add_route("/mcp", mcp_door.TokenGuard(mcp_app, settings.mcp_key))
     app.include_router(routes.router)
     app.include_router(pages.router)
     app.mount("/static", pages.static, name="static")

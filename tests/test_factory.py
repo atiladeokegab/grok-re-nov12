@@ -15,7 +15,8 @@ def test_healthz_reports_public_status(client):
         "mode": "local",
         "model": "claude-opus-5-5",
         "effects": "simulate",
-        "providers": {"anthropic": "fake"},
+        "providers": {"anthropic": "fake", "xai": "off"},
+        "narrator": "rules",
     }
 
 

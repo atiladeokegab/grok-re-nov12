@@ -31,12 +31,13 @@ def main(argv: list[str] | None = None) -> int:
     gateway = build_gateway(open_store(settings.data_path), settings.mode_effects)
     report = run_xray(gateway, args.fixture or args.ref, offline=bool(args.fixture))
     print(json.dumps(report.model_dump(), indent=1))
-    by_source = {f_ev.split("-")[1] for f in report.findings for f_ev in f.evidence_ids}
+    agent = {e.id: e.agent for e in report.evidence}
+    by_source = {agent.get(i) for f in report.findings for i in f.evidence_ids}
     with_evidence = {s.name for s in report.sources if s.n_evidence}
     ok = (
         report.status == "done"
         and report.findings
-        and all(s.split("_")[0] in by_source or s == "listing_history" for s in with_evidence)
+        and all(s in by_source or s == "listing_history" for s in with_evidence)
     )
     print(
         f"trust_score={report.trust_score} counts={report.counts.model_dump()} "

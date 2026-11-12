@@ -49,7 +49,10 @@ def same(field: str, claim: Claim, ev: Evidence) -> bool:
         return abs(a - b) <= AREA_TOLERANCE * b
     if isinstance(claim.value, int | float) and isinstance(ev.value, int | float):
         return abs(float(claim.value) - float(ev.value)) < 0.5
-    return _norm(claim.value) == _norm(ev.value)
+    a, b = _norm(claim.value), _norm(ev.value)
+    if not a or not b:  # "House" vs "Flat" both strip to "": compare the words themselves
+        a, b = str(claim.value).lower().strip(), str(ev.value).lower().strip()
+    return a == b
 
 
 def _show(v, unit=None) -> str:

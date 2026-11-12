@@ -24,6 +24,7 @@ def offline_env(monkeypatch):
     """Tests never see the developer's keys: every test runs offline, in local mode."""
     for name in (
         "ANTHROPIC_API_KEY",
+        "XAI_API_KEY",
         "ADMIN_PASSWORD",
         "MODE",
         "DATA_PATH",

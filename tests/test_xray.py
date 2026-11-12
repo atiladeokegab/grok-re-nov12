@@ -21,7 +21,8 @@ def _gateway(tmp_path):
 def test_s1_offline_demo_scores_and_cites_every_finding(tmp_path):
     r = run_xray(_gateway(tmp_path), "demo", offline=True)
     assert r.status == "done" and r.trust_score is not None
-    assert {s.name: s.status for s in r.sources} == {"listing_history": "ok", "epc": "ok"}
+    status = {s.name: s.status for s in r.sources}
+    assert status["listing_history"] == status["epc"] == "ok"  # other registered sources may add
     evidence = {e.id: e for e in r.evidence}
     for f in r.findings:
         if f.verdict != "unverifiable":
@@ -132,3 +133,35 @@ def test_fixture_names_cannot_walk_the_filesystem():
 
     with pytest.raises(NotFound):
         load_listing("../fixtures/demo", offline=True)
+
+
+def test_house_is_not_a_flat():
+    findings = reconcile([_claim("property_type", "House")], [_ev("property_type", "Flat")], [])
+    assert findings[0].verdict == "disagrees"
+
+
+def test_epc_match_needs_the_same_building():
+    from starter.verticals.sources.epc import match_row
+
+    rows = [
+        "Flat 1, 20 High Street, LONDON, E1 1AA D 3 May 2030 | /c/20",
+        "Flat 1, 10 High Street, LONDON, E1 1AA C 3 May 2030 | /c/10",
+    ]
+    assert match_row(rows, "Flat 1, 10 High Street, London E1 1AA") == "/c/10"
+    assert match_row(rows, "Flat 1, 30 High Street, London E1 1AA") is None
+
+
+def test_advert_floor_area_is_a_claim():
+    from starter.verticals.sources.listing_history import parse_advert
+
+    assert parse_advert("Gross internal area 70 m2 approx")["floor_area"][:2] == (70.0, "m2")
+    assert parse_advert("approx 753 sq ft")["floor_area"][:2] == (753.0, "sq ft")
+
+
+def test_rent_basis_is_never_compared_with_a_sale_price():
+    from starter.verticals.sources.listing_history import _crawl_values
+
+    rent = _crawl_values({"price_gbp": "24000", "price_basis": "rent pa"})
+    assert "price" not in rent and rent["rent_pa"][0] == 24000.0
+    assert "price" not in _crawl_values({"price_gbp": "30", "price_basis": "rent psf"})
+    assert "price" in _crawl_values({"price_gbp": "750000", "price_basis": "guide/asking"})

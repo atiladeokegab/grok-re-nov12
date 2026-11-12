@@ -28,6 +28,11 @@ PATTERNS = {
         "str",
     ),
     "bedrooms": (r"\b(\w+) Bedrooms?\b", None, "count"),
+    "floor_area": (
+        r"(\d[\d,]*(?:\.\d+)?)\s*(sq\.?\s?ft|square feet|sq\.?\s?m\b|m2|m²|square met)",
+        None,
+        "area",
+    ),
     "tenure": (r"Tenure\s*:?\s*(Leasehold|Freehold|Share of Freehold)", None, "str"),
 }
 WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "studio": 0}
@@ -35,6 +40,8 @@ WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "studio
 
 def _value(raw: str, kind: str):
     if kind == "money":
+        return float(raw.replace(",", ""))
+    if kind == "area":
         return float(raw.replace(",", ""))
     if kind == "count":
         return int(raw) if raw.isdigit() else WORDS.get(raw.lower())
@@ -47,6 +54,8 @@ def parse_advert(text: str) -> dict[str, tuple]:
     for field, (pattern, unit, kind) in PATTERNS.items():
         if m := re.search(pattern, text, re.I):
             value = _value(m.group(1), kind)
+            if kind == "area":
+                unit = "sq ft" if re.search(r"f", m.group(2), re.I) else "m2"
             if value is not None:
                 out[field] = (value, unit, m.group(0))
     return out
@@ -69,9 +78,14 @@ def _page(listing: dict) -> dict:
 def _crawl_values(row: dict) -> dict[str, tuple]:
     """What the crawl recorded, mapped onto advert fields."""
     out = {}
+    basis = (row.get("price_basis") or "").lower()
     if row.get("price_gbp"):
-        basis = row.get("price_basis") or "unstated basis"
-        out["price"] = (float(row["price_gbp"]), "GBP", f"price_gbp={row['price_gbp']} ({basis})")
+        words = f"price_gbp={row['price_gbp']} ({basis or 'unstated basis'})"
+        if basis.startswith("guide"):  # a sale price: same basis as the advert's guide/sold
+            out["price"] = (float(row["price_gbp"]), "GBP", words)
+        elif basis in ("rent pa", "pa"):
+            out["rent_pa"] = (float(row["price_gbp"]), "GBP/year", words)
+        # rent psf or unstated: no field to compare it with, so no evidence
     if row.get("status"):
         out["sale_status"] = (row["status"].title(), None, f"status={row['status']}")
     if row.get("tenure"):

@@ -14,22 +14,33 @@ SOURCE = "EPC register"
 BASE = "https://find-energy-certificate.service.gov.uk"
 
 
-def _key(address: str) -> tuple[str, str]:
-    """(house or flat number, first street word): enough to pick one row in a postcode."""
+POSTCODE = r"\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b"
+
+
+def _key(address: str) -> tuple[str, tuple[str, ...], str]:
+    """(flat word, every number before the postcode, first street word): Flat 1, 20 High
+    Street and Flat 1, 10 High Street are different keys."""
     a = re.sub(r"^Lot \d+\s+", "", address, flags=re.I)
+    a = re.split(POSTCODE, a, maxsplit=1, flags=re.I)[0]  # rows go on to rating and dates
     flat = re.search(r"\b(?:Flat|Apartment|Unit)\s+(\w+)", a, re.I)
-    number = flat.group(1) if flat else (re.search(r"\b(\d+[A-Z]?)\b", a) or [None, ""])[1]
+    numbers = tuple(n.lower() for n in re.findall(r"\b(\d+[A-Z]?)\b", a, re.I))
     street = re.search(r"\d+[A-Z]?,?\s+([A-Za-z]+)", a)
-    return number.lower(), (street.group(1).lower() if street else "")
+    return (
+        flat.group(1).lower() if flat else "",
+        numbers,
+        street.group(1).lower() if street else "",
+    )
 
 
 def match_row(rows: list[str], address: str) -> str | None:
-    """The certificate path of the row for this address, or None. Rows are 'address ... | path'."""
-    number, street = _key(address)
+    """The certificate path of the row for this exact address, or None. Rows are
+    'address ... | path'."""
+    key = _key(address)
+    if not key[1] or not key[2]:
+        return None
     for row in rows:
         text, _, path = row.rpartition(" | ")
-        row_number, row_street = _key(text)
-        if row_number == number and street and street in text.lower():
+        if _key(text) == key:
             return path
     return None
 

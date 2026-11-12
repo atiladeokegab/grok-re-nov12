@@ -35,6 +35,7 @@ from starter.core.xray import (
 )
 from starter.runtime.deps import StoreDep
 from starter.verticals import reconcile as rec
+from starter.verticals.narrate import narrate
 from starter.verticals.sources import SOURCES, load_listing
 
 router = APIRouter(tags=["xray"])
@@ -171,6 +172,10 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
         for h in report.history:
             _save(store, report, "history", h)
         report.findings = rec.reconcile(report.claims, report.evidence, report.sources)
+        told = narrate(report.findings, report.claims, report.evidence)
+        if told["provider"] == "xai":
+            report.grok_calls += told["calls"]
+            report.client_calls.grok += told["calls"]
         for f in report.findings:
             _save(store, report, "finding", f)
         report.counts = count(report.findings)

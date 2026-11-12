@@ -106,5 +106,12 @@ class Settings:
             "mode": self.mode,
             "model": self.model,
             "effects": self.mode_effects,
-            "providers": {"anthropic": "configured" if self.anthropic_api_key else "fake"},
+            "providers": {
+                "anthropic": "configured" if self.anthropic_api_key else "fake",
+                "xai": "configured" if os.environ.get("XAI_API_KEY") else "off",
+            },
+            # who writes finding reasoning: xai, else anthropic, else rules (offline)
+            "narrator": "xai"
+            if os.environ.get("XAI_API_KEY")
+            else ("anthropic" if self.anthropic_api_key else "rules"),
         }

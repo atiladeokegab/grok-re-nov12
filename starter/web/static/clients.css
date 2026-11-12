@@ -1,4 +1,4 @@
-/* "Grok Bot & Cursor" live card: reuses the run receipt's list styles (styles.css .run-receipt dl). */
+/* "X-ray over MCP" live card: reuses the run receipt's list styles (styles.css .run-receipt dl). */
 .clients-note {
   font-size: var(--type-caption);
   color: var(--color-muted);

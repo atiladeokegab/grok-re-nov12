@@ -112,3 +112,35 @@ def test_data_path_picks_the_store(tmp_path, fake):
     assert Settings.from_env({"DATA_PATH": URL}).data_path == URL  # not collapsed to gs:/
     assert type(open_store(str(tmp_path / "store.json"))) is Store
     assert type(open_store("gs://demo-bucket/store.json", client=fake)) is GcsStore
+
+
+def test_parallel_source_threads_all_land(fake, monkeypatch):
+    """Nine source threads writing at once (the live ConflictError): every write lands, none gives up."""
+    import threading
+    import time as _time
+
+    slow_read = FakeBlob.download_as_bytes
+
+    def download(self):  # widen the read->upload window so unserialised writers would clash
+        data = slow_read(self)
+        _time.sleep(0.002)
+        return data
+
+    monkeypatch.setattr(FakeBlob, "download_as_bytes", download)
+    store = GcsStore(URL, client=fake, tries=2)
+    errors = []
+
+    def source(i):
+        try:
+            for _ in range(5):
+                store.publish({"type": "xray", "source": i})
+        except Exception as e:  # noqa: BLE001
+            errors.append(e)
+
+    threads = [threading.Thread(target=source, args=(i,)) for i in range(9)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert errors == []
+    assert len(store.snapshot()["events"]) == 45

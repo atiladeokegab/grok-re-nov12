@@ -55,6 +55,7 @@ def test_saved_comparison_sources_chart_and_all_csv(page: Page, tmp_path, monkey
         expect(row).to_contain_text("63.1 m²")
         assert "energy-certificate" in row.get_by_role("link", name="72 m²").get_attribute("href")
         expect(page.locator('[data-listing="macquarie-way"] .analyst-score')).to_have_text("67")
+        expect(page.locator('[data-listing="charlemont-road"]')).to_contain_text("—, not scored")
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         with page.expect_download() as downloaded:
             page.get_by_role("button", name="Download all as CSV").click()

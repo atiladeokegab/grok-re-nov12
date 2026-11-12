@@ -8,6 +8,11 @@ export function score(value) {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100 ? value : null;
 }
 
+export function reportScore(report) {
+  if (report?.counts?.matches === 0 && report.counts.disagrees === 0) return null;
+  return score(report?.trust_score);
+}
+
 export function facts(report) {
   const claims = (Array.isArray(report.claims) ? report.claims : []).filter(sourcePresent);
   const evidence = (Array.isArray(report.evidence) ? report.evidence : []).filter(e => sourcePresent(e) && !e.observed_at);
@@ -101,10 +106,10 @@ function renderRow(entry) {
   }
   const data = facts(report);
   row.append(factCell(data.price, report, v => typeof v === 'number' ? valueText(v, 'GBP') : String(v)));
-  const value = score(report.trust_score);
+  const value = reportScore(report);
   const scoreCell = node('td');
-  scoreCell.append(sourceLink(value == null ? 'Unscored' : String(value), reportURL(report), '/'));
-  scoreCell.className = 'analyst-score'; row.append(scoreCell);
+  scoreCell.append(sourceLink(value == null ? '—, not scored' : String(value), reportURL(report), '/'));
+  scoreCell.className = value == null ? 'analyst-unavailable' : 'analyst-score'; row.append(scoreCell);
   for (const [field, className] of [['matches', 'analyst-match'], ['disagrees', 'analyst-disagree'], ['unverifiable', 'analyst-unverified']]) {
     const count = report.counts?.[field];
     const cell = node('td', undefined, className);
@@ -133,11 +138,11 @@ function renderRow(entry) {
 
 function renderBar({ listing, report }) {
   const row = node('li');
-  const value = score(report?.trust_score);
+  const value = reportScore(report);
   row.append(sourceLink(listing.title, report ? reportURL(report) : listing.url, '/'));
   const track = node('span', undefined, 'analyst-bar'); track.setAttribute('aria-hidden', 'true');
   const fill = node('span', undefined, 'analyst-bar-fill'); fill.style.width = `${value ?? 0}%`;
-  track.append(fill); row.append(track, node('span', value == null ? 'Unscored' : `${value} / 100`, 'analyst-chart-score'));
+  track.append(fill); row.append(track, node('span', value == null ? '—, not scored' : `${value} / 100`, 'analyst-chart-score'));
   if (value == null) row.dataset.unscored = '';
   return row;
 }

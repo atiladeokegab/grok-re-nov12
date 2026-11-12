@@ -1,10 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { score, facts, csvRows, combineCSV } from './analyst.js';
+import { score, reportScore, facts, csvRows, combineCSV } from './analyst.js';
 
 test('an absent score stays unscored; zero remains a real score', () => {
   for (const value of [null, undefined, '', '67', NaN, Infinity, -1, 101]) assert.equal(score(value), null);
   for (const value of [0, 67, 100]) assert.equal(score(value), value);
+});
+
+test('flag-only reports are unscored while a confirmed disagreement can score zero', () => {
+  assert.equal(reportScore({ trust_score: 0, counts: { matches: 0, disagrees: 0, flag: 1 } }), null);
+  assert.equal(reportScore({ trust_score: 0, counts: { matches: 0, disagrees: 1 } }), 0);
+  assert.equal(reportScore({ trust_score: 67, counts: { matches: 1, disagrees: 1 } }), 67);
 });
 
 test('comparison uses current independent EPC facts and keeps room totals separate', () => {

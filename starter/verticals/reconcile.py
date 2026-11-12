@@ -34,6 +34,14 @@ CONTEXT = {
     "area_context": "info",
 }
 UNCLAIMED_INFO = {"floor_area"}
+# Companies House statuses that mean the named company cannot be trading normally
+COMPANY_DOWN = {
+    "dissolved",
+    "liquidation",
+    "administration",
+    "receivership",
+    "insolvency-proceedings",
+}
 AREA_TOLERANCE = 0.10  # an advert's size within 10% of the register's is a match
 SQFT_PER_M2 = 10.7639
 
@@ -95,6 +103,9 @@ def reconcile(
     for c in claims:
         independent = [e for e in current if e.field == c.field and e.agent != HISTORY_AGENT]
         history = [e for e in evidence if e.field == c.field and e.agent == HISTORY_AGENT]
+        if c.field == "agent_company":  # evidence is the register's status, not a rival value
+            _company(c, independent, add)
+            continue
         for e in independent:
             if same(c.field, c, e):
                 why = f"Advert says {_show(c.value, c.unit)}; {e.source_name} agrees."
@@ -132,7 +143,9 @@ def reconcile(
             add(e.field, "flag", CONTEXT[e.field], e.doc_span or f"{e.source_name}.", evs=[e])
 
     for s in sources:  # a source that said nothing is shown, never silently dropped
-        if s.status != "ok" and not any(CHECKED_BY.get(f.field) == s.name for f in out):
+        if s.status not in ("ok", "off") and not any(
+            CHECKED_BY.get(f.field) == s.name for f in out
+        ):
             detail = f": {s.detail}" if s.detail else ""
             out.append(
                 Finding(
@@ -146,3 +159,19 @@ def reconcile(
                 )
             )
     return out
+
+
+def _company(c: Claim, evs: list[Evidence], add) -> None:
+    """Rule 1 for the named agent: an active company matches; a closed or insolvent one
+    disagrees (high); any other status is a warn flag; no exact register match is unverifiable."""
+    if not evs:
+        why = f"Could not check: no exact Companies House match for {c.value}."
+        add(c.field, "unverifiable", "info", why, c)
+    for e in evs:
+        said = f"Advert names {c.value}; {e.source_name} lists it as {e.value}."
+        if e.value == "active":
+            add(c.field, "matches", "info", said, c, [e])
+        elif e.value in COMPANY_DOWN:
+            add(c.field, "disagrees", "high", said, c, [e])
+        else:
+            add(c.field, "flag", "warn", said, c, [e])

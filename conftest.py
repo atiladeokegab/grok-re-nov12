@@ -32,6 +32,7 @@ def offline_env(monkeypatch):
         "DATA_PATH",
         "MODEL",
         "DEMO_LATENCY",
+        "COMPANIES_HOUSE_API_KEY",
     ):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setattr(EXPORTER, "echo", False)  # create_app turns it on; off between tests

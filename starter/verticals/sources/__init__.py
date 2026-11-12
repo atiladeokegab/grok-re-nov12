@@ -17,10 +17,10 @@ from pathlib import Path
 
 from starter.core.errors import NotFound
 from starter.core.xray import Place
-from starter.verticals.sources import epc, listing_history
+from starter.verticals.sources import companies_house, epc, listing_history
 
 FIXTURES = Path(__file__).parent / "fixtures"
-SOURCES = [listing_history, epc]  # order matters: listing_history fills listing["page"]
+SOURCES = [listing_history, epc, companies_house]  # order matters: listing_history fills page
 
 
 @functools.cache

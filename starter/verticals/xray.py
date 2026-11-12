@@ -25,7 +25,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel
 
-from starter.core.errors import NotFound
+from starter.core.errors import NotFound, SourceOff
 from starter.core.ingest import decoded_text, ground, land, raw_bytes
 from starter.core.store import Store
 from starter.core.xray import (
@@ -288,6 +288,8 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
                 evidence = [Evidence(**e) for e in result["payload"]["evidence"]]
                 state = "ok" if claims or evidence else "empty"
                 detail = None if evidence or claims else "no record for this address"
+            except SourceOff as e:  # switched off (offline or no key): not a failure
+                claims, evidence, state, detail = [], [], "off", str(e)
             except Exception as e:  # a failed source is shown as unverifiable, never hidden
                 claims, evidence, state, detail = [], [], "error", f"{type(e).__name__}: {e}"
             try:  # provenance is extra: a landing or grounding failure never fails the run

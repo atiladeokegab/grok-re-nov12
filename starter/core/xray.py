@@ -109,7 +109,7 @@ class Finding(BaseModel):
 
 class SourceStatus(BaseModel):
     name: str
-    status: Literal["ok", "empty", "error"]
+    status: Literal["ok", "empty", "error", "off"]
     n_evidence: int = 0
     ms: int = 0
     detail: str | None = None  # why empty or error; shown on unverifiable findings

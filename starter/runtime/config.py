@@ -36,6 +36,7 @@ class Settings:
     elevenlabs_agent_id: str | None = None
     elevenlabs_phone_number_id: str | None = None
     demo_latency: tuple[float, float] | None = None  # (low, high) s; only the demo recorder sets it
+    companies_house_api_key: str | None = None  # the companies_house source; unset = "off"
 
     @classmethod
     def from_env(cls, env: dict[str, str] | None = None) -> "Settings":
@@ -102,6 +103,7 @@ class Settings:
             elevenlabs_agent_id=env.get("ELEVENLABS_AGENT_ID") or None,
             elevenlabs_phone_number_id=env.get("ELEVENLABS_PHONE_NUMBER_ID") or None,
             demo_latency=demo_latency,
+            companies_house_api_key=env.get("COMPANIES_HOUSE_API_KEY") or None,
         )
 
     @property

@@ -1,0 +1,17 @@
+{
+  "kind": "officer-list",
+  "items_per_page": 35,
+  "start_index": 0,
+  "total_results": 1,
+  "active_count": 1,
+  "resigned_count": 0,
+  "items": [
+    {
+      "name": "EXAMPLE, Alex",
+      "officer_role": "director",
+      "appointed_on": "2015-04-01",
+      "links": {"officer": {"appointments": "/officers/example-officer-1/appointments"}}
+    }
+  ],
+  "links": {"self": "/company/00000001/officers"}
+}

@@ -90,6 +90,6 @@ def test_run_endpoint_stores_run_and_page_lists_it(client, auth):
     r = client.post("/api/runs", json=body, headers=auth)
     assert r.status_code == 200
     assert "SECRET" not in str(r.json()["trace"][0])
-    page = client.get("/")
+    page = client.get("/runs")
     assert page.status_code == 200 and "Case web-1" in page.text and "SIMULATED" in page.text
     assert client.get("/static/tokens.css").status_code == 200

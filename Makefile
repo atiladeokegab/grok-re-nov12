@@ -1,4 +1,4 @@
-.PHONY: dev check smoke smoke-xray e2e demo eval bootstrap deploy mcp
+.PHONY: dev check smoke smoke-xray e2e demo eval eval-leases bootstrap deploy mcp
 
 MCP_URL ?= http://127.0.0.1:8000/mcp
 
@@ -41,3 +41,7 @@ deploy:
 
 mcp:
 	uv run python -m starter.runtime.mcp_door $(MCP_URL)
+
+# Lease abstraction against the hand-labelled MCL gold set (data outside the repo). Not in smoke.
+eval-leases:
+	uv run python scripts/eval_leases.py

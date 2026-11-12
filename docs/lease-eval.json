@@ -1,0 +1,672 @@
+{
+  "documents": 8,
+  "skipped_no_docx": [],
+  "threshold": 0.5,
+  "fields": {
+    "parties": {
+      "n": 8,
+      "strict": 6,
+      "content": 8
+    },
+    "premises": {
+      "n": 8,
+      "strict": 6,
+      "content": 8
+    },
+    "permitted_use": {
+      "n": 8,
+      "strict": 5,
+      "content": 8
+    },
+    "contractual_term": {
+      "n": 8,
+      "strict": 7,
+      "content": 7
+    },
+    "main_rent": {
+      "n": 8,
+      "strict": 7,
+      "content": 7
+    },
+    "rent_review": {
+      "n": 8,
+      "strict": 7,
+      "content": 8
+    },
+    "break_clause": {
+      "n": 8,
+      "strict": 8,
+      "content": 8
+    },
+    "alienation": {
+      "n": 8,
+      "strict": 6,
+      "content": 6
+    },
+    "insurance": {
+      "n": 8,
+      "strict": 4,
+      "content": 4
+    },
+    "lr_prescribed_clauses": {
+      "n": 8,
+      "strict": 8,
+      "content": 8
+    }
+  },
+  "overall": {
+    "n": 80,
+    "strict": 64,
+    "content": 72
+  },
+  "per_document": [
+    {
+      "sample_id": "MCL-OFFICE-01",
+      "file": "MCL-Office-01.docx",
+      "fields": {
+        "parties": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "PARTIES",
+          "doc_span": "(1)the Landlord named in clause LR3 (the “Landlord”); [and] (2)the Tenant named "
+        },
+        "premises": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Premises”",
+          "doc_span": "the premises known as [ADDRESS OF PREMISES] and shown [edged][coloured] [COLOUR]"
+        },
+        "permitted_use": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "definition “Permitted Use”",
+          "doc_span": "the use of the Premises as offices within [E(g)(i) in Part A of Schedule 2][Clas"
+        },
+        "contractual_term": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Contractual Term”",
+          "doc_span": "the term of [●] years starting on [●] and ending on [●];"
+        },
+        "main_rent": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Main Rent”",
+          "doc_span": "the yearly rent of [AMOUNT IN WORDS] pounds (£[AMOUNT IN FIGURES]) [subject to r"
+        },
+        "rent_review": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "Rent Review Date; Rent review",
+          "doc_span": "Rent Review Date: [DATE] in each of the years [YEARS] and references to the “Ren"
+        },
+        "break_clause": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "BREAK CLAUSE; Break Date",
+          "doc_span": "BREAK CLAUSE: The Tenant may end the Term on [any][the] Break Date by giving the"
+        },
+        "alienation": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "LR8. Prohibitions or restrictions on disposing of this lease; Dealings with the Premises; Underletting",
+          "doc_span": "LR8. Prohibitions or restrictions on disposing of this lease: This Lease contain"
+        },
+        "insurance": {
+          "strict": false,
+          "content": false,
+          "placeholder": false,
+          "source": "Insurance; Insurance and Damage Provisions",
+          "doc_span": "Insurance: The Tenant must comply with its obligations in Schedule 3. | Insuranc"
+        },
+        "lr_prescribed_clauses": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "LR1-LR14",
+          "doc_span": "14 of 14 prescribed clauses present: LR1, LR2, LR3, LR4, LR5, LR6, LR7, LR8, LR9"
+        }
+      }
+    },
+    {
+      "sample_id": "MCL-OFFICE-02",
+      "file": "MCL-Office-02.docx",
+      "fields": {
+        "parties": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "PARTIES",
+          "doc_span": "(1)the Landlord named in clause LR3 (the “Landlord”); [and] (2)the Tenant named "
+        },
+        "premises": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Premises”",
+          "doc_span": "the premises known as [ADDRESS OF PREMISES] forming part of the Building and sho"
+        },
+        "permitted_use": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "definition “Permitted Use”",
+          "doc_span": "the use of the Premises as offices within [E(g)(i) in Part A of Schedule 2][Clas"
+        },
+        "contractual_term": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Contractual Term”",
+          "doc_span": "the term of [●] years starting on [●] and ending on [●];"
+        },
+        "main_rent": {
+          "strict": false,
+          "content": false,
+          "placeholder": true,
+          "source": "definition “Main Rent”",
+          "doc_span": "the yearly rent of [AMOUNT IN WORDS] pounds (£[AMOUNT IN FIGURES]) [subject to r"
+        },
+        "rent_review": {
+          "strict": false,
+          "content": true,
+          "placeholder": true,
+          "source": "Rent Review Date; Rent review",
+          "doc_span": "Rent Review Date: [DATE] in each of the years [YEARS] and references to the “Ren"
+        },
+        "break_clause": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "BREAK CLAUSE; Break Date",
+          "doc_span": "BREAK CLAUSE: The Tenant may end the Term on [any][the] Break Date by giving the"
+        },
+        "alienation": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "LR8. Prohibitions or restrictions on disposing of this lease; Dealings with the Premises; Underletting",
+          "doc_span": "LR8. Prohibitions or restrictions on disposing of this lease: This Lease contain"
+        },
+        "insurance": {
+          "strict": false,
+          "content": false,
+          "placeholder": false,
+          "source": "Insurance; Insurance and Damage Provisions",
+          "doc_span": "Insurance: The Tenant must comply with its obligations in Schedule 4. | Insuranc"
+        },
+        "lr_prescribed_clauses": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "LR1-LR14",
+          "doc_span": "14 of 14 prescribed clauses present: LR1, LR2, LR3, LR4, LR5, LR6, LR7, LR8, LR9"
+        }
+      }
+    },
+    {
+      "sample_id": "MCL-RETAIL-01",
+      "file": "MCL-Retail-01.docx",
+      "fields": {
+        "parties": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "PARTIES",
+          "doc_span": "(1)the Landlord named in clause LR3 (the “Landlord”); [and] (2)the Tenant named "
+        },
+        "premises": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Premises”",
+          "doc_span": "the premises known as [ADDRESS OF PREMISES] and shown [edged][coloured] [COLOUR]"
+        },
+        "permitted_use": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Permitted Use”",
+          "doc_span": "the [non-food][retail sale] of [DESCRIPTION]; or any other [non-food][retail] us"
+        },
+        "contractual_term": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Contractual Term”",
+          "doc_span": "the term of [●] years starting on [●] and ending on [●];"
+        },
+        "main_rent": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Main Rent”",
+          "doc_span": "the yearly rent of [AMOUNT IN WORDS] pounds (£[AMOUNT IN FIGURES]) [subject to r"
+        },
+        "rent_review": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "Rent Review Date; Rent review",
+          "doc_span": "Rent Review Date: [DATE] in each of the years [YEARS] and references to the “Ren"
+        },
+        "break_clause": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "BREAK CLAUSE; Break Date",
+          "doc_span": "BREAK CLAUSE: The Tenant may end the Term on [any][the] Break Date by giving the"
+        },
+        "alienation": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "LR8. Prohibitions or restrictions on disposing of this lease; Dealings with the Premises; Underletting",
+          "doc_span": "LR8. Prohibitions or restrictions on disposing of this lease: This Lease contain"
+        },
+        "insurance": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "Insurance; Insurance and Damage Provisions",
+          "doc_span": "Insurance: The Tenant must comply with its obligations in Schedule 3. | Insuranc"
+        },
+        "lr_prescribed_clauses": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "LR1-LR14",
+          "doc_span": "14 of 14 prescribed clauses present: LR1, LR2, LR3, LR4, LR5, LR6, LR7, LR8, LR9"
+        }
+      }
+    },
+    {
+      "sample_id": "MCL-RETAIL-07",
+      "file": "MCL-Retail-07.docx",
+      "fields": {
+        "parties": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "PARTIES",
+          "doc_span": "(1)the Landlord named in clause LR3 (the “Landlord”); [and] (2)the Tenant named "
+        },
+        "premises": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Premises”",
+          "doc_span": "the premises known as [ADDRESS OF PREMISES] forming part of the Centre and shown"
+        },
+        "permitted_use": {
+          "strict": false,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Permitted Use”",
+          "doc_span": "the [non-food][retail sale] of [DESCRIPTION]; or any other [non-food][retail] us"
+        },
+        "contractual_term": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Contractual Term”",
+          "doc_span": "the term of [●] years starting on [●] and ending on [●];"
+        },
+        "main_rent": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Main Rent”",
+          "doc_span": "the yearly rent of [AMOUNT IN WORDS] pounds (£[AMOUNT IN FIGURES]) [subject to r"
+        },
+        "rent_review": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "Rent Review Date; Rent review",
+          "doc_span": "Rent Review Date: [DATE] in each of the years [YEARS] and references to the “Ren"
+        },
+        "break_clause": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "BREAK CLAUSE; Break Date",
+          "doc_span": "BREAK CLAUSE: The Tenant may end the Term on [any][the] Break Date by giving the"
+        },
+        "alienation": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "LR8. Prohibitions or restrictions on disposing of this lease; Dealings with the Premises; Underletting",
+          "doc_span": "LR8. Prohibitions or restrictions on disposing of this lease: This Lease contain"
+        },
+        "insurance": {
+          "strict": false,
+          "content": false,
+          "placeholder": false,
+          "source": "Insurance; Insurance and Damage Provisions",
+          "doc_span": "Insurance: The Tenant must comply with its obligations in Schedule 4. | Insuranc"
+        },
+        "lr_prescribed_clauses": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "LR1-LR14",
+          "doc_span": "14 of 14 prescribed clauses present: LR1, LR2, LR3, LR4, LR5, LR6, LR7, LR8, LR9"
+        }
+      }
+    },
+    {
+      "sample_id": "MCL-LOGISTIC-01",
+      "file": "MCL-Logistic-01.docx",
+      "fields": {
+        "parties": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "PARTIES",
+          "doc_span": "(1)the Landlord named in clause LR3 (the “Landlord”); [and] (2)the Tenant named "
+        },
+        "premises": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Premises”",
+          "doc_span": "the premises known as [ADDRESS OF PREMISES] and shown [edged][coloured] [COLOUR]"
+        },
+        "permitted_use": {
+          "strict": false,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Permitted Use”",
+          "doc_span": "the use of the Premises as [DESCRIPTION] within Class [[E(g)(ii)][E(g)(iii)] of "
+        },
+        "contractual_term": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Contractual Term”",
+          "doc_span": "the term of [●] years starting on [●] and ending on [●];"
+        },
+        "main_rent": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Main Rent”",
+          "doc_span": "the yearly rent of [AMOUNT IN WORDS] pounds (£[AMOUNT IN FIGURES]) [subject to r"
+        },
+        "rent_review": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "Rent Review Date; Rent review",
+          "doc_span": "Rent Review Date: [DATE] in each of the years [YEARS] and references to the “Ren"
+        },
+        "break_clause": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "BREAK CLAUSE; Break Date",
+          "doc_span": "BREAK CLAUSE: The Tenant may end the Term on [any][the] Break Date by giving the"
+        },
+        "alienation": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "LR8. Prohibitions or restrictions on disposing of this lease; Dealings with the Premises; Underletting",
+          "doc_span": "LR8. Prohibitions or restrictions on disposing of this lease: This Lease contain"
+        },
+        "insurance": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "Insurance; Insurance and Damage Provisions",
+          "doc_span": "Insurance: The Tenant must comply with its obligations in Schedule 3. | Insuranc"
+        },
+        "lr_prescribed_clauses": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "LR1-LR14",
+          "doc_span": "14 of 14 prescribed clauses present: LR1, LR2, LR3, LR4, LR5, LR6, LR7, LR8, LR9"
+        }
+      }
+    },
+    {
+      "sample_id": "MCL-FOODDRINK-01",
+      "file": "MCL-Food-Drink-01.docx",
+      "fields": {
+        "parties": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "PARTIES",
+          "doc_span": "(1)the Landlord named in clause LR3 (the “Landlord”); [and] (2)the Tenant named "
+        },
+        "premises": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Premises”",
+          "doc_span": "the premises known as [ADDRESS OF PREMISES] and shown [edged][coloured] [COLOUR]"
+        },
+        "permitted_use": {
+          "strict": false,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Permitted Use”",
+          "doc_span": "the use of the Premises as a [[sandwich shop within Class E(a)][restaurant withi"
+        },
+        "contractual_term": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Contractual Term”",
+          "doc_span": "the term of [●] years starting on [●] and ending on [●];"
+        },
+        "main_rent": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Main Rent”",
+          "doc_span": "the yearly rent of [AMOUNT IN WORDS] pounds (£[AMOUNT IN FIGURES]) [subject to r"
+        },
+        "rent_review": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "Rent Review Date; Rent review",
+          "doc_span": "Rent Review Date: [DATE] in each of the years [YEARS] and references to the “Ren"
+        },
+        "break_clause": {
+          "strict": true,
+          "content": true,
+          "placeholder": true,
+          "source": "BREAK CLAUSE; Break Date",
+          "doc_span": "BREAK CLAUSE: The Tenant may end the Term on [any][the] Break Date by giving the"
+        },
+        "alienation": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "LR8. Prohibitions or restrictions on disposing of this lease; Dealings with the Premises; Underletting",
+          "doc_span": "LR8. Prohibitions or restrictions on disposing of this lease: This Lease contain"
+        },
+        "insurance": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "Insurance; Insurance and Damage Provisions",
+          "doc_span": "Insurance: The Tenant must comply with its obligations in Schedule 3. | Insuranc"
+        },
+        "lr_prescribed_clauses": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "LR1-LR14",
+          "doc_span": "14 of 14 prescribed clauses present: LR1, LR2, LR3, LR4, LR5, LR6, LR7, LR8, LR9"
+        }
+      }
+    },
+    {
+      "sample_id": "MCL-AFL-01",
+      "file": "MCL-AFL-01.docx",
+      "fields": {
+        "parties": {
+          "strict": false,
+          "content": true,
+          "placeholder": true,
+          "source": "PARTIES",
+          "doc_span": "[          ] [(company registration number [     ]) whose registered office is a"
+        },
+        "premises": {
+          "strict": false,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Premises”",
+          "doc_span": "the premises, forming part of the Landlord Property, known as [                 "
+        },
+        "permitted_use": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": null,
+          "doc_span": null
+        },
+        "contractual_term": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "definition “Term Commencement Date”",
+          "doc_span": "the Access Date."
+        },
+        "main_rent": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": "definition “Main Rent”",
+          "doc_span": "[the sum defined as Main Rent in the Lease.][the amount calculated under clause "
+        },
+        "rent_review": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": null,
+          "doc_span": null
+        },
+        "break_clause": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": null,
+          "doc_span": null
+        },
+        "alienation": {
+          "strict": false,
+          "content": false,
+          "placeholder": false,
+          "source": "Dealings with this Agreement",
+          "doc_span": "Dealings with this Agreement: The Tenant must not assign, underlet, charge or ot"
+        },
+        "insurance": {
+          "strict": false,
+          "content": false,
+          "placeholder": false,
+          "source": "Insurance and risk",
+          "doc_span": "Insurance and risk: The Landlord must insure the Landlord Property in accordance"
+        },
+        "lr_prescribed_clauses": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": null,
+          "doc_span": null
+        }
+      }
+    },
+    {
+      "sample_id": "MCL-DEPOSIT-01",
+      "file": "MCL-Deposit-01.docx",
+      "fields": {
+        "parties": {
+          "strict": false,
+          "content": true,
+          "placeholder": true,
+          "source": "PARTIES",
+          "doc_span": "1.[LANDLORD] (incorporated and registered in [England and Wales] [the United Kin"
+        },
+        "premises": {
+          "strict": false,
+          "content": true,
+          "placeholder": true,
+          "source": "definition “Premises”",
+          "doc_span": "the premises known as [ADDRESS OF PREMISES] described in more detail in the Leas"
+        },
+        "permitted_use": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": null,
+          "doc_span": null
+        },
+        "contractual_term": {
+          "strict": false,
+          "content": false,
+          "placeholder": false,
+          "source": null,
+          "doc_span": null
+        },
+        "main_rent": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": null,
+          "doc_span": null
+        },
+        "rent_review": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": null,
+          "doc_span": null
+        },
+        "break_clause": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": null,
+          "doc_span": null
+        },
+        "alienation": {
+          "strict": false,
+          "content": false,
+          "placeholder": false,
+          "source": "Disposals",
+          "doc_span": "Disposals: Following a Disposal the Landlord must:"
+        },
+        "insurance": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": null,
+          "doc_span": null
+        },
+        "lr_prescribed_clauses": {
+          "strict": true,
+          "content": true,
+          "placeholder": false,
+          "source": null,
+          "doc_span": null
+        }
+      }
+    }
+  ]
+}

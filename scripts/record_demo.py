@@ -110,6 +110,7 @@ def play(page: Page, film: Film, base: str, listing: str) -> None:
     if radio is not None:
         radio.check()
     box.click()
+    box.fill("")  # the page preloads the example; typing would append to it
     box.press_sequentially(listing, delay=25)
     film.beat("type", True, 1.5, f"residential={'set' if radio else 'not found'}")
 

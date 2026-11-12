@@ -358,6 +358,9 @@ def _unreadable(report: XRayReport, place) -> str | None:
     return f"Couldn't read this listing: {why}. Read anyway: {', '.join(read) or 'nothing'}."
 
 
+NO_NARRATION = {"provider": None, "model": "rules", "calls": 0, "error": None}
+
+
 def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None = None):
     """One X-ray, synchronously; every step is saved and published as it lands."""
     store = gateway.store
@@ -410,8 +413,11 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
         _score(store, report, findings)
         _flush(store, report)  # the final score lands now; the model calls below only reword
         with ThreadPoolExecutor(max_workers=1) as pool:  # Cursor summary and narration overlap
-            summarizing = pool.submit(cursor_step.summarize, report.model_dump())
-            told = narrate(findings, report.claims, report.evidence)  # once: model calls cost
+            # offline (fixtures, smoke, demo replays) never spends a paid model call
+            summarizing = pool.submit(
+                lambda: None if offline else cursor_step.summarize(report.model_dump())
+            )
+            told = NO_NARRATION if offline else narrate(findings, report.claims, report.evidence)
             if told["provider"] == "xai":
                 report.grok_calls += told["calls"]
                 report.client_calls.grok += told["calls"]

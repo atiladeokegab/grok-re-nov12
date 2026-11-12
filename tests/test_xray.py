@@ -242,3 +242,16 @@ def test_sale_status_quote_carries_the_amount():
     assert (value, quote) == ("Sold", "Sold £750,000")
     span = ground(text, quote)
     assert text[span.start : span.end] == span.quote == "Sold £750,000"
+
+
+def test_offline_run_makes_no_paid_model_calls(tmp_path, monkeypatch):
+    import starter.verticals.xray as xv
+
+    def paid(*a, **k):
+        raise AssertionError("offline run called a paid model")
+
+    monkeypatch.setattr(xv, "narrate", paid)
+    monkeypatch.setattr(xv.cursor_step, "summarize", paid)
+    r = run_xray(_gateway(tmp_path), "demo", offline=True)
+    assert r.status == "done" and r.trust_score == 67
+    assert r.grok_calls == 0 and r.client_calls.cursor_sdk == 0

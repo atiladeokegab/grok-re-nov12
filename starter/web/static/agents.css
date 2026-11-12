@@ -8,3 +8,12 @@
 .graph-query { margin-top: var(--space-4); font-size: var(--type-caption); color: var(--color-muted) }
 .graph-query summary { cursor: pointer; color: var(--color-ink) }
 .graph-query pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: var(--space-2) 0 0 }
+
+/* Who found it and when: under each finding and graph evidence box; one claim's history in the detail. */
+.finding-stamp, .eg-card-stamp { display: block; margin-top: var(--space-1); font-size: 12px; color: var(--color-muted) }
+.claim-history { margin-top: var(--space-4) }
+.claim-history h4 { margin: 0 0 var(--space-2); font-size: var(--type-caption); color: var(--color-ink) }
+.claim-history ol { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); border-left: var(--border-width) solid var(--color-border); padding-left: var(--space-3) }
+.claim-history li { display: grid; gap: 2px; font-size: var(--type-caption); color: var(--color-muted) }
+.claim-history li.is-changed span + span { color: var(--color-ink); font-weight: 600 }
+.claim-history-when { font-size: 12px }

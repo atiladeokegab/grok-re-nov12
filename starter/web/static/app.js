@@ -5,6 +5,7 @@ import { loadGallery } from './gallery.js';
 import { renderRenters } from './renters.js';
 import { renderPlaces } from './places.js';
 import { agentChips } from './agents.js';
+import { stamp, claimHistory } from './provenance.js';
 
 const $ = id => document.getElementById(id);
 const mockup = new URLSearchParams(location.search).get('mockup') === '1';
@@ -131,6 +132,18 @@ function showFinding(id, moveFocus = false) {
   if (sourcePresent(claim)) detail.append(sourceRecord(claim));
   for (const record of cited) detail.append(sourceRecord(record));
   if (!cited.length) detail.append(element('p', 'No supporting evidence record is available.', 'empty'));
+  const past = claimHistory(current.history, finding.field);
+  if (past.length) {
+    const over = element('section', null, 'claim-history'); over.dataset.testid = 'claim-history';
+    over.append(element('h4', 'This claim over time'));
+    const list = element('ol');
+    for (const row of past) {
+      const item = element('li', null, row.changed ? 'is-changed' : '');
+      item.append(element('span', row.when, 'claim-history-when'), element('span', `${row.source}: ${row.text}`));
+      list.append(item);
+    }
+    over.append(list); detail.append(over);
+  }
   const trace = element('section', null, 'trace-slot'); detail.append(trace);
   traceController = new AbortController();
   loadTrace(trace, finding.id, traceController.signal, current.run_id);
@@ -309,6 +322,8 @@ function render(result) {
     button.type = 'button'; button.dataset.id = finding.id; button.dataset.testid = 'finding'; button.setAttribute('aria-expanded', String(finding.id === selected)); button.setAttribute('aria-controls', 'finding-detail');
     const text = element('span');
     text.append(element('span', fieldName(finding.field), 'finding-name'), element('span', VERDICTS[verdict] || 'Verdict not recorded', `finding-verdict verdict-${verdict}`));
+    const who = stamp(evidence.filter(sourcePresent));
+    if (who) { const meta = element('span', who, 'finding-stamp'); meta.dataset.testid = 'finding-stamp'; text.append(meta); }
     const statusIcon = icon(verdict); statusIcon.classList.add(`verdict-${verdict}`);
     button.append(statusIcon, text, icon()); button.addEventListener('click', () => showFinding(finding.id, true));
     $('findings').append(button);

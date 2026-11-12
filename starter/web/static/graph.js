@@ -90,6 +90,8 @@ function nodeButton(node, kind, verdict) {
     const caption = kind === 'claim' ? label(data.field) : (data.source_name || data.source || 'Source record');
     const value = plainValue(data) || quoteOf(data) || 'Not recorded';
     button.append(el('span', 'eg-card-caption', caption), el('span', 'eg-card-value', kind === 'claim' ? value : `${label(data.field)}: ${value}`));
+    const fetched = data.fetched_at || data.captured_at || data.retrieved_at;
+    if (kind === 'evidence' && (data.agent || fetched)) button.append(el('span', 'eg-card-stamp', [agentName(data.agent), fetched ? `retrieved ${timestamp(fetched)}` : ''].filter(Boolean).join(' · ')));
   }
   button.setAttribute('aria-label', kind === 'finding' ? `Finding: ${nodeTitle(node)}` : `${kind === 'claim' ? 'Advert claim' : 'Source evidence'}: ${nodeTitle(node)}`);
   return button;

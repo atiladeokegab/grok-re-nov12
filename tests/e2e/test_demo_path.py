@@ -45,6 +45,7 @@ def test_demo_listing_walkthrough(page: Page, server, errors):
     page.locator('[data-view="findings"]').click()
 
     findings = page.get_by_test_id("finding")
+    expect(page.get_by_test_id("finding-stamp").first).to_contain_text("agent · retrieved")
     expect(findings.filter(has_text="Energy rating")).to_contain_text("Matches the record")
     expect(findings.filter(has_text="Tenure")).to_contain_text("Could not verify")
     expect(findings.filter(has_text="Property type")).to_contain_text("Doesn’t match the record")

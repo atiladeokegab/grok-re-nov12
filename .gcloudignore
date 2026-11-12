@@ -1,0 +1,7 @@
+# What `gcloud run deploy --source .` uploads: the .gitignore rules (gcloud's default), plus the
+# gitignored comparables slice the similar_listings source reads (scripts/deploy.sh).
+.gcloudignore
+.git
+.gitignore
+#!include:.gitignore
+!starter/verticals/sources/comparables.csv

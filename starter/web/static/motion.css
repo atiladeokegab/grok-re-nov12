@@ -1,0 +1,116 @@
+/* Entrance and hover motion for the landing and analyst pages.
+   Every animation ends at the element's normal resting state (fill-mode backwards only),
+   so nothing is ever left hidden if an animation does not run. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes mo-rise { from { opacity: 0; transform: translateY(14px); } }
+  @keyframes mo-fly { from { opacity: 0; transform: translateY(48px) scale(.94) rotateX(12deg); } }
+  @keyframes mo-pop { from { opacity: 0; transform: scale(.4); } 70% { transform: scale(1.25); } }
+  @keyframes mo-row { from { opacity: 0; transform: translateX(-10px); } }
+  @keyframes mo-grow-y { from { transform: scaleY(0); } }
+  @keyframes mo-grow-x { from { width: 0; } }
+  @keyframes mo-reveal { from { clip-path: inset(0 0 100% 0); } }
+  @keyframes mo-scan {
+    from { top: -4%; opacity: 1; }
+    80% { opacity: 1; }
+    to { top: 100%; opacity: 0; }
+  }
+  @keyframes mo-glow {
+    50% { text-shadow: 0 0 64px color-mix(in srgb, var(--color-accent) 60%, transparent), 0 0 12px color-mix(in srgb, var(--color-accent) 30%, transparent); }
+  }
+  @keyframes mo-drift { to { background-position: 50% 30%, 0 64px; } }
+  @keyframes mo-band { from { transform: translateY(-120px); } to { transform: translateY(560px); } }
+  @keyframes mo-film { from { transform: translateY(-100%); } to { transform: translateY(400%); } }
+
+  /* Landing: the hero is x-rayed in, then breathes */
+  .landing::before { animation: mo-drift 6s linear infinite; }
+  .landing::after {
+    content: "";
+    position: absolute;
+    inset: -64px -50vw auto;
+    height: 80px;
+    z-index: -1;
+    background: linear-gradient(transparent, color-mix(in srgb, var(--color-accent) 10%, transparent) 60%, color-mix(in srgb, var(--color-accent) 35%, transparent) 62%, transparent 64%);
+    pointer-events: none;
+    animation: mo-band 7s 1.4s linear infinite backwards;
+  }
+  .landing h1 {
+    position: relative;
+    animation: mo-reveal .9s cubic-bezier(.2, .7, .2, 1) backwards, mo-glow 4s 1.2s ease-in-out infinite;
+  }
+  .landing h1::after {
+    content: "";
+    position: absolute;
+    inset: 0 -12% auto;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--color-accent);
+    box-shadow: 0 0 18px 4px var(--color-accent), 0 0 60px 10px color-mix(in srgb, var(--color-accent) 50%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    animation: mo-scan .9s cubic-bezier(.2, .7, .2, 1);
+  }
+  .landing > :not(h1, .landing-cards) { animation: mo-rise .6s cubic-bezier(.2, .7, .2, 1) backwards; }
+  .landing > :nth-child(2) { animation-delay: .35s; }
+  .landing > :nth-child(3) { animation-delay: .45s; }
+  .landing > :nth-child(4) { animation-delay: .55s; }
+  .landing > :nth-child(5) { animation-delay: .65s; }
+  .landing > :nth-child(n+6) { animation-delay: .75s; }
+
+  .landing-cards { perspective: 900px; }
+  .landing-cards li { animation: mo-fly .7s cubic-bezier(.2, .8, .2, 1) backwards; }
+  .landing-cards li:nth-child(1) { animation-delay: .6s; }
+  .landing-cards li:nth-child(2) { animation-delay: .72s; }
+  .landing-cards li:nth-child(3) { animation-delay: .84s; }
+
+  /* Hover: the photo turns into an x-ray film with a scanline passing over it */
+  .landing-cards a::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 25%;
+    background: linear-gradient(transparent, color-mix(in srgb, var(--color-accent) 30%, transparent) 85%, var(--color-accent) 98%, transparent);
+    mix-blend-mode: screen;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-100%);
+  }
+  .landing-cards a:hover::before, .landing-cards a:focus-visible::before { opacity: 1; animation: mo-film 1.4s linear infinite; }
+  .landing-cards a:hover img, .landing-cards a:focus-visible img {
+    filter: grayscale(1) invert(1) contrast(1.5) brightness(.5) sepia(1) hue-rotate(40deg) saturate(1.8);
+    transform: scale(1.06);
+  }
+  .landing-cards a:hover { box-shadow: 0 0 0 1px var(--color-accent), 0 12px 40px color-mix(in srgb, var(--color-accent) 25%, transparent); }
+  .landing-catch, .landing-address { transition: transform var(--duration-fast) ease-out; }
+  .landing-cards a:hover .landing-catch, .landing-cards a:focus-visible .landing-catch { transform: translateY(-6px) scale(1.05); transform-origin: left; }
+  .landing-cards a:hover .landing-address, .landing-cards a:focus-visible .landing-address { transform: translateY(-6px); }
+  .landing-catch::before { animation: mo-glow 2s ease-in-out infinite; }
+
+  /* Analyst: cards stagger in, bars fill, matrix rows land one by one, chart bars grow */
+  .analyst-main > * { animation: mo-rise .5s cubic-bezier(.2, .7, .2, 1) backwards; }
+  .analyst-main > :nth-child(2) { animation-delay: .08s; }
+  .analyst-main > :nth-child(n+3) { animation-delay: .16s; }
+  .analyst-card { animation: mo-fly .6s cubic-bezier(.2, .8, .2, 1) backwards; }
+  .analyst-card:nth-child(2) { animation-delay: .07s; }
+  .analyst-card:nth-child(3) { animation-delay: .14s; }
+  .analyst-card:nth-child(4) { animation-delay: .21s; }
+  .analyst-card:nth-child(5) { animation-delay: .28s; }
+  .analyst-card:nth-child(6) { animation-delay: .35s; }
+  .analyst-card:nth-child(n+7) { animation-delay: .42s; }
+  .analyst-card a { transition: border-color var(--duration-fast), transform var(--duration-fast), box-shadow var(--duration-fast); }
+  .analyst-card a:hover, .analyst-card a:focus-visible { transform: translateY(-3px); box-shadow: 0 10px 30px color-mix(in srgb, var(--color-accent) 18%, transparent); }
+  .analyst-bar-fill { animation: mo-grow-x 1s .3s cubic-bezier(.2, .7, .2, 1) backwards; }
+
+  #analyst-rows tr { animation: mo-row .4s ease-out backwards; }
+  #analyst-rows tr .dot { animation: mo-pop .4s ease-out backwards; }
+  #analyst-rows tr:nth-child(1), #analyst-rows tr:nth-child(1) .dot { animation-delay: .35s; }
+  #analyst-rows tr:nth-child(2), #analyst-rows tr:nth-child(2) .dot { animation-delay: .45s; }
+  #analyst-rows tr:nth-child(3), #analyst-rows tr:nth-child(3) .dot { animation-delay: .55s; }
+  #analyst-rows tr:nth-child(4), #analyst-rows tr:nth-child(4) .dot { animation-delay: .65s; }
+  #analyst-rows tr:nth-child(5), #analyst-rows tr:nth-child(5) .dot { animation-delay: .75s; }
+  #analyst-rows tr:nth-child(6), #analyst-rows tr:nth-child(6) .dot { animation-delay: .85s; }
+  #analyst-rows tr:nth-child(7), #analyst-rows tr:nth-child(7) .dot { animation-delay: .95s; }
+  #analyst-rows tr:nth-child(n+8), #analyst-rows tr:nth-child(n+8) .dot { animation-delay: 1.05s; }
+
+  .analyst-chart .bar { transform-box: fill-box; transform-origin: bottom; animation: mo-grow-y .9s .4s cubic-bezier(.2, .8, .2, 1) backwards; }
+  .analyst-chart .value { animation: mo-rise .4s 1.1s ease-out backwards; }
+}

@@ -6,6 +6,7 @@ so the reconciler marks the advert's rating unverifiable, never matched.
 
 import re
 
+from starter.core.errors import SourceOff
 from starter.core.xray import Evidence, Place, now
 from starter.verticals.sources.web import get_text, visible_text
 
@@ -74,6 +75,8 @@ def _search(place: Place, listing: dict) -> tuple[str, list[str], dict[str, str]
 
 
 def ingest(place: Place, listing: dict) -> tuple[list, list[Evidence]]:
+    if not (place.address and place.postcode):  # a pasted advert: nothing to match a row on
+        raise SourceOff("no address to look up")
     _, rows, certs, fetched_at = _search(place, listing)
     path = match_row(rows, place.address)
     if not path or path not in certs:

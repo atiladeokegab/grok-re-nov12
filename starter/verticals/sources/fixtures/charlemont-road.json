@@ -1,0 +1,122 @@
+{
+ "listing_id": "auctionhouse-243ec1e5",
+ "note": "Offline fixture: the organisers' crawl row (24 Oct 2026) and text captured 2026-11-12 from the public advert, the public EPC register and the advert's photos. The live path runs the same parsers.",
+ "gallery": {
+  "name": "charlemont-road",
+  "title": "187 Charlemont Road, East Ham, London E6",
+  "discrepancy": "photo_reuse"
+ },
+ "crawl": {
+  "listing_id": "auctionhouse-243ec1e5",
+  "source": "auctionhouse",
+  "agent_firm": "Auction House UK",
+  "url": "https://www.auctionhouse.co.uk/london/auction/lot/153901",
+  "title": "Property for Auction in London - 187 Charlemont Road, East Ham, London",
+  "address": "Lot 40 187 Charlemont Road, East Ham, London, E6 6AG",
+  "postcode": "E6 6AG",
+  "property_type": "house",
+  "sale_or_let": "sale",
+  "price_gbp": "230000.0",
+  "price_basis": "guide/asking",
+  "price_text": "\u00a3230,000+ (plus fees) End of Terrace H",
+  "currency": "GBP",
+  "size_sqft": "",
+  "size_unit": "sq ft",
+  "yield_pct": "",
+  "tenure": "freehold",
+  "tenancy": "Vacant",
+  "status": "available",
+  "listed_or_auction_date": "2026-11-11",
+  "agent_contact": "",
+  "brochure_urls": "https://img.auctionhouse.uk.net/files/national/complaints-procedure.pdf?v=dedc7c83-f3f7-4337-af5a-ccb8970cf8ef",
+  "crawled_at": "2026-10-24T19:05:31+00:00",
+  "lat": "51.525872",
+  "lon": "0.063484",
+  "geo_source": "postcode_centroid",
+  "match_confidence": "high",
+  "hmlr_price_gbp": "252500.0",
+  "hmlr_date": "2026-08-03",
+  "hmlr_paon": "187",
+  "hmlr_saon": "",
+  "hmlr_street": "CHARLEMONT ROAD",
+  "hmlr_property_type": "T",
+  "hmlr_tenure": "F",
+  "hmlr_score": "80.0",
+  "enrichment_note": "geo: postcode_centroid; hmlr: postcode+PAON/SAON/street fuzzy; voa/epc: not joined (licence/registration gated)"
+ },
+ "page": {
+  "url": "https://www.auctionhouse.co.uk/london/auction/lot/153901",
+  "fetched_at": "2026-11-12T20:16:42+00:00",
+  "text": "Property for Auction in London - 187 Charlemont Road, East Ham, London Book a free valuation Book a free valuation Home Auction House London Auctions Auction Dates Auction Results Auction Rooms Auction Conditions Auction Finance Catalogue Request Auction Guide Buying Guide to Buying at Auction Bidding at Auction FAQs Unsold Lots Selling Guide to Selling at Auction FAQs Probate / Executry Service Commercial Commercial Commercial Auction Service Commercial Partner Agents Online Online Online Auction Sellers Guide Online Auction Buyers Guide About About Us News Become a Partner Agent Franchise Opportunities Contact Us Register / Login Select your local auction room National weekly auction Bedfordshire Birmingham Bristol Buckinghamshire Cheshire Chesterfield Cornwall Coventry Cumbria Derbyshire Devon East Anglia Essex Hertfordshire Hull & East Yorkshire Kent Lancashire Leicestershire Lincolnshire London Manchester Merseyside Midlands North Derbyshire North East North Wales North West North Yorkshire Northamptonshire Northern Ireland Nottinghamshire Oxfordshire Scotland Shropshire Somerset South Wales South West South Yorkshire Staffordshire Sussex & Hampshire Tees Valley Wales Warwickshire West Yorkshire For Sale By Auction | 09:30, 11 November 2026 | Lot 40 187 Charlemont Road, East Ham, London, E6 6AG Save Lot List Previous Lot Next Lot *Guide | \u00a3275,000+ (plus fees) End of Terrace House 3 Bedrooms Tenure : Freehold Call the team on 020 7625 9007 for more information Legal pack Register to bid Floor plan Video tour Finance available on this property | Find out more Auction Date Wed 11/11/2026 Auction Time 09:30 Auction Venue Live Stream Viewing Times Fri 30 Oct 15:30-16:00 Tue 3 Nov 15:30-16:00 Thu 5 Nov 15:30-16:00 Sat 7 Nov 12:00-12:30 Mon 9 Nov 15:30-16:00 Auction information and viewing times Auction Date Wed 11/11/2026 Auction Time 09:30 Auction Venue Live Stream Viewing Times: Fri 30 Oct 15:30-16:00 Tue 3 Nov 15:30-16:00 Thu 5 Nov 15:30-16:00 Sat 7 Nov 12:00-12:30 Mon 9 Nov 15:30-16:00 Auction Conditions Print Page EPC View Larger Map Disclaimer: The map preview provided above is for general guidance only and may not accurately reflect the exact location or surrounding buildings. Prospective buyers and interested parties are strongly advised to independently verify the precise location and surroundings before bidding. Previous Next A Vacant End of Terrace House in Need of Modernisation Arranged to Provide Two Flats. Potential for a Loft Extension (Subject to Obtaining all Relevant Consents) The property comprises an end of terrace house arranged to provide two flats over ground and first floors. Tenure Freehold Location The property is situated on a residential road close to local shops and amenities. The open spaces of Gooseley Playing Fields are within easy reach. Transport links are provided by East Ham underground station (Circle line) and Barking rail station. Accommodation Ground Floor Three Rooms (One with En-Suite) Kitchen First Floor Two Rooms Kitchen Bathroom Exterior The property benefits from a rear garden with rear access. The property has not been inspected by Auction House London. All information has been supplied by the vendor. Services Interested parties are requested to make their own enquiries to the relevant authorities as to the availability of services. Important Notice to Prospective Buyers: We draw your attention to the Special Conditions of Sale within the Legal Pack, referring to other charges in addition to the purchase price which may become payable. Such costs may include Search Fees, reimbursement of Sellers costs and Legal Fees, and Transfer Fees amongst others. Additional Fees Administration Charge - Purchasers will be required to pay an administration fee of \u00a31,800 inc VAT Disbursements - Please see the legal pack for any disbursements listed that may become payable by the purchaser on completion. View Larger Map Disclaimer: The map preview provided above is for general guidance only and may not accurately reflect the exact location or surrounding buildings. Prospective buyers and interested parties are strongly advised to independently verify the precise location and surroundings before bidding. \u00d7 Make a Bid \u00d7 Arrange Finance We \u2019re working with Together, one of the UK\u2019s leading specialist lenders. With over 10 years of auction finance experience and a range of finance options, they take a common sense approach to lending. Your loan could be pre-approved in minutes. FIND OUT MORE \u00d7 Floor Plans Click the image to view the full-sized floorplan. London 5 Hampstead Gate, 1a Frognal, Hampstead, NW3 6AL 020 7625 9007 london@auctionhouse.co.uk Price Information *Guides are provided as an indication of each seller's minimum expectation. They are not necessarily figures which a property will sell for and may change at any time prior to the auction. Each property will be offered subject to a Reserve (a figure below which the Auctioneer cannot sell the property during the auction) which we expect will be set within the Guide Range or no more than 10% above a single figure Guide. Additional Fees Information *Please be aware there may be additional fees payable on top of the final sale price. These include and are not limited to administration charges and buyer's premium fees payable on exchange, and disbursements payable on completion. Please ensure you check the property information page for a list of any relevant additional fees as well as reading the legal pack for any disbursements. Privacy Policy | Cookie Policy \u00a9 Auction House UK 2026 Complaints procedure Trustpilot",
+  "photos": [
+   "https://www.auctionhouse.co.uk/lot-image/949232",
+   "https://www.auctionhouse.co.uk/lot-image/949239",
+   "https://www.auctionhouse.co.uk/lot-image/949233",
+   "https://www.auctionhouse.co.uk/lot-image/949234",
+   "https://www.auctionhouse.co.uk/lot-image/949235",
+   "https://www.auctionhouse.co.uk/lot-image/949236",
+   "https://www.auctionhouse.co.uk/lot-image/949237",
+   "https://www.auctionhouse.co.uk/lot-image/954212"
+  ]
+ },
+ "epc": {
+  "search_url": "https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=E6+6AG",
+  "fetched_at": "2026-11-12T20:16:43+00:00",
+  "rows": [
+   "147 Charlemont Road, LONDON, E6 6AG D 21 September 2036 | /energy-certificate/3209-3636-1002-0021-4602",
+   "149 Charlemont Road, LONDON, E6 6AG D 23 August 2031 | /energy-certificate/2145-3009-4208-1329-1200",
+   "151, Charlemont Road, LONDON, E6 6AG E 17 September 2024 Expired | /energy-certificate/9278-2001-7251-2584-0994",
+   "153, Charlemont Road, LONDON, E6 6AG D 24 January 2023 Expired | /energy-certificate/2448-1094-7259-0047-5914",
+   "157 Charlemont Road, LONDON, E6 6AG B 15 March 2033 | /energy-certificate/4800-4857-0622-8196-3773",
+   "171 Charlemont Road, LONDON, E6 6AG C 13 March 2035 | /energy-certificate/0973-0204-3405-1200-6904",
+   "175, Charlemont Road, LONDON, E6 6AG D 10 February 2025 Expired | /energy-certificate/0918-8096-6262-5545-4920",
+   "177 Charlemont Road, LONDON, E6 6AG C 1 April 2032 | /energy-certificate/4532-5024-6100-0772-5206",
+   "179 Charlemont Road, LONDON, E6 6AG D 17 August 2036 | /energy-certificate/0370-2373-0680-2596-1541",
+   "181, Charlemont Road, LONDON, E6 6AG C 5 June 2024 Expired | /energy-certificate/8308-5150-4429-4307-0643",
+   "183 CHARLEMONT ROAD, EAST HAM, LONDON, E6 6AG E 19 October 2030 | /energy-certificate/4600-3620-1009-0093-4292",
+   "Second Floor Flat, 183 Charlemont Road, LONDON, E6 6AG D 22 February 2030 | /energy-certificate/8708-3825-2022-2227-4203",
+   "Flat 1, 183 CHARLEMONT ROAD, LONDON, E6 6AG D 23 October 2034 | /energy-certificate/2734-5720-9009-0084-8222",
+   "183a Charlemont Road, LONDON, E6 6AG D 30 October 2028 | /energy-certificate/8591-2196-3129-7677-3083",
+   "First Floor Flat, 183b Charlemont Road, LONDON, E6 6AG D 28 October 2024 Expired | /energy-certificate/8354-7420-2119-3991-7922",
+   "185 Charlemont Road, LONDON, E6 6AG D 18 May 2032 | /energy-certificate/2010-2405-3020-0604-8495",
+   "187 Charlemont Road, LONDON, E6 6AG G 5 July 2036 | /energy-certificate/0400-1279-0222-1604-3363"
+  ],
+  "certificates": {
+   "/energy-certificate/0400-1279-0222-1604-3363": "Energy performance certificate (EPC) \u2013 Find an energy certificate \u2013 GOV.UK Cookies on Find an energy certificate We use some essential cookies to make this service work. We\u2019d also like to use analytics cookies so we can understand how you use the service and make improvements. Accept analytics cookies Reject analytics cookies View cookies You\u2019ve accepted analytics cookies. You can change your cookie settings at any time. You\u2019ve rejected analytics cookies. You can change your cookie settings at any time. Hide cookie message Skip to main content GOV.UK Find an energy certificate English Newid yr iaith ir Gymraeg Cymraeg Energy performance certificate (EPC) Certificate contents Rules on letting this property Energy rating and score Breakdown of property\u2019s energy performance Smart meters How this affects your energy bills Impact on the environment Steps you could take to save energy Who to contact about this certificate Other certificates for this property Share this certificate Email Copy link to clipboard Copied Print 187 Charlemont Road LONDON E6 6AG Energy rating G Valid until 5 July 2036 Certificate number 0400-1279-0222-1604-3363 Property type End-terrace house Total floor area 109 square metres Rules on letting this property ! Warning You may not be able to let this property This property has an energy rating of G. It cannot be let, unless an exemption has been registered. You can read guidance for landlords on the regulations and exemptions . Properties can be let if they have an energy rating from A to E. You could make changes to improve this property\u2019s energy rating . Energy rating and score This property\u2019s energy rating is G. It has the potential to be C. See how to improve this property\u2019s energy efficiency . Energy efficiency chart This property\u2019s energy rating is G with a score of 1. It has a potential energy rating of C with a score of 79. Properties get a rating from A to G and a score. Rating G is for a score of 1 to 20. The ratings and scores are as follows from best to worst. Rating A is for a score of 92 or more. Rating B is for a score of 81 to 91. Rating C is for a score of 69 to 80. Rating D is for a score of 55 to 68. Rating E is for a score of 39 to 54. Rating F is for a score of 21 to 38. Rating G is for a score of 1 to 20. A B C D E F G 92+ 81-91 69-80 55-68 39-54 21-38 1-20 Score Energy rating Current Potential 1 G 79 C The graph shows this property\u2019s current and potential energy rating. Properties get a rating from A (best) to G (worst) and a score. The better the rating and score, the lower your energy bills are likely to be. For properties in England and Wales: the average energy rating is D the average energy score is 60 Breakdown of property\u2019s energy performance Features in this property Features get a rating from very good to very poor, based on how energy efficient they are. Ratings are not based on how well features work or their condition. Assumed ratings are based on the property\u2019s age and type. They are used for features the assessor could not inspect. Feature Description Rating Wall Solid brick, as built, no insulation (assumed) Very poor Roof Pitched, no insulation Very poor Window Fully double glazed Poor Main heating No system present: electric heaters assumed Very poor Main heating control None Very poor Hot water Gas multipoint Average Lighting Below average lighting efficiency Poor Floor Suspended, no insulation (assumed) N/A Air tightness (not tested) N/A Secondary heating Portable electric heaters (assumed) N/A Primary energy use The primary energy use for this property per year is 337 kilowatt hours per square metre (kWh/m2). About primary energy use Primary energy use is a measure of the energy required for lighting, heating and hot water in a property. The calculation includes: the efficiency of the property\u2019s heating system power station efficiency for electricity the energy used to produce the fuel and deliver it to the property Smart meters This property had no smart meters when it was assessed. Smart meters help you understand your energy use and how you could save money. They may help you access better energy deals. Find out how to get a smart meter How this affects your energy bills An average household would need to spend \u00a36,160 per year on heating, hot water and lighting in this property. These costs usually make up the majority of your energy bills. You could save \u00a35,100 per year if you complete the suggested steps for improving this property\u2019s energy rating. This is based on average costs in 2026 when this EPC was created. People living at the property may use different amounts of energy for heating, hot water and lighting. Heating this property Estimated energy needed in this property is: 20,488 kWh per year for heating 2,143 kWh per year for hot water Impact on the environment This property\u2019s environmental impact rating is D. It has the potential to be C. Properties get a rating from A (best) to G (worst) on how much carbon dioxide (CO2) they produce each year. Carbon emissions An average household produces 6 tonnes of CO2 This property produces 3.9 tonnes of CO2 This property\u2019s potential production 2.4 tonnes of CO2 You could improve this property\u2019s CO2 emissions by making the suggested changes. This will help to protect the environment. These ratings are based on assumptions about average occupancy and energy use. People living at the property may use different amounts of energy. Steps you could take to save energy Do I need to follow these steps in order? Yes. Each step builds on the one before it so you can save the most energy. For example, it\u2019s more energy efficient to insulate your home before you buy a new boiler. A well insulated home will lose less heat so you do not have to run your boiler as often. Step 1: Increase loft insulation to 270 mm Typical installation cost \u00a3900 - \u00a31,200 Typical yearly saving \u00a31,023 Potential rating after completing step 1 7 G Step 2: Internal wall insulation Typical installation cost \u00a37,500 - \u00a311,000 Typical yearly saving \u00a31,958 Potential rating after completing steps 1 and 2 30 F Step 3: Floor insulation (suspended floor) Typical installation cost \u00a35,000 - \u00a310,000 Typical yearly saving \u00a3376 Potential rating after completing steps 1 to 3 37 F Step 4: Low energy lighting Typical installation cost \u00a3120 - \u00a3140 Typical yearly saving \u00a334 Potential rating after completing steps 1 to 4 37 F Step 5: Gas condensing boiler Typical installation cost \u00a33,500 - \u00a310,000 Typical yearly saving \u00a31,710 Potential rating after completing steps 1 to 5 75 C Step 6: Solar photovoltaic panels, 2.5 kWp Typical installation cost \u00a38,000 - \u00a310,000 Typical yearly saving \u00a3227 Potential rating after completing steps 1 to 6 79 C Advice on making energy saving improvements Get detailed recommendations and cost estimates Help paying for energy saving improvements You may be eligible for help with the cost of improvements: Free energy saving improvements: Warm Homes Local Grant (WHLG) Heat pumps and biomass boilers: Boiler Upgrade Scheme Help from your energy supplier: Energy Company Obligation Who to contact about this certificate Contacting the assessor If you\u2019re unhappy about your property\u2019s energy assessment or certificate, you can complain to the assessor who created it. Assessor\u2019s name Michael Payne Telephone 07506758986 Email m_payne@btinternet.com Contacting the accreditation scheme If you\u2019re still unhappy after contacting the assessor, you should contact the assessor\u2019s accreditation scheme. Accreditation scheme Elmhurst Energy Systems Ltd Assessor\u2019s ID EES/029076 Telephone 01455 883 250 Email enquiries@elmhurstenergy.co.uk About this assessment Assessor\u2019s declaration No related party Date of assessment 3 July 2026 Date of certificate 6 July 2026 Type of assessment Show information about the RdSAP RdSAP (Reduced data Standard Assessment Procedure) is a method used to assess and compare the energy and environmental performance of properties in the UK. It uses a site visit and survey of the property to calculate energy performance. This type of assessment can be carried out on properties built before 1 April 2008 in England and Wales, and 30 September 2008 in Northern Ireland. It can also be used for newer properties, as long as they have a previous SAP assessment, which uses detailed information about the property\u2019s construction to calculate energy performance. Other certificates for this property If you are aware of previous certificates for this property and they are not listed here, please contact us at mhclg.digital-services@communities.gov.uk or call our helpdesk on 020 3829 0748 (Monday to Friday, 9am to 5pm). There are no related certificates for this property. Support links Help Accessibility Cookies Give feedback Service performance All content is available under the Open Government Licence v3.0 , except where otherwise stated \u00a9 Crown copyright"
+  }
+ },
+ "photo_reuse": {
+  "fetched_at": "2026-11-12T20:16:43+00:00",
+  "photos": {
+   "https://www.auctionhouse.co.uk/lot-image/949232": "09d5bdf5b5488f86fca8fae0ac08be8133561c8473a7503cf68c85d6bcfa27e3",
+   "https://www.auctionhouse.co.uk/lot-image/949239": "7f2868f553beb6cc0e204f31c49a3ade7c3887440b79d0a28fa0e6d76e16b7b2",
+   "https://www.auctionhouse.co.uk/lot-image/949233": "cbacc4dda6f19c19213f9a9e735821253628d7551e29de083a302688dd12fe20",
+   "https://www.auctionhouse.co.uk/lot-image/949234": "8ed981848b74b9b2c8b8a1264780321efadf2ab5f8ad73d042b50bf1a17a0886",
+   "https://www.auctionhouse.co.uk/lot-image/949235": "fe81031b4336893c8237aa503cd7219b9ee9b2fd383402b0c9bc304c3453678e",
+   "https://www.auctionhouse.co.uk/lot-image/949236": "21effa7f8e25bdfe9101d3ce96d5eef6ef8833dc384bc72408216c380d2e5d84",
+   "https://www.auctionhouse.co.uk/lot-image/949237": "d27b883b0012adf85435b9a5d38fffd79c2460878e503f0f0e2113da15ecfdda",
+   "https://www.auctionhouse.co.uk/lot-image/954212": "4bf9abdd88bc042d9c3496ed48cc9ce4ff23d8bdcb287affc59a06c7a260be86"
+  },
+  "others": [
+   {
+    "listing_id": "auctionhouse-4912cc30",
+    "url": "https://www.auctionhouse.co.uk/london/auction/lot/152997",
+    "crawl": {
+     "status": "sold",
+     "price_gbp": "310000.0",
+     "listed_or_auction_date": "2026-10-07"
+    },
+    "photos": {
+     "https://www.auctionhouse.co.uk/lot-image/936394": "09d5bdf5b5488f86fca8fae0ac08be8133561c8473a7503cf68c85d6bcfa27e3",
+     "https://www.auctionhouse.co.uk/lot-image/937739": "7f2868f553beb6cc0e204f31c49a3ade7c3887440b79d0a28fa0e6d76e16b7b2",
+     "https://www.auctionhouse.co.uk/lot-image/936395": "cbacc4dda6f19c19213f9a9e735821253628d7551e29de083a302688dd12fe20",
+     "https://www.auctionhouse.co.uk/lot-image/936771": "8ed981848b74b9b2c8b8a1264780321efadf2ab5f8ad73d042b50bf1a17a0886",
+     "https://www.auctionhouse.co.uk/lot-image/936772": "fe81031b4336893c8237aa503cd7219b9ee9b2fd383402b0c9bc304c3453678e",
+     "https://www.auctionhouse.co.uk/lot-image/936773": "21effa7f8e25bdfe9101d3ce96d5eef6ef8833dc384bc72408216c380d2e5d84",
+     "https://www.auctionhouse.co.uk/lot-image/936774": "d27b883b0012adf85435b9a5d38fffd79c2460878e503f0f0e2113da15ecfdda",
+     "https://www.auctionhouse.co.uk/lot-image/936396": "47dffe01040611a6bea27978a696b9b58aeb5e5ea214cf1cf125fee665027fef"
+    }
+   }
+  ]
+ }
+}

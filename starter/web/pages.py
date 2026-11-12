@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from starter.core.errors import NotFound
 from starter.runtime.deps import StoreDep
 
 HERE = Path(__file__).parent
@@ -22,6 +23,15 @@ def home(request: Request, store: StoreDep):
     if index.exists():
         return FileResponse(index)
     return runs_page(request, store)
+
+
+@router.get("/lease", response_class=HTMLResponse)
+def lease_page():
+    """The office lease abstractor (static/lease.html, front end's file)."""
+    page = HERE / "static" / "lease.html"
+    if not page.exists():
+        raise NotFound("no lease page yet")
+    return FileResponse(page)
 
 
 @router.get("/runs", response_class=HTMLResponse)

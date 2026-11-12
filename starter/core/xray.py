@@ -163,6 +163,7 @@ class XRayReport(XRay):
 
     status: Literal["running", "done", "error"] = "running"
     error: str | None = None
+    message: str | None = None  # "Couldn't read this listing: ..." when the advert gave no claims
     place: PlaceView
     claims: list[Claim] = []
     evidence: list[Evidence] = []

@@ -10,17 +10,19 @@ advert text and photos) is set by listing_history, which runs first.
 
 import csv
 import functools
+import hashlib
 import json
 import os
 import re
 from pathlib import Path
 
 from starter.core.errors import NotFound
-from starter.core.xray import Place
-from starter.verticals.sources import companies_house, epc, listing_history
+from starter.core.xray import Place, now
+from starter.verticals.sources import companies_house, epc, listing_history, photo_reuse
 
 FIXTURES = Path(__file__).parent / "fixtures"
-SOURCES = [listing_history, epc, companies_house]  # order matters: listing_history fills page
+# order matters: listing_history fills page
+SOURCES = [listing_history, epc, companies_house, photo_reuse]
 
 
 @functools.cache
@@ -47,10 +49,12 @@ def load_listing(ref: str, offline: bool = False) -> tuple[Place, dict]:
     if row is None and not offline:
         rows = _crawl()
         row = rows.get(ref) or next((r for r in rows.values() if r["url"] == ref), None)
-    if row is None:
+    if row is None and offline:
         raise NotFound(f"no listing {ref!r} in the crawl or fixtures")
     if offline and fixture is None:
         raise NotFound(f"no offline fixture for {ref!r}")
+    if row is None:
+        return pasted(ref)
 
     def num(v: str) -> float | None:
         return float(v) if v else None
@@ -70,4 +74,31 @@ def load_listing(ref: str, offline: bool = False) -> tuple[Place, dict]:
         "offline": offline,
         "fixture": fixture if offline else None,
     }
+    return place, listing
+
+
+MAX_PASTE = 100_000  # characters kept of a pasted advert; the rest is dropped
+POSTCODE = re.compile(r"\b[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}\b", re.I)
+
+
+def pasted(ref: str) -> tuple[Place, dict]:
+    """Any other paste: an advert URL (fetched by listing_history) or the advert's own text.
+    Never raises: what cannot be read is reported by the run, not refused here."""
+    ref = ref.encode("utf-8", "replace").decode().strip()[:MAX_PASTE]  # lone surrogates out
+    lid = "paste-" + hashlib.sha256(ref.encode()).hexdigest()[:10]
+    is_url = re.fullmatch(r"https?://\S+", ref) is not None
+    text = "" if is_url else ref
+    pc = POSTCODE.search(text)
+    place = Place(id=f"place-{lid}", address="", postcode=pc.group(0).upper() if pc else "")
+    url = ref if is_url else f"pasted:{lid}"
+    listing = {
+        "listing_id": lid,
+        "url": url,
+        "title": "",
+        "crawl": {},
+        "offline": False,
+        "fixture": None,
+    }
+    if not is_url:
+        listing["page"] = {"url": url, "fetched_at": now(), "text": text, "photos": []}
     return place, listing

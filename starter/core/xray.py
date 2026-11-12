@@ -55,6 +55,27 @@ class Claim(BaseModel):
     captured_at: str = Field(default_factory=now)
 
 
+class Span(BaseModel):
+    """A verbatim quote in a Document's decoded text: text[start:end] == quote, always."""
+
+    start: int
+    end: int
+    quote: str
+
+
+class Document(BaseModel):
+    """A landed raw original (starter/core/ingest.py); id = "doc-" + sha256[:16]."""
+
+    id: str
+    url: str
+    sha256: str
+    content_type: str = "text/html"
+    fetched_at: str = Field(default_factory=now)
+    agent: str
+    size: int
+    bytes_path: str  # server-side only; never served
+
+
 class Evidence(BaseModel):
     id: str
     place_id: str
@@ -66,6 +87,9 @@ class Evidence(BaseModel):
     doc_span: str | None = None
     fetched_at: str = Field(default_factory=now)
     agent: str  # the source module that fetched it
+    document_id: str | None = None  # the Document this came from
+    span: Span | None = None  # doc_span grounded in that document's decoded text
+    observed_at: str | None = None  # when the fact was true (snapshot, lodgement, sale date)
 
 
 class Finding(BaseModel):
@@ -98,6 +122,7 @@ class HistoryEntry(BaseModel):
     fetched_at: str
     agent: str
     advert_id: str | None = None
+    document_id: str | None = None
 
 
 class Counts(BaseModel):
@@ -139,6 +164,7 @@ class XRayReport(XRay):
     claims: list[Claim] = []
     evidence: list[Evidence] = []
     history: list[HistoryEntry] = []  # oldest first
+    documents: list[Document] = []  # every raw original the sources landed
     client_calls: ClientCalls = ClientCalls()
 
 

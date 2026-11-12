@@ -54,6 +54,14 @@ def test_missing_label_cannot_turn_emitted_flag_into_true_or_false_positive():
     assert result["false_positive_rate"] is None
 
 
+def test_unverifiable_without_evidence_is_not_an_ungrounded_assertion():
+    row = report("unverifiable")
+    row["findings"][0]["evidence_ids"] = []
+    result = score_reports({"listing_ids": ["one"]}, [row], [])
+    assert result["ungrounded_findings"] == 0
+    assert result["unresolved_flags"] == 0
+
+
 def test_false_flags_use_confirmed_claim_comparisons_as_denominator():
     result = score_reports({"listing_ids": ["one", "two"]}, [report()], [label("matches")])
     assert result["confusion_matrix"]["fp"] == 1

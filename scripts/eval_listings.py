@@ -75,6 +75,8 @@ def score_reports(manifest: dict, reports: list[dict], labels: list[dict]) -> di
                 raise ValueError("unrecognised finding verdict")
             cited = finding.get("evidence_ids", [])
             agents = {evidence[eid]["agent"] for eid in cited if eid in evidence}
+            if verdict == "unverifiable" and not cited:
+                continue
             if (
                 not cited
                 or any(eid not in evidence for eid in cited)

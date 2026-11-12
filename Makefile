@@ -1,4 +1,4 @@
-.PHONY: dev check smoke smoke-xray e2e demo eval eval-leases bootstrap deploy mcp
+.PHONY: dev check check-js smoke smoke-xray e2e demo eval eval-leases bootstrap deploy mcp
 
 MCP_URL ?= http://127.0.0.1:8000/mcp
 
@@ -9,6 +9,12 @@ check:
 	uv run ruff check .
 	uv run ruff format --check .
 	uv run pytest -q
+	$(MAKE) --no-print-directory check-js
+
+# The page's node unit tests (no browser). Skipped, and said so, where node is not installed.
+check-js:
+	@if command -v node >/dev/null 2>&1; then node --test starter/web/static/*.test.mjs; \
+	else echo "check-js: node not found, skipping starter/web/static/*.test.mjs"; fi
 
 # The merge gate: offline and deterministic even when .env holds a real key. Never calls a model.
 smoke: check smoke-xray

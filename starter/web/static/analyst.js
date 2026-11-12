@@ -282,7 +282,7 @@ async function start() {
       $('analyst-cards').replaceChildren(...entries.map(renderCard));
       $('analyst-rows').replaceChildren(...renderMatrix(entries));
       $('analyst-chart').replaceChildren(renderChart(entries));
-      countUp(document.querySelectorAll('.analyst-score, [data-count]'));
+      countUp(document.querySelectorAll('.analyst-score, [data-count]:not([data-count-animated])'));
       const count = entries.filter(entry => entry.report).length;
       $('analyst-status').textContent = `${count} of ${entries.length} saved reports ready`;
       $('analyst-download').disabled = !count;

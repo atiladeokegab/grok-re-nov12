@@ -290,7 +290,7 @@ function render(result) {
     $('sources').append(line);
   }
   const calls = result.client_calls || {};
-  const activity = [['Cursor SDK calls', calls.cursor_sdk], ['Cursor MCP calls', calls.mcp?.cursor], ['Other MCP calls', calls.mcp?.other]];
+  const activity = [['Cursor SDK calls', calls.cursor_sdk], ['Cursor MCP calls', calls.mcp?.cursor], ['Other MCP calls', calls.mcp && (calls.mcp.other ?? 0) + (calls.mcp.grok_bot ?? 0)]];
   $('activity').replaceChildren();
   for (const [label, count] of activity) $('activity').append(element('dt', label), element('dd', Number.isFinite(count) ? count : 'Not reported'));
   $('run-id').textContent = `Run ${result.run_id || 'not recorded'}`;

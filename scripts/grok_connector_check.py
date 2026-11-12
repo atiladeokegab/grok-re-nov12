@@ -6,7 +6,7 @@ disagreeing finding. It prints the answer and the server's /api/clients counts.
         uv run python scripts/grok_connector_check.py
 
 MCP_TOKEN=<token from make mcp> works instead of MCP_SECRET. The client names itself
-"grok-connector-check" (counted as grok_bot); pass --client NAME to be counted elsewhere.
+"mcp-connector-check" (counted as other); pass --client NAME to be counted elsewhere.
 """
 
 import argparse
@@ -51,7 +51,7 @@ async def check(
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--client", default="grok-connector-check")
+    ap.add_argument("--client", default="mcp-connector-check")
     ap.add_argument("--listing", default="demo")
     ap.add_argument("--offline", action="store_true", help="fixtures only, no network")
     args = ap.parse_args()

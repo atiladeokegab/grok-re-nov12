@@ -1,0 +1,18 @@
+/* "Try these" gallery under the listing form, and the run's own message in the summary. */
+.gallery { margin-top: var(--space-6) }
+.gallery h2 { font-size: var(--type-caption); color: var(--color-muted); font-weight: var(--weight-medium); margin-bottom: var(--space-3) }
+.gallery-list { list-style: none; margin: var(--space-0); padding: var(--space-0); display: grid; gap: var(--space-2) }
+.gallery-item {
+  width: 100%; min-height: var(--control-height); display: flex; justify-content: space-between; align-items: center;
+  gap: var(--space-4); padding: var(--space-2) var(--space-4); text-align: left; cursor: pointer;
+  background: var(--color-surface); color: var(--color-ink); font: inherit;
+  border: var(--border-width) solid var(--color-border); border-radius: var(--radius-control)
+}
+.gallery-item:hover { background: var(--color-raised) }
+.gallery-item:focus-visible { outline: var(--focus-width) solid var(--color-accent); outline-offset: 2px }
+.gallery-kind { font-size: var(--type-caption); color: var(--color-muted); text-align: right }
+.run-message {
+  margin-top: var(--space-4); padding: var(--space-3) var(--space-4); color: var(--color-warning);
+  border: var(--border-width) solid var(--color-warning); border-radius: var(--radius-control); overflow-wrap: anywhere
+}
+@media(max-width:600px) { .gallery-item { flex-direction: column; align-items: flex-start; gap: var(--space-1) } .gallery-kind { text-align: left } }

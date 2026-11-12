@@ -1,6 +1,7 @@
 import { fieldName, VERDICTS, safeUrl, valueText, sourcePresent, findingRecords, sourceLabel, timestamp, photoChange, unitFor, hasChangedValue } from './data.js';
 import { renderTimeline } from './timeline.js';
 import { mountClients } from './clients.js';
+import { loadGallery } from './gallery.js';
 
 const $ = id => document.getElementById(id);
 const mockup = new URLSearchParams(location.search).get('mockup') === '1';
@@ -253,6 +254,7 @@ function render(result) {
   const disagreements = counts.disagrees || 0;
   $('summary-title').textContent = disagreements ? `${disagreements} ${disagreements === 1 ? 'claim doesn’t' : 'claims don’t'} match the records` : (result.findings || []).length ? 'The records are ready to compare' : 'Checking the records';
   $('summary-detail').textContent = `${counts.matches || 0} matched. ${counts.unverifiable || 0} could not be verified. ${counts.flag || 0} worth a closer look. Unverifiable claims are excluded from the score.`;
+  $('run-message').textContent = result.message || ''; $('run-message').hidden = !result.message;
   $('finding-count').textContent = `${(result.findings || []).length} findings`;
   $('findings').replaceChildren();
   for (const finding of result.findings || []) {
@@ -326,6 +328,7 @@ function watch(runId, ownGeneration) {
     if (finished) return;
     finished = true;
     clients.refresh();
+    if (result.message) { $('run-message').textContent = result.message; $('run-message').hidden = false; }
     source.close();
     if (stream === source) stream = null;
     if (result.status === 'error') {
@@ -379,10 +382,17 @@ function watch(runId, ownGeneration) {
 
 const clients = mountClients($('clients'));
 
-$('xray-form').addEventListener('submit', async event => {
+$('xray-form').addEventListener('submit', event => {
   event.preventDefault();
   const listing = $('listing').value.trim();
   if (!listing) return;
+  const use = document.querySelector('input[name="use"]:checked')?.value === 'office' ? 'office' : 'residential';
+  startRun({ ...( /^https?:\/\//i.test(listing) ? { url: listing } : { listing_id: listing }), use });
+});
+
+loadGallery($('gallery'), item => { $('listing').value = item.name; startRun({ listing_id: item.name, offline: true }); });
+
+async function startRun(payload) {
   stop(); controller = new AbortController();
   setView('findings');
   const ownGeneration = generation;
@@ -392,8 +402,6 @@ $('xray-form').addEventListener('submit', async event => {
       const { prototype } = await import('./prototype.js');
       if (generation === ownGeneration) render(prototype);
     } else {
-      const use = document.querySelector('input[name="use"]:checked')?.value === 'office' ? 'office' : 'residential';
-      const payload = { ...( /^https?:\/\//i.test(listing) ? { url: listing } : { listing_id: listing }), use };
       const started = await request('/api/xray', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       if (generation !== ownGeneration) return;
       if (!started.run_id) throw new Error('The server did not return a run ID. Try again.');
@@ -412,7 +420,7 @@ $('xray-form').addEventListener('submit', async event => {
   } finally {
     if (generation === ownGeneration) $('start').disabled = false;
   }
-});
+}
 
 $('new-listing').addEventListener('click', () => {
   stop(); selected = null;

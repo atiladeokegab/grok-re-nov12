@@ -43,7 +43,7 @@ from starter.core.xray import (
     trust_score,
 )
 from starter.runtime.deps import StoreDep
-from starter.verticals import cursor_step
+from starter.verticals import cursor_step, xray_limit
 from starter.verticals import reconcile as rec
 from starter.verticals.narrate import narrate
 from starter.verticals.sources import FIXTURES, SOURCES, load_listing
@@ -261,18 +261,27 @@ def _history(claims: list[Claim], evidence: list[Evidence]) -> list[HistoryEntry
     return sorted(out, key=lambda h: h.observed_at or h.fetched_at)
 
 
+_emitted: dict[str, dict[str, str]] = {}  # run_id -> what each finding / the score last said
+
+
 def _score(store: Store, report: XRayReport, findings=None) -> None:
-    """Replace the findings wholesale (an id may flip between steps), publish them and the
-    score. Without `findings`, the deterministic rules on what has arrived so far."""
+    """Replace the findings wholesale (an id may flip between steps) and publish only what
+    changed. No score event while the score is still null (nothing checkable yet). Without
+    `findings`, the deterministic rules on what has arrived so far."""
     if findings is None:
         findings = rec.reconcile(report.claims, report.evidence, report.sources)
     report.findings = findings
     report.counts = count(findings)
     report.trust_score = trust_score(findings)
+    seen = _emitted.setdefault(report.run_id, {})
     for f in findings:
-        _save(store, report, "finding", f)
+        if seen.get(f.id) != (now := f.model_dump_json()):
+            seen[f.id] = now
+            _save(store, report, "finding", f)
     data = {"trust_score": report.trust_score, "counts": report.counts.model_dump()}
-    _save(store, report, "score", data)
+    if report.trust_score is not None and seen.get("score") != (now := json.dumps(data)):
+        seen["score"] = now
+        _save(store, report, "score", data)
 
 
 def begin(store: Store, ref: str, offline: bool = False, use: str | None = None) -> XRayReport:
@@ -398,17 +407,21 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
         for h in report.history:
             _save(store, report, "history", h)
         findings = rec.reconcile(report.claims, report.evidence, report.sources)
-        told = narrate(findings, report.claims, report.evidence)  # once: model calls cost
-        if told["provider"] == "xai":
-            report.grok_calls += told["calls"]
-            report.client_calls.grok += told["calls"]
         _score(store, report, findings)
-        _flush(store, report)  # the final score lands before linking and the summary
-        doc_of = {e.id: e.document_id for e in report.evidence}
-        for f in report.findings:
-            ids = list(dict.fromkeys(d for i in f.evidence_ids if (d := doc_of.get(i))))
-            _save(store, report, "ingestion.linked", {"finding_id": f.id, "document_ids": ids})
-        if (summary := cursor_step.summarize(report.model_dump())) is not None:
+        _flush(store, report)  # the final score lands now; the model calls below only reword
+        with ThreadPoolExecutor(max_workers=1) as pool:  # Cursor summary and narration overlap
+            summarizing = pool.submit(cursor_step.summarize, report.model_dump())
+            told = narrate(findings, report.claims, report.evidence)  # once: model calls cost
+            if told["provider"] == "xai":
+                report.grok_calls += told["calls"]
+                report.client_calls.grok += told["calls"]
+            _score(store, report, findings)  # publishes only the reworded findings
+            doc_of = {e.id: e.document_id for e in report.evidence}
+            for f in report.findings:
+                ids = list(dict.fromkeys(d for i in f.evidence_ids if (d := doc_of.get(i))))
+                _save(store, report, "ingestion.linked", {"finding_id": f.id, "document_ids": ids})
+            summary = summarizing.result()
+        if summary is not None:
             report.client_calls.cursor_sdk += 1
             _save(store, report, "cursor_summary", summary)
         report.status = "done"
@@ -422,6 +435,7 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
         _save(store, report, "done", data)
         _flush(store, report)
         _buffers.pop(run_id, None)
+        _emitted.pop(run_id, None)
     return report
 
 
@@ -446,15 +460,17 @@ def gallery() -> list[dict]:
 
 @router.post("/api/xray", status_code=202)
 def start_xray(body: XRayRequest, request: Request) -> dict:
-    # shortcut: open route, one thread per run, no rate limit; add a per-IP budget before any
-    # paid model or search key is behind it on a public URL.
     ref = body.listing_id or body.url
     if not ref:
         raise ValueError("give listing_id or url")
     gateway = request.app.state.gateway
+    if cached := xray_limit.cached_demo(gateway.store, body):  # a demo repeat: no new run
+        return {"run_id": cached}
+    xray_limit.check(request)  # 429 over the per-IP or global budget
     report = begin(
         gateway.store, ref, body.offline, body.use
     )  # unknown listing: 404 now, saved run else
+    xray_limit.remember_demo(body, report.run_id)
 
     def work():
         try:

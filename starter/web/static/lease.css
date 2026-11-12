@@ -1,0 +1,48 @@
+/* The lease is another dossier surface; shared typography, controls and tokens come first. */
+.lease-main { padding: var(--space-7); }
+.lease-intro { display: grid; grid-template-columns: 1.2fr 1fr; gap: var(--space-8); align-items: start; }
+.lease-eyebrow { font-size: var(--type-caption); color: var(--color-accent); margin-bottom: var(--space-4); }
+.lease-copy h1 { font-size: var(--type-display); line-height: var(--leading-heading); letter-spacing: var(--tracking-display); }
+.lease-lead { font-size: var(--type-lead); color: var(--color-muted); margin-top: var(--space-5); max-width: 42ch; }
+.lease-upload { margin-top: var(--space-6); }
+.lease-upload input { overflow: hidden; }
+.lease-upload input::file-selector-button { font: inherit; color: var(--color-ink); background: var(--color-raised); border: 0; border-radius: var(--radius-control); padding: var(--space-2) var(--space-3); margin-right: var(--space-3); cursor: pointer; }
+.lease-upload .primary { margin-top: var(--space-5); width: 100%; justify-content: space-between; }
+.lease-benchmark { border-left: var(--border-width) solid var(--color-border); padding-left: var(--space-7); }
+.lease-benchmark h2 { font-size: var(--type-heading); }
+.lease-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); margin: var(--space-6) 0 var(--space-3); }
+.lease-metrics dt { color: var(--color-muted); font-size: var(--type-caption); }
+.lease-metrics dd { margin: var(--space-2) 0 0; font: var(--weight-medium) var(--type-title)/1.2 var(--font-display); font-variant-numeric: tabular-nums; }
+.lease-eval-details { margin-top: var(--space-5); }
+.lease-eval-details summary { min-height: var(--control-height); display: list-item; align-content: center; cursor: pointer; }
+.lease-eval-table { width: 100%; border-collapse: collapse; font-size: var(--type-caption); font-variant-numeric: tabular-nums; }
+.lease-eval-table caption { text-align: left; color: var(--color-muted); padding-block: var(--space-3); }
+.lease-eval-table th, .lease-eval-table td { text-align: left; padding: var(--space-3) var(--space-2); border-bottom: var(--border-width) solid var(--color-border); }
+.lease-eval-table th:first-child, .lease-eval-table td:first-child { padding-left: 0; }
+.lease-data-link { display: inline-flex; align-items: center; min-height: var(--control-height); margin-top: var(--space-3); font-size: var(--type-caption); }
+.lease-results { margin-top: var(--space-8); border-top: var(--border-width) solid var(--color-border); padding-top: var(--space-6); }
+.lease-result-heading { display: flex; gap: var(--space-5); justify-content: space-between; align-items: end; }
+.lease-terms { margin-top: var(--space-5); }
+.lease-term { border-top: var(--border-width) solid var(--color-border); }
+.lease-term summary { display: flex; justify-content: space-between; gap: var(--space-4); cursor: pointer; padding-block: var(--space-5); min-height: var(--control-height); list-style: none; }
+.lease-term summary::-webkit-details-marker { display: none; }
+.lease-term summary::after { content: "+"; color: var(--color-muted); }
+.lease-term[open] summary::after { content: "−"; }
+.lease-term-name { flex: 1; font-weight: var(--weight-medium); }
+.lease-term-state { color: var(--color-accent); font-size: var(--type-caption); text-align: right; }
+.lease-term[data-state="attention"] .lease-term-state { color: var(--color-warning); }
+.lease-term-body { padding-bottom: var(--space-5); max-width: var(--measure-body); overflow-wrap: anywhere; }
+.lease-term blockquote { border-left: var(--border-width) solid var(--color-accent); background: var(--color-surface); margin: var(--space-4) 0; padding: var(--space-5); white-space: pre-wrap; }
+.lease-filename, #lease-filename { overflow-wrap: anywhere; }
+.lease-main .error { margin: var(--space-4) 0; }
+@media (max-width: 900px) {
+  .lease-main { padding: var(--space-5); }
+  .lease-intro { grid-template-columns: 1fr; gap: var(--space-7); }
+  .lease-copy h1 { font-size: var(--type-title); }
+  .lease-lead { font-size: var(--type-body); }
+  .lease-benchmark { border-left: 0; border-top: var(--border-width) solid var(--color-border); padding: var(--space-5) 0 0; }
+  .lease-results { margin-top: var(--space-7); }
+  .lease-result-heading { align-items: start; flex-direction: column; gap: var(--space-3); }
+  .lease-term summary { flex-wrap: wrap; gap: var(--space-2); }
+  .lease-term-name { flex-basis: 55%; }
+}

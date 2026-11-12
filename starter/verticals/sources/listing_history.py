@@ -69,15 +69,21 @@ def parse_advert(text: str) -> dict[str, tuple]:
     return out
 
 
+def advert_site(url: str) -> bool:
+    u = urlparse(url)
+    host = (u.hostname or "").lower()
+    return u.scheme in ("http", "https") and any(host == h or host.endswith("." + h) for h in HOSTS)
+
+
 def _page(listing: dict) -> dict:
     if listing["offline"]:
         return listing["fixture"]["page"]
     if "page" in listing:  # pasted text: the advert is the paste
         return listing["page"]
-    host = (urlparse(listing["url"]).hostname or "").lower()
-    if not listing["crawl"] and not any(host == h or host.endswith("." + h) for h in HOSTS):
+    pasted = not listing["crawl"]
+    if pasted and not advert_site(listing["url"]):
         raise SourceOff("not an advert site we read (Rightmove, Zoopla, OpenRent, Auction House)")
-    html = get_text(listing["url"])
+    html = get_text(listing["url"], allow=advert_site if pasted else None)
     found = re.findall(r"(?:https://www\.auctionhouse\.co\.uk)?(/lot-image/\d+)", html)
     photos = [urljoin(listing["url"], p) for p in dict.fromkeys(found)]  # gallery order, once
     return {

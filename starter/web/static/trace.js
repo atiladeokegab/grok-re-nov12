@@ -159,7 +159,7 @@ export async function renderTrace(container, findingId, { signal, runId } = {}) 
       const documentId = idOf(first(asRecord(step.document).id, step.evidence?.document_id));
       const evidenceDocumentId = idOf(step.evidence?.document_id);
       if (!documentId || !evidenceDocumentId || documentId !== evidenceDocumentId) {
-        documents.push({ step, error: new Error('The evidence and document identifiers do not match.') }); continue;
+        documents.push({ step, error: new Error(!documentId || !evidenceDocumentId ? 'No captured source document is linked to this evidence.' : 'The evidence and document identifiers do not match.') }); continue;
       }
       try {
         documents.push({ step, ...await fetchDocument(documentId) });

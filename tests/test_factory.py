@@ -26,6 +26,13 @@ def test_health_serves_the_same_body_for_cloud_run(client):
     assert r.status_code == 200 and r.json() == client.get("/healthz").json()
 
 
+def test_config_serves_the_maps_key_or_null(client, monkeypatch):
+    monkeypatch.delenv("GOOGLE_MAPS_API_KEY", raising=False)
+    assert client.get("/api/config").json() == {"maps_key": None}
+    monkeypatch.setenv("GOOGLE_MAPS_API_KEY", "browser-key")
+    assert client.get("/api/config").json() == {"maps_key": "browser-key"}
+
+
 def test_login_returns_token_only_for_the_right_password(client, auth):
     assert client.post("/api/login", json={"password": "nope"}).status_code == 401
     r = client.post("/api/login", json={"password": "admin"})

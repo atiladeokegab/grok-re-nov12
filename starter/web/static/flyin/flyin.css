@@ -67,6 +67,11 @@
 .xf-root .maplibregl-ctrl-attrib a { color: var(--xf-muted); }
 .xf-root .maplibregl-ctrl-bottom-right { z-index: 3; }
 
+/* Google 3D tiles: the pin follows the roof; Google's logo and credits stay visible, clear of the HUD. */
+.xf-root .xf-tiles .xf-pin { position: absolute; left: 0; top: 0; z-index: 1; will-change: transform; }
+.xf-root .xf-tiles .cesium-widget-credits { left: auto; right: 0; bottom: 0; z-index: 3; display: flex !important; align-items: center; gap: 6px; background: #080a09b3; color: var(--xf-muted); font: 11px/1.4 var(--xf-body); padding: 2px 8px; border-radius: 6px 0 0 0; }
+.xf-root .xf-tiles .cesium-widget-credits a { color: var(--xf-muted); }
+
 /* Static fallback card. */
 .xf-fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: 32px 24px; background: radial-gradient(60% 60% at 50% 40%, #141815 0%, #080a09 100%); }
 .xf-fb-grid { position: absolute; inset: 0; opacity: 0.5; background-image: linear-gradient(#3f494033 1px, transparent 1px), linear-gradient(90deg, #3f494033 1px, transparent 1px); background-size: 48px 48px; mask-image: radial-gradient(closest-side, #000, transparent); -webkit-mask-image: radial-gradient(closest-side, #000, transparent); }

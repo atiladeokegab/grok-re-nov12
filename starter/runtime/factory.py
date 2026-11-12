@@ -3,6 +3,7 @@ every vertical. A new part of the product is a module in starter/verticals/, not
 
 import hmac
 import json
+import os
 import time
 import uuid
 
@@ -68,6 +69,11 @@ def create_app(settings: Settings | None = None, store: Store | None = None) -> 
     @app.get("/healthz")
     def healthz() -> dict:
         return {"status": "ok", **settings.public()}
+
+    @app.get("/api/config")
+    def config() -> dict:
+        # A browser Maps key is public by design (referrer-restricted); the fly-in reads it.
+        return {"maps_key": os.environ.get("GOOGLE_MAPS_API_KEY") or None}
 
     @app.post("/api/login")
     def login(body: Login) -> dict:

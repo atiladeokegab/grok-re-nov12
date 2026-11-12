@@ -11,8 +11,11 @@
   <div id="flyin"></div>
   <script type="module">
     // ?fail=1 points the tiles at a dead URL to exercise the fallback card; ?precision=address shows the pin.
+    // ?flat=1 skips Google 3D tiles; ?key=bad tries them with a bad key (403 -> MapLibre).
     const q = new URLSearchParams(location.search);
-    if (q.has('fail')) window.XRAY_CONFIG = { flyinTiles: 'http://127.0.0.1:9/nope.json' };
+    if (q.has('fail')) window.XRAY_CONFIG = { flyinTiles: 'http://127.0.0.1:9/nope.json', mapsKey: null };
+    if (q.has('flat')) window.XRAY_CONFIG = { mapsKey: null };
+    if (q.has('key')) window.XRAY_CONFIG = { mapsKey: q.get('key') };
     const { flyIn } = await import('./flyin.js');
     const t0 = performance.now();
     await flyIn(document.getElementById('flyin'), {

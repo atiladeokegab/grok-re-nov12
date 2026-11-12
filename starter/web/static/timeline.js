@@ -1,4 +1,4 @@
-import { fieldName, valueText, safeUrl, sourcePresent, timestamp } from './data.js';
+import { fieldName, valueText, safeUrl, sourcePresent, timestamp, unitFor } from './data.js';
 
 export function timelineEntries(report) {
   return (Array.isArray(report?.history) ? report.history : [])
@@ -20,12 +20,12 @@ const element = (tag, text, className) => {
   return node;
 };
 
-function recordDetails(record) {
+function recordDetails(record, report) {
   const details = element('div', null, 'timeline-detail');
   if (record.previous_value !== undefined && record.previous_value !== null) {
     const comparison = element('dl', null, 'timeline-comparison');
-    comparison.append(element('dt', 'Previous'), element('dd', valueText(record.previous_value, record.unit)));
-    comparison.append(element('dt', 'Recorded'), element('dd', valueText(record.value, record.unit)));
+    comparison.append(element('dt', 'Previous'), element('dd', valueText(record.previous_value, record.unit || unitFor(report, record.field, record.previous_value))));
+    comparison.append(element('dt', 'Recorded'), element('dd', valueText(record.value, record.unit || unitFor(report, record.field, record.value))));
     details.append(comparison);
   }
   const source = element('p', record.source_name || record.source || (record.source_url ? 'Source record' : 'Cited document span'), 'timeline-source');
@@ -43,20 +43,20 @@ function recordDetails(record) {
   return details;
 }
 
-function renderEvent(entry) {
+function renderEvent(entry, report) {
   const { record, date } = entry;
   const item = element('li', null, 'timeline-event');
   const button = element('button', null, 'timeline-event-toggle');
   button.type = 'button';
   button.setAttribute('aria-expanded', 'false');
-  const currentValue = valueText(record.value, record.unit);
+  const currentValue = valueText(record.value, record.unit || unitFor(report, record.field, record.value));
   const dateLabel = date ? `${entry.dateKind === 'event' ? 'Source event' : 'Retrieved'} on ${timestamp(date.toISOString())}` : 'Date not recorded';
   const dateNode = element('time', dateLabel, 'timeline-date');
   if (date) dateNode.dateTime = date.toISOString();
   button.append(dateNode);
   button.append(element('span', fieldName(record.field), 'timeline-field'));
   button.append(element('span', currentValue, 'timeline-value'));
-  const details = recordDetails(record);
+  const details = recordDetails(record, report);
   details.hidden = true;
   button.addEventListener('click', () => {
     details.hidden = !details.hidden;
@@ -105,7 +105,7 @@ export function renderTimeline(container, report) {
     group.setAttribute('aria-label', heading);
     group.append(element('h3', heading));
     const list = element('ol', null, 'timeline-events');
-    for (const entry of records) list.append(renderEvent(entry));
+    for (const entry of records) list.append(renderEvent(entry, report));
     group.append(list);
     track.append(group);
   }

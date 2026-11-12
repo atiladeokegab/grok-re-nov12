@@ -64,7 +64,7 @@ function roomTable({ rooms, rooms_m2, stated_m2 }) {
 function compareColumn(title, record) {
   const column = element('div');
   column.append(element('dt', title));
-  column.append(element('dd', sourcePresent(record) ? valueText(record.value, record.unit) : 'Source not available'));
+  column.append(element('dd', sourcePresent(record) ? valueText(record.value, record.unit) : record ? 'Source not available' : 'Not stated'));
   const image = safeUrl(record?.value);
   if (sourcePresent(record) && image && ['photo', 'photos', 'image_url'].includes(record.field)) {
     const img = element('img'); img.src = image; img.alt = title; img.loading = 'lazy'; column.append(img);

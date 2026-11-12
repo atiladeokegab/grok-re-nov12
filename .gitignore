@@ -23,3 +23,9 @@ build/
 # OS noise
 .DS_Store
 Thumbs.db
+
+# kit
+.pytest_cache/
+.ruff_cache/
+data/
+TUNING/

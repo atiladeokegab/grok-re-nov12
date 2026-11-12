@@ -1,0 +1,44 @@
+<!doctype html>
+{% set theme = request.query_params.get("theme") or "neutral" %}
+<html lang="en" data-theme="{{ theme }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Runs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Work+Sans:wght@400&display=swap">
+  <link rel="stylesheet" href="/static/tokens.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Runs</h1>
+      <p class="muted">{{ status.mode }} · {{ status.model }} · provider: {{ status.providers.anthropic }}</p>
+    </header>
+    <div class="toolbar">
+      <input class="input" type="search" placeholder="Filter by case or state" aria-label="Filter runs"
+             oninput="for (const run of document.querySelectorAll('[data-run]')) run.hidden = !run.textContent.toLowerCase().includes(this.value.toLowerCase())">
+      <a class="button secondary" href="?theme={{ 'neutral' if theme == 'refinery' else 'refinery' }}">{{ 'Neutral' if theme == 'refinery' else 'Refinery' }} theme</a>
+    </div>
+    {% for run in runs %}
+    <article class="card" data-run>
+      <h2>Case {{ run.case_id }} <span class="badge">{{ run.final_state }}</span></h2>
+      <p>{{ run.final_answer }}</p>
+      {% if run.actions %}
+      <table class="table">
+        <thead><tr><th>Status</th><th>Tool</th></tr></thead>
+        <tbody>
+          {% for action in run.actions %}
+          <tr><td><span class="badge">{{ action.status }}</span></td><td><code>{{ action.tool }}</code></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+    </article>
+    {% else %}
+    <p class="muted">No runs yet. POST a case to /api/runs or run scripts/run_cases.py.</p>
+    {% endfor %}
+  </main>
+</body>
+</html>

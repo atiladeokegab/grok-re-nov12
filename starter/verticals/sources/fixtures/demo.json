@@ -1,0 +1,75 @@
+{
+ "listing_id": "auctionhouse-0715ecf1",
+ "note": "Offline fixture: the organisers' crawl row (24 Oct 2026) and text captured 2026-11-12 from the public advert and the public EPC register. The live path runs the same parsers.",
+ "crawl": {
+  "listing_id": "auctionhouse-0715ecf1",
+  "source": "auctionhouse",
+  "agent_firm": "Auction House UK",
+  "url": "https://www.auctionhouse.co.uk/london/auction/lot/152478",
+  "title": "Property for Auction in London - 24 Macquarie Way, Isle of Dogs, London",
+  "address": "Lot 8 24 Macquarie Way, Isle of Dogs, London, E14 3AU",
+  "postcode": "E14 3AU",
+  "property_type": "house",
+  "sale_or_let": "sale",
+  "price_gbp": "770000.0",
+  "price_basis": "guide/asking",
+  "price_text": "\u00a3770,000 Semi-Detached House 3 Bedroom",
+  "currency": "",
+  "size_sqft": "",
+  "size_unit": "",
+  "yield_pct": "",
+  "tenure": "freehold",
+  "tenancy": "",
+  "status": "sold",
+  "listed_or_auction_date": "2026-10-07",
+  "agent_contact": "",
+  "brochure_urls": "",
+  "crawled_at": "2026-10-24T20:47:45+00:00",
+  "lat": "51.489504",
+  "lon": "-0.015614",
+  "geo_source": "postcode_centroid",
+  "match_confidence": "low",
+  "hmlr_price_gbp": "870000.0",
+  "hmlr_date": "2025-11-13",
+  "hmlr_paon": "7",
+  "hmlr_saon": "",
+  "hmlr_street": "MACQUARIE WAY",
+  "hmlr_property_type": "S",
+  "hmlr_tenure": "F",
+  "hmlr_score": "30.0",
+  "enrichment_note": "geo: postcode_centroid; hmlr: postcode+PAON/SAON/street fuzzy; voa/epc: not joined (licence/registration gated)"
+ },
+ "page": {
+  "url": "https://www.auctionhouse.co.uk/london/auction/lot/152478",
+  "fetched_at": "2026-11-12T19:16:00+00:00",
+  "text": "Sold \u00a3770,000 Semi-Detached House 3 Bedrooms Tenure : Freehold Call the team on 020 7625 9007 for more information Legal pack Register to bid Floor plan Video tour Finance available on this property | Find out more Auction Date Wed 07/10/2026 Auction Time 09:30 Auction Venue Live Stream Viewing Times Fri 25 Sep 13:30-14:00 Sat 26 Sep 13:45-14:15 Tue 29 Sep 13:30-14:00 Thu 1 Oct 13:30-14:00 Mon 5 Oct 13:30-14:00 Auction information and viewing times Auction Date Wed 07/10/2026 Auction Time 09:30 Auction Venue Live Stream Viewing Times: Fri 25 Sep 13:30-14:00 Sat 26 Sep 13:45-14:15 Tue 29 Sep 13:30-14:00 Thu 1 Oct 13:30-14:00 Mon 5 Oct 13:30-14:00 Auction Conditions Print Page EPC View Larger Map Disclaimer: The map preview provided above is for general guidance only and may not accurately reflect the exact location or surrounding buildings. Prospective buyers and interested parties are strongly advised to independently verify the precise location and surroundings before bidding. Previous Next A Vacant Three Bedroom Semi Detached House The property comprises a three bedroom semi detached house arranged over ground and first floors. Tenure Freehold By Order of a Housing Association Location The property is situated on a residential road close to local shops and amenities. The open spaces of Millwall Park are within easy reach. Transport links are provided by Madchute rail station (DLR). Accommodation Ground Floor Reception Room Kitchen/Diner First Floor Three Bedrooms Bathroom Exterior The property benefits from both front and rear gardens and off street parking. Energy Efficiency Rating (EPC) Current Rating D ",
+  "photos": [
+   "https://www.auctionhouse.co.uk/lot-image/930671"
+  ]
+ },
+ "epc": {
+  "search_url": "https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=E14+3AU",
+  "fetched_at": "2026-11-12T19:24:00+00:00",
+  "rows": [
+   "2 Macquarie Way, LONDON, E14 3AU D 23 July 2032 | /energy-certificate/2498-3018-5203-9552-6204",
+   "4 Macquarie Way, E14 3AU D 23 February 2033 | /energy-certificate/2221-8526-2161-7601-4871",
+   "5, Macquarie Way, LONDON, E14 3AU C 17 September 2030 | /energy-certificate/9568-4026-6251-4230-0250",
+   "6 Macquarie Way, E14 3AU D 23 February 2033 | /energy-certificate/2371-9217-1574-5146-3801",
+   "7, Macquarie Way, LONDON, E14 3AU D 13 September 2026 Expired | /energy-certificate/8046-7221-4440-2777-0996",
+   "8 Macquarie Way, E14 3AU D 23 February 2033 | /energy-certificate/2097-1994-3214-1942-1242",
+   "9, Macquarie Way, LONDON, E14 3AU D 16 September 2029 | /energy-certificate/8241-6221-6510-0956-0996",
+   "10, Macquarie Way, LONDON, E14 3AU E 5 August 2024 Expired | /energy-certificate/7698-6030-7233-2364-3974",
+   "11 Macquarie Way, LONDON, E14 3AU C 7 April 2036 | /energy-certificate/7305-3060-4207-9686-6204",
+   "12, Macquarie Way, LONDON, E14 3AU D 2 May 2028 | /energy-certificate/0678-3068-6205-6828-6954",
+   "13 Macquarie Way, E14 3AU D 11 February 2034 | /energy-certificate/2630-1179-3881-5620-5120",
+   "14 Macquarie Way, LONDON, E14 3AU D 19 March 2036 | /energy-certificate/2050-6807-8060-4603-0021",
+   "17 Macquarie Way, LONDON, E14 3AU D 20 September 2031 | /energy-certificate/0350-2760-3010-2729-6921",
+   "20, Macquarie Way, LONDON, E14 3AU E 12 June 2027 | /energy-certificate/0451-2820-7667-9293-7925",
+   "22 Macquarie Way, LONDON, E14 3AU D 8 September 2035 | /energy-certificate/0400-4488-0322-3500-3153",
+   "24, Macquarie Way, LONDON, E14 3AU D 2 March 2030 | /energy-certificate/8160-7422-6830-1941-6222"
+  ],
+  "certificates": {
+   "/energy-certificate/8160-7422-6830-1941-6222": "energy rating is D. It has the potential to be B. See how to improve this property\u2019s energy efficiency . Energy efficien Valid until 2 March 2030 Certificate number 8160-7422-6830-1941-6222 Property type End-terrace house Total floor area 84 square metres Rules on letting this property Properties can be let if they have an energy rating from A to E. You can read guidance for landlords on the regulations and exemptions"
+  }
+ }
+}

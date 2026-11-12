@@ -1,0 +1,16 @@
+.git
+.venv
+.env
+.env.*
+**/.env*
+ANSWERS
+data
+.worktrees
+**/.worktrees
+*.tfvars
+*.tfstate
+*.tfstate.*
+**/__pycache__
+.pytest_cache
+.ruff_cache
+node_modules

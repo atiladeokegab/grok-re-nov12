@@ -1,0 +1,42 @@
+[project]
+name = "starter"
+version = "0.1.0"
+description = "Hackathon starter: one FastAPI image, one store, one tool gateway, one agent loop."
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=1.13.0",
+    "fastapi>=0.143.0",
+    "google-cloud-storage>=3.17.0",
+    "httpx2>=2.13.1",
+    "jinja2>=3.1.6",
+    "mcp>=2.3.0",
+    "opentelemetry-sdk>=1.45.1",
+    "pillow>=13.0.0",
+    "surrealdb>=2.0.0",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "starter"]
+addopts = "-m 'not e2e'"  # make check stays offline; make e2e selects them with -m e2e
+markers = [
+    "e2e: browser tests in tests/e2e, run by make e2e (needs Chromium)",
+    "live: also run against BASE_URL after a deploy (scripts/deploy.sh); read-only",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-playwright>=0.10.0",
+    "ruff>=0.17.0",
+]

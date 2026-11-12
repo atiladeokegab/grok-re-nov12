@@ -15,14 +15,6 @@ MIN_INSTANCES="${MIN_INSTANCES:-0}"  # the event playbook sets 1 on demo day: no
 # The one list of secrets: each mounts as its upper-cased name (anthropic-api-key is
 # ANTHROPIC_API_KEY), and scripts/bootstrap.sh creates and grants exactly these.
 SECRETS="anthropic-api-key admin-password"
-# Optional keys mount only when the secret exists (checked as you, before impersonating: the
-# deployer cannot list secrets). OPTIONAL_SECRETS= deploys with none of them.
-OPTIONAL_SECRETS="${OPTIONAL_SECRETS:-}"
-for s in $OPTIONAL_SECRETS; do
-  if gcloud secrets describe "$s" --project "$PROJECT" >/dev/null 2>&1; then SECRETS+=" $s"; fi
-done
-echo "deploy: MODE=$MODE secrets: $SECRETS"
-
 if [[ -n "$(git status --porcelain)" ]]; then
   echo "deploy: the working tree is dirty; commit first so the commit label names what ships" >&2
   exit 1
@@ -32,6 +24,13 @@ COMMIT="$(git rev-parse --short=12 HEAD)"
 # Every gcloud call below runs as the deployer scripts/bootstrap.sh made, never as you: its roles
 # bound what a deploy can change. DEPLOY_AS_SELF=1 is the one opt-out, said out loud.
 unset CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT  # only this script decides who deploys
+# Optional keys mount only when the secret exists (checked as you, before impersonating: the
+# deployer cannot list secrets). OPTIONAL_SECRETS= deploys with none of them.
+OPTIONAL_SECRETS="${OPTIONAL_SECRETS:-}"
+for s in $OPTIONAL_SECRETS; do
+  if gcloud secrets describe "$s" --project "$PROJECT" >/dev/null 2>&1; then SECRETS+=" $s"; fi
+done
+echo "deploy: MODE=$MODE secrets: $SECRETS"
 if [[ "${DEPLOY_AS_SELF:-}" == 1 ]]; then
   echo "deploy: deploying as $(gcloud config get-value account), not the deployer"
 else

@@ -46,7 +46,7 @@ def test_deploys_the_commit_then_checks_health_and_runs_the_live_smoke(tmp_path)
 
 
 def test_a_dirty_tree_is_refused_before_any_cloud_call(tmp_path):
-    proc, calls = run("deploy.sh", tmp_path, ENV, dirty=True)
+    proc, calls = run("deploy.sh", tmp_path, {**ENV, "OPTIONAL_SECRETS": "xai-api-key"}, dirty=True)
     assert proc.returncode == 1 and "dirty" in proc.stderr
     assert calls == []
 

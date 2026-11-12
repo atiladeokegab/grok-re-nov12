@@ -24,8 +24,8 @@ URL = "https://api.parallel.ai/v1/search"
 RECORDED = Path(__file__).parent / "fixtures" / NAME
 MAX_QUOTES = 4
 SENTENCE = re.compile(r"[^.!?\n]+[.!?]")
-# a renter speaking: first person, and about renting or living there
-SPEAKER = re.compile(r"\b(I|we)(\s+have|'ve)?\s+(lived|live|rented|rent|stayed|moved in)\b", re.I)  # a resident speaking, not an agent or a valuation
+# A resident speaking, not an agent or a valuation.
+SPEAKER = re.compile(r"\b(I|we)(\s+have|'ve)?\s+(lived|live|rented|rent|stayed|moved in)\b", re.I)
 TOPIC = re.compile(
     r"\b(rent\w*|landlord|tenan\w*|lease|letting|flat|apartment|building|lived|living|live here|"
     r"neighbou?r\w*|concierge|management|managing agent|noise|noisy|damp|mould|mold|repairs?|"

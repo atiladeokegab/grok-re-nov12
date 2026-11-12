@@ -300,6 +300,7 @@ function render(result) {
   $('activity').replaceChildren();
   for (const [label, count] of activity) $('activity').append(element('dt', label), element('dd', Number.isFinite(count) ? count : 'Not reported'));
   $('run-id').textContent = `Run ${result.run_id || 'not recorded'}`;
+  $('export-csv').hidden = !result.run_id; if (result.run_id) $('export-csv').href = `/api/xray/${encodeURIComponent(result.run_id)}/export.csv`;
   if (selected && (result.findings || []).some(item => item.id === selected)) showFinding(selected);
   else { selected = null; $('finding-detail').hidden = true; $('findings').hidden = false; }
   if (activeView === 'timeline') renderTimeline($('history-timeline'), result);

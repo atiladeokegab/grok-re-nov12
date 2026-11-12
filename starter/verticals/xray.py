@@ -15,6 +15,8 @@ Each source agent runs as a read-only gateway tool `source_<name>`, so every cal
 """
 
 import asyncio
+import csv
+import io
 import json
 import mimetypes
 import threading
@@ -492,6 +494,63 @@ def start_xray(body: XRayRequest, request: Request) -> dict:
 def read_xray(run_id: str, store: StoreDep) -> dict:
     run = get_report(store, run_id)
     return {**run, "documents": [_public(d) for d in run.get("documents", [])]}
+
+
+@router.get("/api/xray/{run_id}/export.csv")
+def export_xray(run_id: str, store: StoreDep) -> Response:
+    """One row per claim, evidence record and finding, for an analyst's spreadsheet."""
+    run = get_report(store, run_id)
+    out = io.StringIO()
+    w = csv.writer(out)
+    w.writerow(["kind", "field", "value", "unit", "verdict", "severity", "source", "url", "words"])
+    for c in run.get("claims", []):
+        w.writerow(
+            [
+                "claim",
+                c["field"],
+                c.get("value"),
+                c.get("unit"),
+                "",
+                "",
+                "advert",
+                c.get("source_url"),
+                c.get("doc_span"),
+            ]
+        )
+    for e in run.get("evidence", []):
+        v = e.get("value")
+        w.writerow(
+            [
+                "evidence",
+                e["field"],
+                json.dumps(v) if isinstance(v, dict | list) else v,
+                e.get("unit"),
+                "",
+                "",
+                e.get("source_name"),
+                e.get("source_url"),
+                e.get("doc_span"),
+            ]
+        )
+    for f in run.get("findings", []):
+        w.writerow(
+            [
+                "finding",
+                f["field"],
+                "",
+                "",
+                f.get("verdict"),
+                f.get("severity"),
+                "",
+                "",
+                f.get("reasoning"),
+            ]
+        )
+    return Response(
+        out.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="xray-{run_id}.csv"'},
+    )
 
 
 @router.get("/api/xray/{run_id}/events")

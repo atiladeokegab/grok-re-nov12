@@ -24,11 +24,12 @@ from starter.verticals.sources import (
     floor_plan,
     listing_history,
     photo_reuse,
+    similar_listings,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"
 # order matters: listing_history fills page
-SOURCES = [listing_history, epc, companies_house, photo_reuse, floor_plan]
+SOURCES = [listing_history, epc, companies_house, photo_reuse, floor_plan, similar_listings]
 LOT = re.compile(
     r"^\s*lot\s+\w+\s*[-:–]?\s*", re.I
 )  # an auction's "Lot 8 " / "LOT 12 - " / "Lot 3:"

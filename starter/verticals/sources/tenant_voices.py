@@ -25,7 +25,7 @@ RECORDED = Path(__file__).parent / "fixtures" / NAME
 MAX_QUOTES = 4
 SENTENCE = re.compile(r"[^.!?\n]+[.!?]")
 # a renter speaking: first person, and about renting or living there
-SPEAKER = re.compile(r"\b(I|I'm|I've|we|we've|my|our)\b", re.I)
+SPEAKER = re.compile(r"\b(I|we)(\s+have|'ve)?\s+(lived|live|rented|rent|stayed|moved in)\b", re.I)  # a resident speaking, not an agent or a valuation
 TOPIC = re.compile(
     r"\b(rent\w*|landlord|tenan\w*|lease|letting|flat|apartment|building|lived|living|live here|"
     r"neighbou?r\w*|concierge|management|managing agent|noise|noisy|damp|mould|mold|repairs?|"
@@ -89,7 +89,12 @@ def ingest(place: Place, listing: dict) -> tuple[list, list[Evidence]]:
     recorded = json.loads(path.read_text())
     evidence: list[Evidence] = []
     seen: set[str] = set()
+    # A quote counts only from a page about this street: an agent's review page is not this home.
+    street = re.sub(r"^[\d\s/-]+", "", (place.address or "").split(",")[0]).strip().lower()
     for res in recorded.get("results") or []:
+        about = f"{res.get('title') or ''} {res['url'].replace('-', ' ')}".lower()
+        if street and street not in about:
+            continue
         text = "\n\n".join(res.get("excerpts") or [])
         found = [q for q in quotes(text) if q.lower() not in seen]
         if not found:

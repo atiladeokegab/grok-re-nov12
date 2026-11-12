@@ -1,4 +1,4 @@
-export const FIELD_NAMES = { property_type: 'Property type', tenure: 'Tenure', floor_area: 'Floor area', size: 'Floor area', epc: 'Energy rating', epc_rating: 'Energy rating', energy_rating: 'Energy rating', price: 'Price', rent: 'Rent', photos: 'Listing photos', photo: 'Listing photo', photo_reuse: 'Photo match', photo_history: 'Photo history', tenant_reviews: 'Tenant reviews', reviews: 'Tenant reviews', price_basis: 'Price basis' };
+export const FIELD_NAMES = { property_type: 'Property type', tenure: 'Tenure', floor_area: 'Floor area', size: 'Floor area', epc: 'Energy rating', epc_rating: 'Energy rating', energy_rating: 'Energy rating', price: 'Price', rent: 'Rent', photos: 'Listing photos', photo: 'Listing photo', photo_reuse: 'Photo match', photo_history: 'Photo history', tenant_reviews: 'Tenant reviews', reviews: 'Tenant reviews', price_basis: 'Price basis', sale_status: 'Sale status' };
 export const VERDICTS = { matches: 'Matches the record', disagrees: 'Doesn’t match the record', unverifiable: 'Could not verify', flag: 'Worth a closer look' };
 
 export function fieldName(field) {
@@ -14,6 +14,7 @@ export function safeUrl(value) {
 
 export function valueText(value, unit) {
   const text = value === null || value === undefined ? 'Not recorded' : typeof value === 'object' ? JSON.stringify(value) : String(value);
+  if (unit === 'GBP' && typeof value === 'number') return `£${value.toLocaleString('en-GB')}`;
   return unit ? `${text} ${unit}` : text;
 }
 

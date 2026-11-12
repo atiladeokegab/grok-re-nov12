@@ -41,7 +41,7 @@ function state(container, message, kind = 'info') {
 function metadata(documentRecord, evidence) {
   const wrap = node('dl', null, 'trace-meta');
   const values = [
-    ['Source', first(documentRecord.source_name, evidence.source_name, 'Source not recorded')],
+    ['Source', first(documentRecord.source_name, evidence.source_name, safeUrl(first(documentRecord.source_url, evidence.source_url)) && new URL(first(documentRecord.source_url, evidence.source_url)).hostname, 'Source not recorded')],
     ['Fetched at', timestamp(first(documentRecord.fetched_at, evidence.fetched_at))],
     ['Agent', first(documentRecord.agent, evidence.agent, 'Agent not recorded')],
     ['SHA-256', first(documentRecord.sha256, documentRecord.content_sha256, evidence.document_sha256, 'Hash not supplied')],

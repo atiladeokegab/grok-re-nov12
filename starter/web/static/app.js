@@ -265,7 +265,7 @@ function render(result) {
   const counts = result.counts || {};
   const disagreements = counts.disagrees || 0;
   $('summary-title').textContent = disagreements ? `${disagreements} ${disagreements === 1 ? 'claim doesn’t' : 'claims don’t'} match the records` : (result.findings || []).length ? 'The records are ready to compare' : 'Checking the records';
-  $('summary-detail').textContent = `${counts.matches || 0} matched. ${counts.unverifiable || 0} could not be verified. ${counts.flag || 0} worth a closer look. Unverifiable claims are excluded from the score.`;
+  $('summary-detail').textContent = `${counts.matches || 0} matched. ${counts.unverifiable || 0} could not be verified. ${counts.flag || 0} worth a closer look. Unverifiable claims are left out of the score.`;
   $('run-message').textContent = result.message || ''; $('run-message').hidden = !result.message;
   $('finding-count').textContent = `${(result.findings || []).length} findings`;
   $('findings').replaceChildren();

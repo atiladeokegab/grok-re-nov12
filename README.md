@@ -26,6 +26,7 @@ and X-ray then reads each claim against them.
 | Photos | Reverse image search | reused elsewhere, or not found |
 | Price and history | The listing's own earlier versions, archived captures | what changed, and when |
 | The building and its landlord | Past-tenant reviews found by Parallel, each one cited | quoted, with the link |
+| The letting agent or landlord company | Companies House register | active · dissolved or in liquidation · no exact match |
 
 The result is a **trust score** and a ledger of findings. Each finding shows its source, when that source was fetched,
 and which agent fetched it. When X-ray can't tie a record to the exact flat, it says **unverifiable** rather than guess.
@@ -60,7 +61,8 @@ make dev      # the whole app, offline, with the demo place
 make smoke    # lint, tests and one X-ray run, no keys and no network
 ```
 
-Optional keys enable live sources: Google Maps (3D tiles), Google Vision (image search) and Parallel (reviews).
+Optional keys enable live sources: Google Maps (3D tiles), Parallel (reviews) and Companies House (landlord company).
+Image search uses Google Vision through the Cloud Run service account.
 Without them X-ray runs on recorded public captures and labels them as captures.
 
 ## Data and licences

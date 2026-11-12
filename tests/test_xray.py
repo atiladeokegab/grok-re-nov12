@@ -165,3 +165,23 @@ def test_rent_basis_is_never_compared_with_a_sale_price():
     assert "price" not in rent and rent["rent_pa"][0] == 24000.0
     assert "price" not in _crawl_values({"price_gbp": "30", "price_basis": "rent psf"})
     assert "price" in _crawl_values({"price_gbp": "750000", "price_basis": "guide/asking"})
+
+
+def test_sources_after_the_advert_page_run_in_parallel(monkeypatch):
+    import time as _time
+    from types import SimpleNamespace
+
+    from starter.verticals import xray as xv
+
+    mods = [SimpleNamespace(NAME=n) for n in ("listing_history", "a", "b", "c")]
+    monkeypatch.setattr(xv, "SOURCES", mods)
+
+    class Slow:
+        def call(self, name, args, case_id):
+            _time.sleep(0.3)
+            return {"payload": {"claims": [], "evidence": []}}
+
+    t = _time.perf_counter()
+    order = [m.NAME for m, _ in xv._fetch_all(Slow(), "r")]
+    assert order[0] == "listing_history" and sorted(order[1:]) == ["a", "b", "c"]
+    assert _time.perf_counter() - t < 0.9  # 0.3 first, then a, b, c together: not 1.2 in series

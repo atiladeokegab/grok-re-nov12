@@ -14,6 +14,7 @@ import httpx2 as httpx
 from starter.core.xray import Claim, Evidence, Finding
 
 XAI_URL = "https://api.x.ai/v1/chat/completions"
+XAI_MODEL = "grok-4.7"  # the one default; scripts/grok_session.py imports it
 PROMPT = (
     "You explain property-listing checks to a renter. For each finding, write ONE plain sentence "
     "(max 30 words) saying what the advert claims and what the cited source records. Use only "
@@ -25,7 +26,7 @@ PROMPT = (
 def provider() -> tuple[str, str] | None:
     """(provider, model) for narration, or None offline."""
     if os.environ.get("XAI_API_KEY"):
-        return "xai", os.environ.get("XAI_MODEL", "grok-4")
+        return "xai", (os.environ.get("XAI_MODEL") or XAI_MODEL)
     if os.environ.get("ANTHROPIC_API_KEY"):
         return "anthropic", os.environ.get("MODEL", "claude-opus-5-5")
     return None

@@ -49,6 +49,7 @@ SQFT_PER_M2 = 10.7639
 def _norm(v) -> str:
     s = re.sub(r"[-_]", " ", str(v).lower())
     s = re.sub(r"\b(house|flat|property)\b", "", s)
+    s = re.sub(r"(?<!end )\b(?:mid )?terraced?\b", "mid terrace", s)  # advert "Terraced" = EPC mid
     return re.sub(r"\s+", " ", s).strip()
 
 

@@ -1,7 +1,8 @@
-"""X-ray over MCP: three read-only gateway tools (so every call is audited) and GET /api/clients.
+"""X-ray over MCP: four read-only gateway tools (so every call is audited) and GET /api/clients.
 
 xray_listing runs a whole X-ray; explain_finding answers "why?" for a finding or a run's score
-from the cited evidence only; get_place_graph is GET /api/place/{id}/graph. A call that came in
+from the cited evidence only; trace_finding is GET /api/finding/{id}/trace plus a plain answer
+quoting the stored spans; get_place_graph is GET /api/place/{id}/graph. A call that came in
 over MCP is counted on its run's client_calls.mcp and in the global tally at GET /api/clients.
 """
 
@@ -62,6 +63,18 @@ def register_tools(gateway) -> None:
         raise NotFound(f"no finding or run {finding_id!r}")
 
     @gateway.register(effect=False)
+    def trace_finding(finding_id: str) -> dict:
+        """Show where a finding comes from: the advert's words and each source's exact quote, the
+        stored document each was read from, and whether the quote is verified verbatim in it.
+
+        Args:
+            finding_id: A finding id from an X-ray (the latest run holding it answers).
+        """
+        out = xray.finding_trace(finding_id, store)
+        _count(store, out["run_id"])
+        return {**out, "answer": trace_answer(out)}
+
+    @gateway.register(effect=False)
     def get_place_graph(place_id: str) -> dict:
         """The evidence graph of a place's latest X-ray: place, claims, evidence, findings, edges.
 
@@ -109,6 +122,31 @@ def explain(run: dict, f: dict) -> dict:
         "evidence": cited,
         "answer": " ".join(parts),
     }
+
+
+def _quoted(name: str, when: str, item: dict, doc: dict | None, verified: bool) -> str:
+    span = item.get("span")
+    if not span:
+        return f"{name}, captured {when[:10]}: no stored quote."
+    where = doc["id"] if doc else "no document"
+    check = f"verified verbatim in {where}" if verified else f"not verified in {where}"
+    return f"{name}, captured {when[:10]}: '{span['quote']}' ({check})."
+
+
+def trace_answer(t: dict) -> str:
+    """One line per source, quoting only the stored spans (never paraphrased)."""
+    parts = [f"{t['finding']['field']} ({t['finding']['verdict']}):"]
+    if c := t["claim"]:
+        parts.append(
+            _quoted("Advert", c["captured_at"], c, t["claim_document"], t["claim_quote_verified"])
+        )
+    for s in t["steps"]:
+        e = s["evidence"]
+        when = e.get("observed_at") or e["fetched_at"]
+        parts.append(_quoted(e["source_name"], when, e, s["document"], s["quote_verified"]))
+    if not t["steps"]:
+        parts.append("No source returned evidence for this field.")
+    return " ".join(parts)
 
 
 def explain_score(run: dict) -> dict:

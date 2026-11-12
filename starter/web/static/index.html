@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Check a property listing against its history and independent records. Open every finding back to its source.">
+  <title>X-ray | See through the listing</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='8' fill='%23080a09'/%3E%3Cpath d='m12 12 24 24m0-24L12 36' stroke='%23b8ed81' stroke-width='5'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/tokens.css">
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/views.css">
+  <link rel="stylesheet" href="/static/timeline.css">
+  <link rel="stylesheet" href="/static/graph.css">
+  <link rel="stylesheet" href="/static/trace.css">
+  <script type="module" src="/static/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to listing</a>
+  <header class="header">
+    <span class="brand" aria-label="X-ray"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M5 5 27 27M27 5 5 27M0 10V0h10M22 0h10v10M32 22v10H22M10 32H0V22"/></svg><span>x-ray</span></span>
+    <span class="header-purpose">See through the listing.</span>
+    <a class="header-link" href="#how-it-works">How it works</a>
+  </header>
+  <div id="prototype" class="prototype" hidden>Illustrative prototype. These values demonstrate the interface; they are not a real property assessment.</div>
+  <main id="main">
+    <p id="error" class="error" role="alert" hidden></p>
+    <section class="intro" id="intro" aria-labelledby="intro-title">
+      <div class="intro-copy">
+        <h1 id="intro-title">A listing tells<br>half the story.</h1>
+        <p class="intro-description">Check the listing against its history, photos and independent records.</p>
+        <form id="xray-form">
+          <fieldset class="property-use"><legend>Property type</legend><label><input type="radio" name="use" value="residential" data-testid="use-residential" checked>Residential</label><label><input type="radio" name="use" value="office" data-testid="use-office">Office</label></fieldset>
+          <label for="listing">Listing link or crawl ID</label>
+          <div class="input-row"><input id="listing" name="listing" type="text" value="https://www.auctionhouse.co.uk/london/auction/lot/152478" placeholder="Paste a property listing" required autocomplete="off" spellcheck="false" data-testid="listing-input"><button id="start" class="primary" type="submit" data-testid="xray-submit">X-ray this listing<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
+        </form>
+        <p id="status" class="status" role="status" aria-live="polite">Every finding opens back to its source.</p>
+        <div class="source-line" id="how-it-works"><span>Listing history</span><span>EPC records</span><span>Photo matches</span><span>Tenant reviews</span></div>
+      </div>
+      <div class="intro-visual" id="intro-visual">
+        <img class="hero-photo" src="/static/images/macquarie-exterior.jpg" alt="Exterior photograph of 24 Macquarie Way, from its Auction House listing">
+        <div class="visual-caption"><span>Start with the place.<br>Follow every claim.</span><a href="https://www.auctionhouse.co.uk/london/auction/lot/152478" target="_blank" rel="noopener noreferrer">24 Macquarie Way, via Auction House</a></div>
+      </div>
+    </section>
+    <section id="results" class="results" aria-labelledby="place-title" hidden>
+      <div class="result-heading"><div><h1 id="place-title">Listing X-ray</h1><p id="place-description"></p><p id="run-status" class="status" role="status" aria-live="polite"></p></div><button class="secondary" id="new-listing">Check another listing</button></div>
+      <div class="summary" aria-live="polite"><div class="score"><span id="score" data-testid="trust-score">—</span><span>Trust Score <span class="score-max">/ 100</span></span></div><div class="summary-copy"><h2 id="summary-title">Checking the records</h2><p id="summary-detail">Sources appear as they arrive. An unavailable source never counts as a match.</p></div></div>
+      <div id="flyin" data-enabled="true" data-testid="flyin" hidden aria-label="Property location fly-in"></div>
+      <nav class="result-nav" aria-label="Inspect this X-ray">
+        <button type="button" data-view="findings" aria-pressed="true" aria-controls="findings-view">Findings</button>
+        <button type="button" data-view="connections" aria-pressed="false" aria-controls="connections-view">Connections</button>
+        <button type="button" data-view="timeline" aria-pressed="false" aria-controls="timeline-view">Time machine</button>
+      </nav>
+      <div class="result-layout" id="findings-view">
+        <section class="property-column" aria-label="Listing images and history">
+          <div id="property-media" class="property-media"><div class="media-empty">The listing’s source images will appear here.</div></div>
+          <div class="section-title"><h2>What changed</h2><span id="history-count"></span></div>
+          <p class="section-description">The listing’s history, with the original record behind each change.</p>
+          <div id="history" class="history"><p class="empty">Waiting for the listing’s history.</p></div>
+        </section>
+        <section class="findings-column" aria-labelledby="findings-title"><div class="section-title"><h2 id="findings-title">The findings</h2><span id="finding-count"></span></div><p class="section-description">Select a finding to compare the claim with its evidence.</p><div id="findings" class="findings"></div><article id="finding-detail" class="finding-detail" data-testid="finding-detail" aria-label="Finding evidence" hidden></article></section>
+      </div>
+      <section id="connections-view" class="extra-view" aria-labelledby="connections-title" hidden>
+        <h2 id="connections-title">Follow the evidence</h2>
+        <p class="section-description">See how this place, its claims and the source records connect. Select a node to inspect its evidence.</p>
+        <div id="connections-graph" aria-live="polite"></div>
+      </section>
+      <section id="timeline-view" class="extra-view" aria-labelledby="timeline-title" hidden>
+        <h2 id="timeline-title">The record over time</h2>
+        <p class="section-description">Explore sourced records in time. A retrieval date tells you when a record was fetched, rather than when the property changed.</p>
+        <div id="history-timeline"></div>
+      </section>
+      <div class="run-receipt"><section aria-label="Source status"><h2>Sources checked</h2><div id="sources"></div></section><section aria-label="Agent activity"><h2>Grok Bot &amp; Cursor</h2><dl id="activity"></dl><p id="run-id"></p></section></div>
+    </section>
+  </main>
+  <footer><span>x-ray</span><p>The records, alongside the claim.</p><span>Built with Grok Bot &amp; Cursor</span></footer>
+</body>
+</html>

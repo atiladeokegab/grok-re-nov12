@@ -124,3 +124,12 @@ def test_mcp_secret_falls_back_to_admin_password_until_deploy_carries_it():
     assert Settings.from_env({**env, "DATA_PATH": "gs://b/s"}).mcp_key == "pw"
     assert Settings.from_env({**env, "DATA_PATH": "gs://b/s", "MCP_SECRET": "m"}).mcp_key == "m"
     assert Settings.from_env({}).mcp_key == "admin"  # local falls back to the admin password
+
+
+def test_trace_finding_unknown_id_is_an_mcp_tool_error_not_a_500(client, auth):
+    [result] = mcp(
+        client.app,
+        token_for(client, auth),
+        lambda c: c.call_tool("trace_finding", {"finding_id": "f-nope"}),
+    )
+    assert result.is_error and "no finding 'f-nope'" in result.content[0].text

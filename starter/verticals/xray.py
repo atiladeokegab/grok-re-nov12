@@ -4,6 +4,7 @@ POST /api/xray {listing_id | url} starts a run in a thread and returns {run_id};
 GET /api/xray/{run_id} is the XRayReport; GET /api/xray/{run_id}/events streams it (SSE) as it
 grows: `source`, `claim`, `evidence`, `finding`, `history`, `score`, then `done` (terminal; also
 sent on error, with status "error"). Each event's data is the full object.
+GET /api/gallery lists the 'try these' offline listings.
 GET /api/place/{id}/graph is the evidence graph of the latest run for that place.
 Ingestion (contract: ingest-contract v1): each source's raw originals are landed as Documents,
 every evidence quote is grounded in its document (`ingestion.landed`, `ingestion.parsed`,
@@ -45,7 +46,7 @@ from starter.runtime.deps import StoreDep
 from starter.verticals import cursor_step
 from starter.verticals import reconcile as rec
 from starter.verticals.narrate import narrate
-from starter.verticals.sources import SOURCES, load_listing
+from starter.verticals.sources import FIXTURES, SOURCES, load_listing
 from starter.verticals.sources import epc as epc_source
 
 router = APIRouter(tags=["xray"])
@@ -80,15 +81,36 @@ def _source_tool(module):
     return tool
 
 
+_buffers: dict[str, list[dict]] = {}  # run_id -> events held until the next _flush
+
+
 def _save(store: Store, report: XRayReport, kind: str | None = None, data=None) -> None:
+    """Save the report and publish one event. Inside run_xray events are held and written in one
+    store write per step (_flush): on GCS every write rewrites the whole object (~1/s)."""
+    events = []
+    if kind:
+        payload = data.model_dump() if hasattr(data, "model_dump") else data
+        events.append({"type": "xray", "run_id": report.run_id, "kind": kind, "data": payload})
+    if (held := _buffers.get(report.run_id)) is not None:
+        held += events
+        return
+    _write(store, report, events)
+
+
+def _flush(store: Store, report: XRayReport) -> None:
+    _write(store, report, _buffers.get(report.run_id, []))
+    _buffers[report.run_id] = []
+
+
+def _write(store: Store, report: XRayReport, events: list[dict]) -> None:
     def write(d: dict) -> None:
         d.setdefault("xray_runs", {})[report.run_id] = report.model_dump()
         d.setdefault("xray_places", {})[report.place_id] = report.run_id
+        log = d.setdefault("events", [])
+        for e in events:  # the same shape Store.publish stores
+            log.append({"seq": len(log) + 1, "ts": time.time(), **e})
 
     store.mutate(write)
-    if kind:
-        payload = data.model_dump() if hasattr(data, "model_dump") else data
-        store.publish({"type": "xray", "run_id": report.run_id, "kind": kind, "data": payload})
 
 
 def _land_known(name: str, listing: dict) -> None:
@@ -308,6 +330,7 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
     report = report or begin(store, ref, offline)
     run_id = report.run_id
     place, listing = _ctx[run_id]
+    _buffers[run_id] = []
     try:
         batches = {}
         for module, (claims, evidence, state, detail, ms) in _fetch_all(gateway, run_id):
@@ -340,6 +363,7 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
             for e in evidence:
                 _save(store, report, "evidence", e)
             _score(store, report)  # a provisional score after every source, status "running"
+            _flush(store, report)  # one store write per source
         # sources finish in any order: put them back in SOURCES order so finding ids are stable
         rank = {m.NAME: i for i, m in enumerate(SOURCES)}
         report.sources.sort(key=lambda s: rank[s.name])
@@ -354,6 +378,7 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
             report.grok_calls += told["calls"]
             report.client_calls.grok += told["calls"]
         _score(store, report, findings)
+        _flush(store, report)  # the final score lands before linking and the summary
         doc_of = {e.id: e.document_id for e in report.evidence}
         for f in report.findings:
             ids = list(dict.fromkeys(d for i in f.evidence_ids if (d := doc_of.get(i))))
@@ -368,6 +393,8 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
     finally:
         _ctx.pop(run_id, None)
         _save(store, report, "done", {"status": report.status, "error": report.error})
+        _flush(store, report)
+        _buffers.pop(run_id, None)
     return report
 
 
@@ -376,6 +403,18 @@ def get_report(store: Store, run_id: str) -> dict:
     if run is None:
         raise NotFound(f"no X-ray run {run_id!r}")
     return run
+
+
+@router.get("/api/gallery")
+def gallery() -> list[dict]:
+    """'Try these': real crawl listings recorded offline, one per discrepancy type. Start one with
+    POST /api/xray {"listing_id": name, "offline": true}."""
+    out = []
+    for p in sorted(FIXTURES.glob("*.json")):
+        fx = json.loads(p.read_text())
+        if g := fx.get("gallery"):
+            out.append({**g, "listing_id": fx["listing_id"], "url": fx["crawl"]["url"]})
+    return out
 
 
 @router.post("/api/xray", status_code=202)

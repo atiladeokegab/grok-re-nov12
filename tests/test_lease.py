@@ -78,3 +78,13 @@ def test_mcp_tool_returns_the_accuracy_table(client):
     assert "abstract_lease_eval" in gateway.tools
     result = gateway.call("abstract_lease_eval", {}, case_id="lease-test")["payload"]
     assert result["overall"]["n"] == sum(f["n"] for f in result["fields"].values())
+
+
+def test_lease_page_route_serves_static_lease_html(client):
+    from starter.web.pages import HERE
+
+    r = client.get("/lease")
+    if (HERE / "static" / "lease.html").exists():
+        assert r.status_code == 200 and "text/html" in r.headers["content-type"]
+    else:
+        assert r.status_code == 404

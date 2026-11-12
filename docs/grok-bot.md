@@ -9,20 +9,34 @@ HTTP headers ([Use the computer and apps](https://docs.x.ai/grok-bot/computer-an
 Claude Code messaging a Bot), so it is not what we need. Grok Bot runs in the cloud: it reaches
 only a public URL, never localhost.
 
+Live server: `https://xray-901257379404.europe-west1.run.app/mcp`.
+
 Setup, on the laptop with the Grok Bot app signed in:
 
-1. `make mcp MCP_URL=https://<deployed-url>/mcp` and copy the token from the printed line.
+1. `make mcp MCP_URL=https://xray-901257379404.europe-west1.run.app/mcp` and copy the token from the printed line (it is signed with the
+   deploy's `MCP_SECRET`, or `ADMIN_PASSWORD` until that secret is mounted).
 2. In Grok Bot: **Connect apps > Add a custom connector**. Name `xray`, Type **Remote HTTPS**,
-   Server URL `https://<deployed-url>/mcp`, header `Authorization: Bearer <token>`. **Add plugin**.
+   Server URL `https://xray-901257379404.europe-west1.run.app/mcp`, header `Authorization: Bearer <token>`. **Add plugin**.
 3. In a chat, type `@xray` to attach it, then send the demo prompts.
 
 (Instead of step 2 you can tell a Bot: "Add a custom MCP server called xray at
-https://<deployed-url>/mcp with header Authorization: Bearer <token>", and approve the card.)
+https://xray-901257379404.europe-west1.run.app/mcp with header Authorization: Bearer <token>", and approve the card.)
 
-Demo prompts:
+Demo prompts, in order:
 
-- `X-ray 24 Macquarie Way, E14`
-- `Why is the score 67?`
+1. `@xray X-ray the listing "demo" (24 Macquarie Way, E14) and give me the Trust Score.`
+2. `@xray Explain the property type finding: what does the advert say and what does the EPC register record?`
+3. `@xray Why is the score 67? List each finding that cost points and its source.`
+4. `@xray Show me the exact source text behind the property type finding.`
+
+Before the demo, check the connector path without the app. This speaks Streamable HTTP with a
+bearer header exactly as the connector does, runs `xray_listing` on the demo, runs
+`explain_finding` on the disagreeing finding, and prints `/api/clients`:
+
+    MCP_URL=https://xray-901257379404.europe-west1.run.app/mcp MCP_SECRET=<secret> uv run python scripts/grok_connector_check.py
+
+It names itself `grok-connector-check`, so its calls count under `grok_bot` in `/api/clients`;
+pass `--client check` to keep them out of that count.
 
 ## The same session through the xAI API
 

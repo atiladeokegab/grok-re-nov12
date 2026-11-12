@@ -14,6 +14,8 @@ import sys
 import urllib.request
 from pathlib import Path
 
+from starter.verticals.narrate import XAI_MODEL
+
 PROMPTS = ["X-ray 24 Macquarie Way, E14", "Why is the score 67?"]
 OUT = Path(__file__).resolve().parent.parent / "docs" / "media" / "grok-session.json"
 
@@ -45,7 +47,7 @@ def main() -> int:
     if "localhost" in env["BASE_URL"] or "127.0.0.1" in env["BASE_URL"]:
         print("BASE_URL must be the deployed URL: xAI cannot reach localhost", file=sys.stderr)
         return 2
-    model = os.environ.get("XAI_MODEL") or "grok-4.7"
+    model = os.environ.get("XAI_MODEL") or XAI_MODEL
     tool = {
         "type": "mcp",
         "server_url": env["BASE_URL"].rstrip("/") + "/mcp",

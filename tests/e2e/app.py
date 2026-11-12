@@ -1,5 +1,5 @@
-"""The app the way `make dev` starts it (offline, seeded) on a free port, with sample cases already
-run. Shared by the e2e tests and scripts/demo/record.py, so the film shows what the tests check."""
+"""The app the way `make dev` starts it (offline) on a free port. Shared by the e2e tests and
+scripts/demo/record.py, so the film shows what the tests check."""
 
 import contextlib
 import os
@@ -20,7 +20,10 @@ def serve(
     tmp: Path, cases: list[str], demo_latency: str = "", password: str = "admin"
 ) -> Iterator[str]:
     """Yields the base URL. demo_latency is DEMO_LATENCY for this server only: set explicitly, so a
-    value in the caller's shell never reaches the tests."""
+    value in the caller's shell never reaches the tests. cases stays only so serve(tmp, []) callers
+    keep working: the sample cases were retired with cases/ in 98a54f2."""
+    if cases:
+        raise ValueError("sample cases were retired with cases/; pass []")
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
         port = s.getsockname()[1]
@@ -39,16 +42,6 @@ def serve(
     base = f"http://127.0.0.1:{port}"
     try:
         _wait_healthy(base, proc, tmp / "server.log")
-        token = httpx2.post(f"{base}/api/login", json={"password": password}).json()["token"]
-        for case in cases:
-            body = (ROOT / "cases" / "sample" / case / "index.md").read_text()
-            run = httpx2.post(
-                f"{base}/api/runs",
-                json={"id": case, "body": body},
-                headers={"Authorization": f"Bearer {token}"},
-                timeout=60,
-            )
-            run.raise_for_status()
         yield base
     finally:
         proc.terminate()

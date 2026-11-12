@@ -197,7 +197,8 @@ function setView(view) {
 
 function renderHistory(result) {
   const history = (result.history || []).filter(sourcePresent);
-  $('history-count').textContent = `${history.length} ${history.length === 1 ? 'record' : 'records'}, ${history.filter(hasChangedValue).length} changes`;
+  const changed = history.filter(hasChangedValue).length;
+  $('history-count').textContent = `${history.length} ${history.length === 1 ? 'record' : 'records'}, ${changed ? `${changed} changed` : 'no changes since the crawl'}`;
   $('history').replaceChildren();
   for (const record of history) {
     const row = element('article', null, 'history-entry');
@@ -288,11 +289,13 @@ function render(result) {
   $('place-title').textContent = result.place?.title || result.place?.address || 'Listing X-ray';
   $('place-description').textContent = result.place?.title && result.place?.address ? result.place.address : result.listing_id || '';
   $('run-status').textContent = result.status === 'running' ? 'Checking sources. Findings update as records arrive.' : result.status === 'done' ? 'Check complete.' : result.status === 'error' ? 'Check incomplete. Review the source details below.' : 'Source records from this check.';
-  $('score').textContent = Number.isFinite(result.trust_score) ? result.trust_score : '—';
   const counts = result.counts || {};
   const disagreements = counts.disagrees || 0;
-  $('summary-title').textContent = disagreements ? `${disagreements} ${disagreements === 1 ? 'claim doesn’t' : 'claims don’t'} match the records` : (result.findings || []).length ? 'The records are ready to compare' : 'Checking the records';
-  $('summary-detail').textContent = `${counts.matches || 0} matched. ${counts.unverifiable || 0} could not be verified. ${counts.flag || 0} worth a closer look. Unverifiable claims are left out of the score.`;
+  const scored = (counts.matches || 0) + disagreements > 0; // flags alone are no score: never a fake 0
+  $('score').textContent = scored && Number.isFinite(result.trust_score) ? result.trust_score : '—';
+  const flags = counts.flag || 0;
+  $('summary-title').textContent = disagreements ? `${disagreements} ${disagreements === 1 ? 'claim doesn’t' : 'claims don’t'} match the records` : flags ? `${flags} ${flags === 1 ? 'claim' : 'claims'} worth a closer look` : (result.findings || []).length ? 'The records are ready to compare' : 'Checking the records';
+  $('summary-detail').textContent = (scored || result.status === 'running' ? '' : 'Not scored: no claim had a matching record. ') + `${counts.matches || 0} matched. ${counts.unverifiable || 0} could not be verified. ${flags} worth a closer look. Unverifiable claims are left out of the score.`;
   $('run-message').textContent = result.message || ''; $('run-message').hidden = !result.message;
   $('finding-count').textContent = `${(result.findings || []).length} findings`;
   $('findings').replaceChildren();

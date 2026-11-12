@@ -8,6 +8,12 @@ export function score(value) {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100 ? value : null;
 }
 
+// flags alone are no score: 0 with no match or disagreement would be a fake zero
+function reportScore(report) {
+  const c = report?.counts || {};
+  return (c.matches || 0) + (c.disagrees || 0) > 0 ? score(report?.trust_score) : null;
+}
+
 export function facts(report) {
   const claims = (Array.isArray(report.claims) ? report.claims : []).filter(sourcePresent);
   const evidence = (Array.isArray(report.evidence) ? report.evidence : []).filter(e => sourcePresent(e) && !e.observed_at);
@@ -101,7 +107,7 @@ function renderRow(entry) {
   }
   const data = facts(report);
   row.append(factCell(data.price, report, v => typeof v === 'number' ? valueText(v, 'GBP') : String(v)));
-  const value = score(report.trust_score);
+  const value = reportScore(report);
   const scoreCell = node('td');
   scoreCell.append(sourceLink(value == null ? 'Unscored' : String(value), reportURL(report), '/'));
   scoreCell.className = 'analyst-score'; row.append(scoreCell);
@@ -133,7 +139,7 @@ function renderRow(entry) {
 
 function renderBar({ listing, report }) {
   const row = node('li');
-  const value = score(report?.trust_score);
+  const value = reportScore(report);
   row.append(sourceLink(listing.title, report ? reportURL(report) : listing.url, '/'));
   const track = node('span', undefined, 'analyst-bar'); track.setAttribute('aria-hidden', 'true');
   const fill = node('span', undefined, 'analyst-bar-fill'); fill.style.width = `${value ?? 0}%`;

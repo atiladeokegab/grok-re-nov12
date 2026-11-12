@@ -1,13 +1,13 @@
-# <Project name>
+# X-ray
 
-<One paragraph: what we're building and who it's for.>
+X-ray sees through every property claim. Paste a rental listing and agents ingest everything about the place into one evidence graph: the listing's own change history, the EPC register, reverse image search and cited past-tenant reviews. Grok checks each claim against an independent source, and every verdict links to the page, pixel or register row behind it. Track 3: attribution and provenance. Built with Grok Bot and Cursor.
 
 What we're building and who owns which part: [IDEA.md](IDEA.md). Deadlines, rules and
 the team: [HACKATHON.md](HACKATHON.md). Who is doing what, live: the board linked in HACKATHON.md.
 
 ## Quick start
 
-1. `gh repo clone <this repo>`
+1. `gh repo clone atiladeokegab/grok-re-nov12`
 2. Open your AI tool (Claude Code, Codex, Cursor, Copilot…) in the folder.
 3. Tell it: *"Read AGENTS.md, then pick up my issue."*
 
@@ -253,4 +253,4 @@ built during the event.
 
 ## Architecture
 
-<!-- the lead adds the C4 diagrams here -->
+

@@ -1,6 +1,6 @@
 {
  "listing_id": "auctionhouse-0715ecf1",
- "note": "Offline fixture: the organisers' crawl row (24 Oct 2026) and text captured 2026-11-12 from the public advert and the public EPC register. The live path runs the same parsers.",
+ "note": "Offline fixture: the organisers' crawl row (24 Oct 2026) and text captured 2026-11-12 from the public advert and the public EPC register. The live path runs the same parsers. Historical EPC replay contains a factual recorded excerpt with actual assessment/certificate dates, not an invented prior observation.",
  "crawl": {
   "listing_id": "auctionhouse-0715ecf1",
   "source": "auctionhouse",
@@ -71,5 +71,14 @@
   "certificates": {
    "/energy-certificate/8160-7422-6830-1941-6222": "energy rating is D. It has the potential to be B. See how to improve this property\u2019s energy efficiency . Energy efficien Valid until 2 March 2030 Certificate number 8160-7422-6830-1941-6222 Property type End-terrace house Total floor area 84 square metres Rules on letting this property Properties can be let if they have an energy rating from A to E. You can read guidance for landlords on the regulations and exemptions"
   }
+ },
+ "epc_history": {
+  "fixture_kind": "recorded_official_certificate_excerpt",
+  "documents": [
+   [
+    "https://find-energy-certificate.service.gov.uk/energy-certificate/8160-7422-6830-1941-6222",
+    "24, Macquarie Way LONDON E14 3AU Energy rating D. energy rating is D. Property type End-terrace house Total floor area 84 square metres. Date of assessment 29 February 2020. Date of certificate 3 March 2020"
+   ]
+  ]
  }
 }

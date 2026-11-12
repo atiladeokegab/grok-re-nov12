@@ -18,17 +18,32 @@ from pathlib import Path
 from starter.core.errors import NotFound
 from starter.core.xray import Place
 from starter.verticals.sources import (
+    area_context,
     companies_house,
     epc,
+    epc_history,
+    hmlr_history,
     listing_history,
     photo_diff,
     reverse_image,
     reviews_parallel,
+    wayback_history,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"
 # Listing history fills listing["page"] before the image and review checks run.
-SOURCES = [listing_history, epc, companies_house, reverse_image, reviews_parallel, photo_diff]
+SOURCES = [
+    listing_history,
+    epc,
+    companies_house,
+    reverse_image,
+    reviews_parallel,
+    photo_diff,
+    wayback_history,
+    epc_history,
+    hmlr_history,
+    area_context,
+]
 
 
 @functools.cache

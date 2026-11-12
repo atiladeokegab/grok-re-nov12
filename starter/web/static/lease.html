@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Office lease · X-ray</title>
+  <meta name="description" content="Read the terms of a commercial lease alongside their original text.">
+  <link rel="stylesheet" href="/static/tokens.css">
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/lease.css">
+  <script type="module" src="/static/lease.js"></script>
+</head>
+<body>
+  <a class="skip" href="#lease-main">Skip to lease review</a>
+  <header class="header">
+    <a class="brand" href="/" aria-label="X-ray home">X-ray</a>
+    <span class="header-purpose">The property dossier</span>
+    <a class="header-link" href="/">Back to listing X-ray</a>
+  </header>
+  <main id="lease-main" class="lease-main">
+    <section class="lease-intro" aria-labelledby="lease-title">
+      <div class="lease-copy">
+        <p class="lease-eyebrow">Office / lease review</p>
+        <h1 id="lease-title">The lease,<br>with its evidence.</h1>
+        <p class="lease-lead">Rent, break clauses and obligations. Read the extracted terms beside the words they came from.</p>
+        <form id="lease-form" class="lease-upload">
+          <label for="lease-file">Choose a commercial lease</label>
+          <input id="lease-file" name="file" type="file" accept=".docx" required aria-describedby="lease-help">
+          <p id="lease-help" class="status">Word document (.docx), up to 5 MB. Read in memory; the upload is not saved.</p>
+          <button id="lease-submit" class="primary" type="submit" disabled>Read this lease <span aria-hidden="true">↗</span></button>
+        </form>
+        <p id="lease-status" class="status" role="status" aria-live="polite">Select a document to begin.</p>
+        <p id="lease-error" class="error" role="alert" hidden></p>
+      </div>
+      <aside class="lease-benchmark" aria-labelledby="benchmark-title">
+        <p class="lease-eyebrow">Measured extraction</p>
+        <h2 id="benchmark-title">Tested against the source.</h2>
+        <p class="status">In-sample evaluation on the organisers’ hand-labelled Model Commercial Lease templates.</p>
+        <p id="benchmark-status" class="status" role="status">Loading the recorded results…</p>
+        <div id="benchmark-results" hidden>
+          <dl class="lease-metrics">
+            <div><dt>Strict correct</dt><dd id="benchmark-strict"></dd></div>
+            <div><dt>Content correct</dt><dd id="benchmark-content"></dd></div>
+          </dl>
+          <p id="benchmark-documents" class="status"></p>
+          <details class="lease-eval-details">
+            <summary>See results by term</summary>
+            <table class="lease-eval-table"><caption>Correct fields / fields checked</caption><thead><tr><th scope="col">Term</th><th scope="col">Strict</th><th scope="col">Content</th></tr></thead><tbody id="benchmark-fields"></tbody></table>
+            <p class="status">Strict scoring also checks placeholder flags. Content scoring relaxes that flag for non-placeholder labels.</p>
+          </details>
+          <a class="lease-data-link" href="/api/lease/eval" target="_blank" rel="noopener">Open the recorded evaluation ↗</a>
+        </div>
+        <button id="benchmark-retry" type="button" class="secondary" hidden>Retry evaluation</button>
+      </aside>
+    </section>
+    <section id="lease-results" class="lease-results" aria-labelledby="lease-results-title" hidden>
+      <div class="lease-result-heading"><div><p class="lease-eyebrow">Document record</p><h2 id="lease-results-title">Extracted terms</h2><p id="lease-filename" class="status"></p></div><p id="lease-counts" class="status"></p></div>
+      <p class="status">Open a term to inspect its source text. A missing clause is marked “Not found”; a template blank is marked “Placeholder”.</p>
+      <div id="lease-terms" class="lease-terms"></div>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,5 @@
+/* "What each agent did": the agent's name above its plain sentence, so long names never squeeze into a column. */
+.source-status.agent-line { display: block; margin-bottom: var(--space-4) }
+.source-status.agent-line span { display: block }
+.source-status.agent-line span:first-child { font-weight: 600; color: var(--color-ink) }
+.source-status.agent-line span + span { color: var(--color-muted); margin-top: var(--space-1); text-align: left }

@@ -121,3 +121,24 @@ button.eg-card:hover { background: var(--color-raised); }
   .eg-row[data-verdict="disagrees"] .eg-edge:not(.is-missing) { width: 4px; height: 16px; }
   .eg-edge-out::after { right: auto; left: 50%; top: auto; bottom: -6px; border: 5px solid transparent; border-top: 7px solid var(--eg-verdict); border-bottom: 0; transform: translateX(-50%); }
 }
+
+/* Entrance: rows rise in turn, edges draw left to right, the disagreeing edge pulses a few times. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes eg-draw { from { transform: scaleX(0) } }
+  @keyframes eg-pop { from { opacity: 0; transform: scale(.85) } }
+  @keyframes eg-pulse { 50% { box-shadow: 0 0 18px 2px color-mix(in srgb, var(--color-danger) 80%, transparent) } }
+  .eg-row:not(.eg-columns) { --d: 0ms }
+  .eg-row:nth-child(3) { --d: 80ms } .eg-row:nth-child(4) { --d: 160ms } .eg-row:nth-child(5) { --d: 240ms }
+  .eg-row:nth-child(6) { --d: 320ms } .eg-row:nth-child(n+7) { --d: 400ms }
+  .eg-row:not(.eg-columns) .eg-card { animation: eg-pop 380ms var(--d) cubic-bezier(.3, 1.4, .5, 1) backwards }
+  .eg-row:not(.eg-columns) .eg-card-finding { animation-delay: calc(var(--d) + 180ms) }
+  .eg-row:not(.eg-columns) .eg-sources .eg-card { animation-delay: calc(var(--d) + 360ms) }
+  .eg-edge:not(.is-missing) { transform-origin: left center; animation: eg-draw 260ms calc(var(--d, 0ms) + 120ms) ease-out backwards }
+  .eg-edge-out:not(.is-missing) { animation-delay: calc(var(--d, 0ms) + 300ms) }
+  .eg-row[data-verdict="disagrees"] .eg-edge:not(.is-missing) {
+    animation: eg-draw 260ms calc(var(--d) + 120ms) ease-out backwards, eg-pulse 900ms calc(var(--d) + 800ms) ease-in-out 3;
+  }
+  .eg-row[data-verdict="disagrees"] .eg-edge-out:not(.is-missing) { animation-delay: calc(var(--d) + 300ms), calc(var(--d) + 800ms) }
+  .eg-detail { animation: eg-pop 300ms ease-out backwards }
+  @media (max-width: 640px) { .eg-edge:not(.is-missing) { transform-origin: center top; animation-name: eg-pop } }
+}

@@ -17,3 +17,4 @@
 .claim-history li { display: grid; gap: 2px; font-size: var(--type-caption); color: var(--color-muted) }
 .claim-history li.is-changed span + span { color: var(--color-ink); font-weight: 600 }
 .claim-history-when { font-size: 12px }
+.agent-chip.status-ok::before { content: '✓'; color: var(--color-accent); font-weight: 600 }

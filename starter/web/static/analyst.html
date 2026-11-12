@@ -20,40 +20,44 @@
   </header>
   <main id="analyst-main" class="analyst-main" aria-busy="true">
     <section class="analyst-heading" aria-labelledby="analyst-title">
-      <div>
-        <p class="analyst-eyebrow">Analyst workspace / saved reports</p>
-        <h1 id="analyst-title">The shortlist, with its evidence.</h1>
-        <p class="analyst-lead">Compare saved property reports and follow each value to its source.</p>
-      </div>
-      <div class="analyst-actions">
-        <button id="analyst-download" class="primary" type="button" disabled>Download all as CSV <span aria-hidden="true">↓</span></button>
-        <p class="status">Saved reports only. Opening this view starts no new checks.</p>
-      </div>
-    </section>
-    <div class="analyst-state">
+      <h1 id="analyst-title">Shortlist</h1>
       <p id="analyst-status" class="status" role="status" aria-live="polite">Loading saved reports…</p>
-      <button id="analyst-retry" class="secondary" type="button" hidden>Reload saved reports</button>
-    </div>
+      <button id="analyst-retry" class="secondary" type="button" hidden>Reload</button>
+      <button id="analyst-download" class="primary" type="button" disabled>Download CSV <span aria-hidden="true">↓</span></button>
+    </section>
     <p id="analyst-error" class="error" role="alert" hidden></p>
-    <section class="analyst-comparison" aria-labelledby="comparison-title">
-      <h2 id="comparison-title">Compare the records</h2>
-      <p id="comparison-help" class="status">Values open their recorded sources. Scores and counts open the saved report. Missing evidence is never a match.</p>
-      <div class="analyst-table-scroll" role="region" aria-label="Property comparison, scroll horizontally for all columns" tabindex="0">
-        <table class="analyst-table" aria-describedby="comparison-help area-help">
-          <caption>Recorded claims and independent evidence for the saved gallery listings</caption>
-          <thead>
-            <tr><th scope="col" rowspan="2">Listing</th><th scope="col" rowspan="2">Advert price</th><th scope="col" rowspan="2">Trust score</th><th scope="colgroup" colspan="3">Findings</th><th scope="colgroup" colspan="3">Floor area / m²</th><th scope="col" rowspan="2">Energy rating</th><th scope="col" rowspan="2">Photo reuse</th></tr>
-            <tr><th scope="col">Matches</th><th scope="col">Disagrees</th><th scope="col">Unverifiable</th><th scope="col">Advert</th><th scope="col">EPC</th><th scope="col">Rooms only</th></tr>
-          </thead>
-          <tbody id="analyst-rows"></tbody>
-        </table>
-      </div>
-      <p id="area-help" class="status">Room totals come from the advert’s room schedule and exclude halls, stairs and walls. They are not a measurement of total floor area.</p>
-    </section>
-    <section class="analyst-chart-section" aria-labelledby="chart-title">
-      <div><p class="analyst-eyebrow">At a glance</p><h2 id="chart-title">Trust score by listing</h2><p class="status">Recorded scores out of 100. An unscored property stays unscored.</p></div>
-      <ol id="analyst-chart" class="analyst-chart" aria-label="Trust scores, out of 100"></ol>
-    </section>
+    <ol id="analyst-cards" class="analyst-cards" aria-label="Properties by trust score"></ol>
+    <div class="analyst-panels">
+      <section class="analyst-panel" aria-labelledby="matrix-title">
+        <div class="analyst-panel-head">
+          <h2 id="matrix-title">Advert vs records</h2>
+          <ul class="analyst-key" aria-label="Key">
+            <li><i class="dot" data-verdict="matches"></i>Match</li>
+            <li><i class="dot" data-verdict="disagrees"></i>Mismatch</li>
+            <li><i class="dot" data-verdict="flag"></i>Flag</li>
+            <li><i class="dot" data-verdict="unverifiable"></i>Unverifiable</li>
+          </ul>
+        </div>
+        <div class="analyst-table-scroll" role="region" aria-label="Field comparison" tabindex="0">
+          <table class="analyst-matrix">
+            <caption class="visually-hidden">Each advert claim checked against independent records; each value opens its source</caption>
+            <thead><tr id="analyst-matrix-head"><th scope="col">Field</th></tr></thead>
+            <tbody id="analyst-rows"></tbody>
+          </table>
+        </div>
+      </section>
+      <section class="analyst-panel" aria-labelledby="chart-title">
+        <div class="analyst-panel-head">
+          <h2 id="chart-title">Floor area, m²</h2>
+          <ul class="analyst-key" aria-label="Series">
+            <li><i class="swatch" data-series="advert"></i>Advert</li>
+            <li><i class="swatch" data-series="rooms"></i>Floor-plan rooms</li>
+            <li><i class="swatch" data-series="epc"></i>EPC</li>
+          </ul>
+        </div>
+        <div id="analyst-chart" class="analyst-chart"></div>
+      </section>
+    </div>
   </main>
 </body>
 </html>

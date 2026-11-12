@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { score, facts, csvRows, combineCSV } from './analyst.js';
+import { score, facts, csvRows, combineCSV, cell, areas } from './analyst.js';
 
 test('an absent score stays unscored; zero remains a real score', () => {
   for (const value of [null, undefined, '', '67', NaN, Infinity, -1, 101]) assert.equal(score(value), null);
@@ -56,4 +56,16 @@ test('incompatible or broken exports fail instead of producing a partial downloa
   const base = { listing: { title: 'One' }, report: { listing_id: 'one', run_id: 'xr-one' } };
   assert.throws(() => combineCSV([{ ...base, text: 'kind,words\nevidence,one\n' }, { ...base, text: 'different\none\n' }]), /different columns/);
   assert.throws(() => combineCSV([{ ...base, text: 'kind,words\nevidence\n' }]), /incomplete row/);
+});
+
+test('a matrix cell carries the verdict, a short value and its source; no evidence is never a match', () => {
+  const report = {
+    claims: [{ field: 'floor_area', value: 81, source_url: 'https://advert.example' }, { field: 'tenure', value: 'Freehold', source_url: 'https://advert.example' }],
+    evidence: [{ id: 'e1', agent: 'epc', field: 'floor_area', value: 72, source_url: 'https://epc.example' }],
+    findings: [{ field: 'floor_area', verdict: 'disagrees', evidence_ids: ['e1'] }, { field: 'photo_reuse', verdict: 'matches', evidence_ids: ['gone'] }],
+  };
+  assert.deepEqual({ ...cell(report, ['floor_area']), note: undefined }, { verdict: 'disagrees', text: '81 m² ≠ 72 m²', note: undefined, href: 'https://epc.example' });
+  assert.equal(cell(report, ['tenure']).verdict, 'unverifiable');
+  assert.equal(cell(report, ['photo_reuse', 'image_reuse']).verdict, 'unverifiable');
+  assert.deepEqual(areas(report).map(a => a.value), [81, null, 72]);
 });

@@ -27,6 +27,7 @@ Demo prompts, in order:
 1. `@xray X-ray the listing "demo" (24 Macquarie Way, E14) and give me the Trust Score.`
 2. `@xray Explain the property type finding: what does the advert say and what does the EPC register record?`
 3. `@xray Why is the score 67? List each finding that cost points and its source.`
+4. `@xray Show me the exact source text behind the property type finding.`
 
 Before the demo, check the connector path without the app. This speaks Streamable HTTP with a
 bearer header exactly as the connector does, runs `xray_listing` on the demo, runs

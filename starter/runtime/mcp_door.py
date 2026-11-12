@@ -15,9 +15,11 @@ import sys
 from contextvars import ContextVar
 
 from mcp.server import MCPServer
+from mcp.server.mcpserver.exceptions import ToolError
 from mcp.server.transport_security import TransportSecuritySettings
 from starlette.responses import JSONResponse
 
+from starter.core.errors import NotFound
 from starter.core.gateway import Gateway
 from starter.runtime.config import Settings
 
@@ -61,7 +63,10 @@ def build_mcp(gateway: Gateway) -> MCPServer:
     def bind(name: str, fn):
         @functools.wraps(fn)  # the tool's signature and docstring become its MCP schema
         def call(**args):
-            result = gateway.call(name, args, f"mcp-{SESSION.get()}")
+            try:
+                result = gateway.call(name, args, f"mcp-{SESSION.get()}")
+            except NotFound as e:  # the caller's mistake: say what was not found, not "crashed"
+                raise ToolError(str(e)) from e
             gateway.store.mutate(functools.partial(_tally, CLIENT.get() or "other"))
             return result
 

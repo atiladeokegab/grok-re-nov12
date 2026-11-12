@@ -1,5 +1,8 @@
-"""explain_finding and get_place_graph answer from the run's cited evidence only."""
+"""explain_finding, trace_finding and get_place_graph answer from the run's cited evidence only."""
 
+import pytest
+
+from starter.core.errors import NotFound
 from starter.core.gateway import build_gateway
 from starter.core.store import Store
 from starter.runtime import mcp_door
@@ -54,3 +57,27 @@ def test_get_place_graph_is_the_route(tmp_path):
     assert _call(gateway, "get_place_graph", place_id=r.place_id) == place_graph(
         r.place_id, gateway.store
     )
+
+
+def test_trace_finding_quotes_the_epc_document_verbatim(tmp_path):
+    gateway, r = _run(tmp_path)
+    f = next(f for f in r.findings if f.field == "property_type")
+    out = _call(gateway, "trace_finding", finding_id=f.id)
+    [step] = out["steps"]
+    assert step["quote_verified"] and step["evidence"]["agent"] == "epc"
+    doc_id, quote = step["document"]["id"], step["evidence"]["span"]["quote"]
+    assert out["chain"][-3:] == [
+        {"kind": "document", "id": doc_id},
+        {"kind": "evidence", "id": step["evidence"]["id"]},
+        {"kind": "finding", "id": f.id},
+    ]
+    assert (
+        f"EPC register, captured 2026-11-12: '{quote}' (verified verbatim in {doc_id})."
+        in (out["answer"])
+    )
+
+
+def test_trace_finding_unknown_id_is_a_tool_error(tmp_path):
+    gateway, _ = _run(tmp_path)
+    with pytest.raises(NotFound, match="no finding 'f-nope'"):
+        _call(gateway, "trace_finding", finding_id="f-nope")

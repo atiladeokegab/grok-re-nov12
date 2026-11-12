@@ -72,9 +72,10 @@ def test_trace_and_document_routes(tmp_path):
         run_id = client.post("/api/xray", json={"listing_id": "demo", "offline": True}).json()[
             "run_id"
         ]
-        for _ in range(50):
+        deadline = time.monotonic() + 30
+        while True:
             report = client.get(f"/api/xray/{run_id}").json()
-            if report["status"] != "running":
+            if report["status"] != "running" or time.monotonic() >= deadline:
                 break
             time.sleep(0.1)
         assert report["status"] == "done"

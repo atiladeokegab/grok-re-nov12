@@ -22,6 +22,7 @@ class Settings:
     surreal_user: str | None = None
     surreal_password: str | None = None
     admin_password: str = "admin"
+    mcp_secret: str | None = None  # signs MCP tokens; local falls back to admin_password
     anthropic_api_key: str | None = None
     model: str = DEFAULT_MODEL
     mode_effects: str = "simulate"  # "live" lets effect tools act; anything else simulates
@@ -46,6 +47,10 @@ class Settings:
             missing = [k for k in ("ANTHROPIC_API_KEY", "ADMIN_PASSWORD") if not env.get(k)]
             if missing:
                 raise RuntimeError(f"cloud mode refuses to start without {', '.join(missing)}")
+            if not env.get(
+                "MCP_SECRET"
+            ):  # its own secret: an MCP token never opens the admin login
+                raise RuntimeError("cloud mode refuses to start without MCP_SECRET")
         store = env.get("STORE", "json")
         if store not in ("json", "surreal"):
             raise ValueError(f"STORE must be json or surreal, got {store!r}")
@@ -85,6 +90,7 @@ class Settings:
             surreal_user=env.get("SURREAL_USER") or None,
             surreal_password=env.get("SURREAL_PASS") or None,
             admin_password=env.get("ADMIN_PASSWORD", "admin"),
+            mcp_secret=env.get("MCP_SECRET") or None,
             anthropic_api_key=env.get("ANTHROPIC_API_KEY") or None,
             model=env.get("MODEL", DEFAULT_MODEL),
             mode_effects=effects,
@@ -99,6 +105,11 @@ class Settings:
             elevenlabs_phone_number_id=env.get("ELEVENLABS_PHONE_NUMBER_ID") or None,
             demo_latency=demo_latency,
         )
+
+    @property
+    def mcp_key(self) -> str:
+        """What signs MCP tokens: MCP_SECRET (required in cloud), else the local admin password."""
+        return self.mcp_secret or self.admin_password
 
     def public(self) -> dict:
         """What is configured, safe to show anyone: never a secret."""

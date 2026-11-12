@@ -104,6 +104,7 @@ def test_unknown_store_is_rejected():
 
 def test_cloud_refuses_an_incomplete_surreal_config():
     env = {"MODE": "cloud", "ANTHROPIC_API_KEY": "k", "ADMIN_PASSWORD": "pw", "STORE": "surreal"}
+    env["MCP_SECRET"] = "m"
     with pytest.raises(RuntimeError, match="SURREAL_URL, SURREAL_NS, SURREAL_DB, SURREAL_USER"):
         Settings.from_env({**env, "SURREAL_PASS": "p"})
     full = {"SURREAL_URL": "wss://db.example", "SURREAL_NS": "n", "SURREAL_DB": "d"}

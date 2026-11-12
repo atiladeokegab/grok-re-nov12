@@ -41,6 +41,16 @@
   font-size: var(--type-lead);
   color: var(--color-muted);
 }
+.landing-line:has(+ .landing-for) { margin-bottom: var(--space-2); }
+.landing-for { margin: 0 0 var(--space-4); max-width: 56ch; color: var(--color-ink); font-size: var(--type-body); text-wrap: balance; }
+.landing-analyst {
+  display: inline-flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-5);
+  padding: var(--space-2) var(--space-4); border-radius: var(--radius-control);
+  background: var(--color-accent); color: var(--color-on-accent); font-weight: var(--weight-bold); text-decoration: none;
+}
+.landing-analyst:hover { filter: brightness(1.1); }
+.landing-analyst:focus-visible { outline: var(--focus-width) solid var(--color-ink); outline-offset: 2px; }
+.landing-analyst svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
 .landing form { width: min(100%, 680px); }
 .landing-sr {
   position: absolute; width: 1px; height: 1px; overflow: hidden;

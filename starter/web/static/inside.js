@@ -1,5 +1,5 @@
 // The "Inside" view: the property reconstructed from the advert's room schedule, beside the facts a
-// renter or analyst asks first, each with its source.
+// analyst asks first, each with its source.
 // Walk-through controls adapted from sesasa/3d-house-walkthrough (MIT, (c) 2026 Saeed Asadzadeh).
 import { safeUrl } from './data.js';
 

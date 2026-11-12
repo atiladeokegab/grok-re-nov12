@@ -1,0 +1,211 @@
+#!/usr/bin/env bash
+set -u
+shopt -s nocasematch
+
+since=1970-01-01T00:00:00Z
+agent=
+who=@me
+all=0
+lead=0
+while (($#)); do
+    case $1 in
+        --all) all=1; shift ;;
+        --lead) lead=1; shift ;;
+        --agent) agent=${2:?--agent needs a name}; shift 2 ;;
+        --as) who=${2:?--as needs a handle}; shift 2 ;;
+        *) printf 'inbox: unknown option: %s\n' "$1" >&2; exit 1 ;;
+    esac
+done
+
+remote=$(git remote get-url origin 2>&1) || { printf 'inbox: %s\n' "$remote" >&2; exit 1; }
+case $remote in
+    *github.com/*) repo=${remote#*github.com/} ;;
+    *github.com:*) repo=${remote#*github.com:} ;;
+    *) printf 'inbox: origin is not a GitHub repository\n' >&2; exit 1 ;;
+esac
+repo=${repo%.git}
+state=$(git rev-parse --git-path team-inbox.last)
+if (( ! all )) && [[ -f $state ]]; then read -r since <"$state"; fi
+started=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+
+call() {
+    local result
+    result=$(gh "$@" 2>&1) || {
+        printf 'inbox: %s\n' "${result%%$'\n'*}" >&2
+        return 1
+    }
+    printf '%s' "$result"
+}
+has_agent() {
+    [[ -z $agent || ,$1, == *",agent:$agent,"* ]]
+}
+emit() { out+="$1"$'\n'; }
+# The repo is public: only the team's words ever reach the agent.
+team() { [[ $1 == OWNER || $1 == MEMBER || $1 == COLLABORATOR ]]; }
+comments() {
+    local rows assoc at writer body
+    rows=$(call issue view "$1" -R "$repo" --json comments --jq '.comments[]? | [.authorAssociation // "-", .createdAt // "", .author.login // "", ((.body // "") | split("\n")[0])] | @tsv') || return 1
+    while IFS=$'\t' read -r assoc at writer body; do
+        team "$assoc" && printf '%s\t%s\t%s\n' "$at" "$writer" "$body"
+    done <<<"$rows"
+    return 0
+}
+issue_rows() {
+    call issue list -R "$repo" --state open --limit 1000 "$@" --json number,title,createdAt,updatedAt,labels,author --jq '.[] | [.number, .title, .createdAt, .updatedAt, ([.labels[].name] | join(",")), .author.login] | @tsv'
+}
+flags() {
+    local n=$1 notes at writer body reply_at reply_writer reply_body answered
+    notes=$(comments "$n") || return 1
+    while IFS=$'\t' read -r at writer body; do
+        [[ -n $at && $at > $since && $body == FLAG:* ]] || continue
+        answered=0
+        while IFS=$'\t' read -r reply_at reply_writer reply_body; do
+            [[ $reply_at > $at && $reply_writer == "$me" && $reply_body != FLAG:* ]] && answered=1
+        done <<<"$notes"
+        ((answered)) || emit "FLAG    #$n from $writer: \"$body\""
+    done <<<"$notes"
+}
+
+out=
+if [[ -f HACKATHON.md ]]; then
+    now=$(date -u +%s)
+    while IFS='|' read -r _ kind _ utc _; do
+        [[ $kind == *'code freeze'* || $kind == *'submit'* ]] || continue
+        utc=${utc//[[:space:]]/}
+        epoch=$(date -u -d "$utc" +%s 2>/dev/null) || epoch=$(date -j -u -f '%Y-%m-%dT%H:%MZ' "$utc" +%s 2>/dev/null) || continue
+        remaining=$((epoch - now))
+        if ((remaining > 0 && remaining <= 3600)); then
+            kind=${kind#"${kind%%[![:space:]]*}"}
+            kind=${kind%"${kind##*[![:space:]]}"}
+            emit "⏰ $kind in $(((remaining + 59) / 60)) min"
+            break
+        fi
+    done <HACKATHON.md
+fi
+
+me=$(call api user --jq .login) || exit 1
+owned=$(issue_rows --assignee "$who") || exit 1
+mine=' '
+while IFS=$'\t' read -r n _ _ _ labels _; do
+    [[ -n $n ]] && has_agent "$labels" && mine+="$n "
+done <<<"$owned"
+prs=$(call pr list -R "$repo" --state open --limit 1000 --json number,updatedAt,labels,headRefName,author,isCrossRepository --jq '.[] | [.number, .updatedAt, .headRefName, .author.login, .isCrossRepository, ([.labels[].name] | join(","))] | @tsv') || exit 1
+while IFS=$'\t' read -r n updated head author fork labels; do
+    [[ -n $n && $fork == false ]] || continue
+    # yours, or one the lead opened from the branch of one of your issues
+    [[ $mine == *" ${head%%-*} "* ]] || { [[ $author == "$me" ]] && has_agent "$labels"; } || continue
+    reviews=$(call pr view "$n" -R "$repo" --json reviews --jq '.reviews[]? | [.authorAssociation // "-", .submittedAt // "", .author.login // "", .state // "", ((.body // "") | split("\n")[0])] | @tsv') || exit 1
+    newest_time= newest_author= newest_state= newest_body=
+    while IFS=$'\t' read -r assoc at author review_state body; do
+        [[ -n $at ]] && team "$assoc" || continue
+        if [[ -z $newest_time || $at > $newest_time ]]; then
+            newest_time=$at newest_author=$author newest_state=$review_state newest_body=$body
+        fi
+    done <<<"$reviews"
+    if [[ $newest_state == CHANGES_REQUESTED && ( $newest_author != "$me" || -n $agent ) ]]; then
+        emit "REVIEW  #$n changes requested by $newest_author: \"$newest_body\""
+    elif [[ $newest_time > $since && -n $newest_author && ( $newest_author != "$me" || -n $agent ) ]]; then
+        emit "REVIEW  #$n new review by $newest_author: \"$newest_body\""
+    fi
+    notes=$(call pr view "$n" -R "$repo" --json comments --jq '.comments[]? | [.authorAssociation // "-", .createdAt // "", .author.login // "", ((.body // "") | split("\n")[0])] | @tsv') || exit 1
+    while IFS=$'\t' read -r assoc at author body; do
+        [[ -n $at && $at > $since && -n $author ]] && team "$assoc" || continue
+        [[ $author != "$me" || -n $agent ]] || continue
+        emit "REVIEW  #$n new comment by $author: \"$body\""
+    done <<<"$notes"
+done <<<"$prs"
+
+assigned=$(issue_rows --label question --assignee "$who") || exit 1
+mentioned=$(issue_rows --label question --mention "$who") || exit 1
+seen=' '
+while IFS=$'\t' read -r n title created updated labels author; do
+    [[ -n $n ]] || continue
+    has_agent "$labels" || continue
+    [[ $seen != *" $n "* ]] || continue
+    seen+="$n "
+    notes=$(comments "$n") || exit 1
+    answered=0
+    while IFS=$'\t' read -r at writer body; do
+        [[ $writer == "$me" ]] && answered=1
+    done <<<"$notes"
+    ((answered)) || emit "QUESTION #$n for you from $author: \"$title\""
+done <<<"$assigned"$'\n'"$mentioned"
+
+authored=$(issue_rows --label question --author '@me') || exit 1
+while IFS=$'\t' read -r n title created updated labels author; do
+    [[ -n $n ]] || continue
+    has_agent "$labels" || continue
+    notes=$(comments "$n") || exit 1
+    while IFS=$'\t' read -r at writer body; do
+        [[ -n $at && $at > $since && -n $writer && $writer != "$me" ]] || continue
+        [[ $body == *'this is waiting on you'* ]] && continue
+        emit "ANSWER  #$n answered by $writer: \"$body\""
+    done <<<"$notes"
+done <<<"$authored"
+
+while IFS=$'\t' read -r n title created updated labels author; do
+    [[ -n $n ]] || continue
+    has_agent "$labels" || continue
+    if [[ $updated > $since ]]; then
+        notes=$(comments "$n") || exit 1
+        while IFS=$'\t' read -r at writer body; do
+            [[ -n $at && $at > $since && $body == 'Brief updated by the lead'* ]] || continue
+            emit "BRIEF   #$n Brief updated by the lead — re-read it"
+        done <<<"$notes"
+        if [[ ,$labels, == *,task,* && ,$labels, != *,draft,* ]]; then
+            removed=$(call api "repos/$repo/issues/$n/timeline" --paginate --jq '.[] | select(.event == "unlabeled" and .label.name == "draft") | .created_at') || exit 1
+            while read -r at; do
+                [[ -n $at && $at > $since ]] || continue
+                emit "READY   #$n draft removed: build it"
+                break
+            done <<<"$removed"
+        fi
+    fi
+    if [[ ,$labels, == *,vertical,* ]]; then
+        flags "$n" || exit 1
+        children=$(call api "repos/$repo/issues/$n/sub_issues" --paginate --jq '.[] | .number') || exit 1
+        while read -r child; do
+            [[ -n $child ]] || continue
+            flags "$child" || exit 1
+        done <<<"$children"
+    fi
+    if [[ $created > $since && ,$labels, == *,task,* ]]; then
+        emit "NEW     #$n assigned to you: \"$title\""
+    fi
+done <<<"$owned"
+
+if ((lead)); then
+    verticals=$(issue_rows --label vertical) || exit 1
+    while IFS=$'\t' read -r v _; do
+        [[ -n $v ]] || continue
+        subs=$(call api "repos/$repo/issues/$v/sub_issues" --paginate --jq '.[] | [.number, .title, .created_at, .updated_at, (.closed_at // "-"), (.state_reason // "-"), .state, ([.labels[].name] | join(",")), .user.login] | @tsv') || exit 1
+        while IFS=$'\t' read -r n title created updated closed reason issue_state labels author; do
+            [[ -n $n ]] || continue
+            if [[ $created > $since ]]; then
+                if [[ ,$labels, == *,draft,* ]]; then
+                    emit "DRAFT   #$n in #$v by $author: \"$title\""
+                else
+                    emit "NEW     #$n in #$v by $author: \"$title\""
+                fi
+            fi
+            if [[ $closed > $since ]]; then
+                [[ $reason != - ]] || reason=completed
+                emit "CLOSED  #$n in #$v by $author: \"$title\" ($reason)"
+            elif [[ ( $created < $since || $created == "$since" ) && $issue_state == open && $updated > $since ]]; then
+                if [[ ,$labels, == *,draft,* ]]; then
+                    added=$(call api "repos/$repo/issues/$n/timeline" --paginate --jq '.[] | select(.event == "labeled" and .label.name == "draft") | .created_at') || exit 1
+                    while read -r at; do
+                        if [[ -n $at && $at > $since ]]; then
+                            emit "DRAFT   #$n in #$v by $author: \"$title\""
+                            continue 2
+                        fi
+                    done <<<"$added"
+                fi
+                emit "CHANGED #$n in #$v by $author: \"$title\""
+            fi
+        done <<<"$subs"
+    done <<<"$verticals"
+fi
+
+printf '%s' "$out"
+printf '%s\n' "$started" >"$state"

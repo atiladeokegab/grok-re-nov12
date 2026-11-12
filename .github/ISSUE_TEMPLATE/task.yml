@@ -1,0 +1,25 @@
+name: Task
+description: One unit of work in your vertical (open it as a sub-issue of your vertical issue).
+labels: [task, draft]
+body:
+  - type: textarea
+    id: context
+    attributes: {label: Context}
+    validations: {required: true}
+  - type: textarea
+    id: files
+    attributes: {label: Files, description: "Inside your vertical's Files line. Anything outside it is a change-request."}
+    validations: {required: true}
+  - type: textarea
+    id: approach
+    attributes: {label: Approach}
+  - type: textarea
+    id: acceptance
+    attributes: {label: Acceptance}
+    validations: {required: true}
+  - type: textarea
+    id: verify
+    attributes: {label: Verify}
+  - type: input
+    id: deadline
+    attributes: {label: Deadline, placeholder: code freeze}

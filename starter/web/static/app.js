@@ -45,8 +45,20 @@ function sourceRecord(record) {
     block.append(a);
   }
   if (record.doc_span) block.append(element('p', typeof record.doc_span === 'string' ? record.doc_span : JSON.stringify(record.doc_span)));
+  if (record.field === 'room_schedule' && Array.isArray(record.value?.rooms)) block.append(roomTable(record.value));
   block.append(element('p', `${timestamp(record.fetched_at || record.captured_at)}. ${record.agent ? `Retrieved by ${record.agent}.` : 'Agent not recorded.'}`));
   return block;
+}
+
+function roomTable({ rooms, rooms_m2, stated_m2 }) {
+  const table = element('table', null, 'room-table');
+  table.dataset.testid = 'room-table';
+  const row = (cells, tag = 'td') => { const tr = element('tr'); for (const c of cells) tr.append(element(tag, c)); return tr; };
+  table.append(row(['Room', 'Size (m)', 'Area (m²)'], 'th'));
+  for (const r of rooms) table.append(row([r.name, `${r.width_m} × ${r.length_m}`, r.area_m2.toFixed(1)]));
+  table.append(row(['Rooms total', '', rooms_m2.toFixed(1)], 'th'));
+  if (stated_m2) table.append(row(['Advert states', '', stated_m2.toFixed(1)], 'th'));
+  return table;
 }
 
 function compareColumn(title, record) {

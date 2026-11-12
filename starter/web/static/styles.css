@@ -952,3 +952,7 @@ html {
     object-position: 50% 42%
   }
 }
+
+.room-table { width: 100%; border-collapse: collapse; margin-top: var(--space-2); font-variant-numeric: tabular-nums }
+.room-table th, .room-table td { text-align: left; padding: var(--space-1) 0; border-bottom: var(--border-width) solid var(--color-border) }
+.room-table th:last-child, .room-table td:last-child { text-align: right }

@@ -85,9 +85,11 @@ export function renderMap(data) {
     const heading = node('h4', first.address || id);
     const checks = node('ul');
     for (const flag of point.flags) {
-      checks.append(node('li', `${LABELS[flag.check]}: advert “${flag.advert_value}” · supplied record “${flag.record_label}”`));
+      const check = node('li', `${LABELS[flag.check]}: advert “${flag.advert_value}” · supplied record “${flag.record_label}”`);
+      check.append(node('span', `Joined unit: ${flag.record_address || 'not supplied'} · Record date: ${flag.record_date || 'not supplied'}`, 'partner-note'));
+      checks.append(check);
     }
-    details.replaceChildren(heading, checks, node('p', 'Supplied-column difference: review the joined unit before relying on it.', 'partner-map-caveat'));
+    details.replaceChildren(heading, node('p', `Listing: ${point.id}`, 'partner-note'), checks, node('p', 'Supplied-column difference: review the joined unit before relying on it.', 'partner-map-caveat'));
     const href = safeUrl(first.url);
     if (href) {
       const link = node('a', 'Open the advert ↗'); link.href = href;

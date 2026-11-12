@@ -34,6 +34,7 @@ from starter.core.xray import (
     trust_score,
 )
 from starter.runtime.deps import StoreDep
+from starter.verticals import cursor_step
 from starter.verticals import reconcile as rec
 from starter.verticals.narrate import narrate
 from starter.verticals.sources import SOURCES, load_listing
@@ -186,6 +187,9 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
             "score",
             {"trust_score": report.trust_score, "counts": report.counts.model_dump()},
         )
+        if (summary := cursor_step.summarize(report.model_dump())) is not None:
+            report.client_calls.cursor_sdk += 1
+            _save(store, report, "cursor_summary", summary)
         report.status = "done"
     except Exception as e:
         report.status, report.error = "error", f"{type(e).__name__}: {e}"

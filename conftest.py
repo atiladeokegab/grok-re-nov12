@@ -25,6 +25,8 @@ def offline_env(monkeypatch):
     for name in (
         "ANTHROPIC_API_KEY",
         "XAI_API_KEY",
+        "CURSOR_API_KEY",
+        "MCP_SECRET",
         "ADMIN_PASSWORD",
         "MODE",
         "DATA_PATH",

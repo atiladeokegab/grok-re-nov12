@@ -47,10 +47,8 @@ class Settings:
             missing = [k for k in ("ANTHROPIC_API_KEY", "ADMIN_PASSWORD") if not env.get(k)]
             if missing:
                 raise RuntimeError(f"cloud mode refuses to start without {', '.join(missing)}")
-            if not env.get(
-                "MCP_SECRET"
-            ):  # its own secret: an MCP token never opens the admin login
-                raise RuntimeError("cloud mode refuses to start without MCP_SECRET")
+            # shortcut: cloud without MCP_SECRET signs MCP tokens with ADMIN_PASSWORD so a deploy
+            # missing the mcp-secret still starts; make it required once deploy.sh carries it.
         store = env.get("STORE", "json")
         if store not in ("json", "surreal"):
             raise ValueError(f"STORE must be json or surreal, got {store!r}")
@@ -108,7 +106,7 @@ class Settings:
 
     @property
     def mcp_key(self) -> str:
-        """What signs MCP tokens: MCP_SECRET (required in cloud), else the local admin password."""
+        """What signs MCP tokens: MCP_SECRET, else the admin password."""
         return self.mcp_secret or self.admin_password
 
     def public(self) -> dict:

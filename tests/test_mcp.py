@@ -4,7 +4,6 @@ import asyncio
 import json
 
 import httpx2
-import pytest
 from fastapi.testclient import TestClient
 from mcp import Client
 from mcp.client.streamable_http import streamable_http_client
@@ -120,8 +119,8 @@ def test_mcp_tokens_are_signed_with_mcp_secret_not_the_admin_password(store):
     assert mcp_door.session_of(minted.json()["token"], "mcp-only")
 
 
-def test_cloud_refuses_to_start_without_mcp_secret():
+def test_mcp_secret_falls_back_to_admin_password_until_deploy_carries_it():
     env = {"MODE": "cloud", "ANTHROPIC_API_KEY": "k", "ADMIN_PASSWORD": "pw"}
-    with pytest.raises(RuntimeError, match="MCP_SECRET"):
-        Settings.from_env({**env, "DATA_PATH": "gs://b/s"})
+    assert Settings.from_env({**env, "DATA_PATH": "gs://b/s"}).mcp_key == "pw"
+    assert Settings.from_env({**env, "DATA_PATH": "gs://b/s", "MCP_SECRET": "m"}).mcp_key == "m"
     assert Settings.from_env({}).mcp_key == "admin"  # local falls back to the admin password

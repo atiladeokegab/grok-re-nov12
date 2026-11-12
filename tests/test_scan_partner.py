@@ -1,11 +1,12 @@
 import csv
 import hashlib
 import json
+import re
 from pathlib import Path
 
 import pytest
 
-from scripts.scan_partner import REQUIRED, positive, scan
+from scripts.scan_partner import REQUIRED, coordinates, positive, scan
 
 
 def row(**changes):
@@ -114,5 +115,11 @@ def test_landing_headline_matches_committed_scan_counts():
         f"Ran across all {artifact['rows_scanned']:,} partner listings · "
         f"{artifact['flagged_listings']:,} flagged for review"
     )
-    assert headline in landing
+    assert headline in re.sub(r"<[^>]+>", "", landing)
     assert 'href="/analyst#partner-scan"' in landing
+
+
+def test_coordinates_are_rounded_without_inventing_missing_or_invalid_positions():
+    assert coordinates({"lat": "51.50745", "lon": "-0.12786"}) == [51.507, -0.128]
+    for lat, lon in [("", ""), ("NaN", "1"), ("91", "1"), ("51", "181")]:
+        assert coordinates({"lat": lat, "lon": lon}) == [None, None]

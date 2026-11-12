@@ -1,4 +1,5 @@
 import { safeUrl } from './data.js';
+import { renderMap } from './partner-map.js';
 
 const LABELS = { property_type: 'Property type', tenure: 'Tenure' };
 const format = value => Number.isInteger(value) ? value.toLocaleString('en-GB') : 'not recorded';
@@ -58,7 +59,10 @@ async function start() {
       const response = await fetch('/static/partner-scan.json', { signal: AbortSignal.timeout(15000) });
       if (!response.ok) throw new Error(`The recorded scan could not be loaded (${response.status}).`);
       data = validateScan(await response.json());
-      $('partner-title').textContent = `Ran across all ${format(data.rows_scanned)} partner listings · flagged ${format(data.flagged_listings)}`;
+      const total = node('span', format(data.rows_scanned)); total.dataset.count = data.rows_scanned;
+      const flagged = node('span', format(data.flagged_listings)); flagged.dataset.count = data.flagged_listings;
+      $('partner-title').replaceChildren('Ran across all ', total, ' partner listings · flagged ', flagged);
+      renderMap(data);
       $('partner-coverage').textContent = `Property type: ${format(data.checks?.property_type?.comparable)} comparisons, ${format(data.checks?.property_type?.flagged)} flags. Tenure: ${format(data.checks?.tenure?.comparable)} comparisons, ${format(data.checks?.tenure?.flagged)} flags. ${format(data.confidence_rows?.high)} rows were labelled high confidence.`;
       $('partner-missing').textContent = `${format(data.price_context?.context)} dated sale-price comparisons retained as context, never flags. Unverifiable price fields: ${format(data.unverifiable_missing_values?.price)}; size fields: ${format(data.unverifiable_missing_values?.size)}.`;
       $('partner-source').textContent = `Source: ${data.source?.file || 'supplied CSV'} · SHA256 ${data.source?.sha256 || 'not recorded'}`;

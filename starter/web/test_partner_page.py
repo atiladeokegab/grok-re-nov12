@@ -1,4 +1,5 @@
 import json
+import re
 
 import pytest
 from playwright.sync_api import Page, expect
@@ -13,6 +14,7 @@ def test_recorded_partner_scan_filters_without_network_effects(page: Page, tmp_p
     page.set_viewport_size({"width": viewport[0], "height": viewport[1]})
     artifact = json.loads((ROOT / "starter/web/static/partner-scan.json").read_text())
     target = next(row for row in artifact["flags"] if row["check"] == "tenure")
+    page.emulate_media(reduced_motion="reduce" if viewport[0] == 390 else "no-preference")
     writes = []
     page.on(
         "request", lambda request: writes.append(request.url) if request.method != "GET" else None
@@ -26,6 +28,28 @@ def test_recorded_partner_scan_filters_without_network_effects(page: Page, tmp_p
         expect(page.locator("#partner-title")).to_have_text(
             "Ran across all 7,251 partner listings · flagged 350"
         )
+        expect(page.locator("#partner-map circle")).to_have_count(artifact["rows_scanned"])
+        expect(page.locator("#partner-map .is-flagged")).to_have_count(artifact["flagged_listings"])
+        expect(page.locator("#partner-map svg")).to_have_attribute(
+            "aria-label", re.compile("6,027.*1224")
+        )
+        expect(page.locator('#partner-title [data-count="7251"]')).to_have_text("7,251")
+        expect(page.locator('#partner-title [data-count="350"]')).to_have_text("350")
+        assert page.locator("#partner-map svg").bounding_box()["height"] > 250
+        map_select = page.get_by_role("combobox", name="Explore a flagged listing")
+        map_select.select_option(target["listing_id"])
+        expect(page.locator(".partner-map-selection")).to_contain_text(target["address"])
+        expect(page.locator(".partner-map-selection a")).to_have_attribute("href", target["url"])
+        circle = page.locator("#partner-map .is-flagged").last
+        circle.click()
+        expect(map_select).to_have_value(circle.get_attribute("data-listing"))
+        if viewport[0] == 390:
+            assert (
+                page.locator(".partner-map-region").first.evaluate(
+                    "el => getComputedStyle(el).animationName"
+                )
+                == "none"
+            )
         expect(page.locator("#partner-rows > tr")).to_have_count(5)
         page.locator("#partner-check").select_option("tenure")
         page.locator("#partner-search").fill(target["listing_id"])

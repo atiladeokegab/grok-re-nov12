@@ -57,6 +57,8 @@ REQUIRED = {
     "hmlr_date",
     "sale_or_let",
     "price_basis",
+    "lat",
+    "lon",
 }
 
 
@@ -70,6 +72,16 @@ def positive(raw: str) -> Decimal | None:
 
 def normal(raw: str) -> str:
     return " ".join(raw.casefold().split())
+
+
+def coordinates(row: dict) -> list[float | None]:
+    try:
+        lat, lon = Decimal(row["lat"]), Decimal(row["lon"])
+        if lat.is_finite() and lon.is_finite() and -90 <= lat <= 90 and -180 <= lon <= 180:
+            return [round(float(lat), 3), round(float(lon), 3)]
+    except (InvalidOperation, TypeError, ValueError):
+        pass
+    return [None, None]
 
 
 def scan(path: Path) -> dict:
@@ -192,6 +204,7 @@ def scan(path: Path) -> dict:
             "tenure_codes": TENURE_CODES,
         },
         "flags": flags,
+        "map_points": [[row["listing_id"], *coordinates(row)] for row in rows],
     }
 
 
@@ -202,7 +215,7 @@ def main() -> None:
     args = parser.parse_args()
     result = scan(args.csv)
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
+    args.out.write_text(json.dumps(result, ensure_ascii=False, separators=(",", ":")) + "\n")
     print(
         f"Scanned {result['rows_scanned']:,} rows; {result['flagged_listings']:,} listings "
         f"with {result['flagged_comparisons']:,} supplied-column differences. No network calls."

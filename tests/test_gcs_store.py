@@ -115,7 +115,7 @@ def test_data_path_picks_the_store(tmp_path, fake):
 
 
 def test_parallel_source_threads_all_land(fake, monkeypatch):
-    """Nine source threads writing at once (the live ConflictError): every write lands, none gives up."""
+    """Nine source threads writing at once (the live ConflictError): every write lands."""
     import threading
     import time as _time
 

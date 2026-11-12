@@ -5,7 +5,9 @@ so the reconciler marks the advert's rating unverifiable, never matched.
 """
 
 import re
+from urllib.parse import urlencode
 
+from starter.core.ingest import land
 from starter.core.xray import Evidence, Place, now
 from starter.verticals.sources.web import get_text, visible_text
 
@@ -64,13 +66,19 @@ def _search(place: Place, listing: dict) -> tuple[str, list[str], dict[str, str]
         return fx["search_url"], fx["rows"], fx["certificates"], fx["fetched_at"]
     url = f"{BASE}/find-a-certificate/search-by-postcode"
     html = get_text(url, {"postcode": place.postcode})
+    search_url = f"{url}?{urlencode({'postcode': place.postcode})}"
+    land(listing, raw=html, source_url=search_url, agent=NAME)
     rows = []
     for tr in re.findall(r"<tr.*?</tr>", html, flags=re.S):
         if href := re.search(r'href="(/energy-certificate/[^"]+)"', tr):
             rows.append(f"{visible_text(tr)} | {href.group(1)}")
     path = match_row(rows, place.address)
-    certs = {path: visible_text(get_text(BASE + path))} if path else {}
-    return f"{url}?postcode={place.postcode.replace(' ', '+')}", rows, certs, now()
+    certs = {}
+    if path:
+        certificate = get_text(BASE + path)
+        land(listing, raw=certificate, source_url=BASE + path, agent=NAME)
+        certs[path] = visible_text(certificate)
+    return search_url, rows, certs, now()
 
 
 def ingest(place: Place, listing: dict) -> tuple[list, list[Evidence]]:

@@ -10,6 +10,7 @@ import re
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlsplit
 
+from starter.core.ingest import land
 from starter.core.xray import Claim, Evidence, Place, now
 from starter.verticals.sources.web import get_text, visible_text
 
@@ -66,6 +67,7 @@ def _page(listing: dict) -> dict:
     if listing["offline"]:
         return listing["fixture"]["page"]
     html = get_text(listing["url"])
+    land(listing, raw=html, source_url=listing["url"], agent=NAME)
 
     class GalleryImages(HTMLParser):
         def __init__(self):

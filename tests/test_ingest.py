@@ -147,3 +147,55 @@ def test_smoke_counts_a_history_only_source_as_covered(tmp_path, monkeypatch):
     monkeypatch.setattr(script, "run_xray", run_with_history_source)
     monkeypatch.setenv("DATA_PATH", str(tmp_path / "s.json"))
     assert script.main(["--fixture", "demo"]) == 0
+
+
+class _FakeBlob:
+    def __init__(self, objects: dict, name: str):
+        self.objects, self.name = objects, name
+
+    def upload_from_string(self, data, content_type, if_generation_match):
+        from google.api_core.exceptions import PreconditionFailed
+
+        assert if_generation_match == 0
+        if self.name in self.objects:
+            raise PreconditionFailed("exists")
+        self.objects[self.name] = data
+
+    def download_as_bytes(self) -> bytes:
+        from google.api_core.exceptions import NotFound
+
+        if self.name not in self.objects:
+            raise NotFound("no such object")
+        return self.objects[self.name]
+
+
+class _FakeClient:
+    def __init__(self):
+        self.objects: dict[str, bytes] = {}
+
+    def bucket(self, name):
+        assert name == "demo-bucket"
+        return self
+
+    def blob(self, name):
+        return _FakeBlob(self.objects, name)
+
+
+def test_gcs_documents_live_in_the_bucket_and_read_from_any_instance(tmp_path, monkeypatch):
+    from starter.core import ingest
+
+    fake = _FakeClient()
+    monkeypatch.delenv("DOCS_DIR")
+    monkeypatch.setenv("DATA_PATH", "gs://demo-bucket/state/store.json")
+    monkeypatch.setattr(ingest, "_client", fake)
+    monkeypatch.setattr(ingest, "CACHE_DIR", tmp_path / "cache-a")
+    doc = land({}, raw="<p>Hi</p>", source_url="https://x", agent="t")
+    assert doc.bytes_path == f"gs://demo-bucket/documents/{doc.sha256}"
+    assert fake.objects == {f"documents/{doc.sha256}": b"<p>Hi</p>"}
+    land({}, raw="<p>Hi</p>", source_url="https://x", agent="t")  # already there: no error
+    monkeypatch.setattr(ingest, "CACHE_DIR", tmp_path / "cache-b")  # another instance
+    assert decoded_text(doc) == "Hi"
+    assert (tmp_path / "cache-b" / doc.sha256).read_bytes() == b"<p>Hi</p>"  # cached now
+    fake.objects.clear()
+    gone = doc.model_copy(update={"bytes_path": "gs://demo-bucket/documents/nope"})
+    assert decoded_text(gone) is None

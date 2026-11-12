@@ -3,6 +3,7 @@ import { renderTimeline } from './timeline.js';
 import { mountClients } from './clients.js';
 import { loadGallery } from './gallery.js';
 import { renderRenters } from './renters.js';
+import { agentLines } from './agents.js';
 
 const $ = id => document.getElementById(id);
 const mockup = new URLSearchParams(location.search).get('mockup') === '1';
@@ -292,15 +293,11 @@ function render(result) {
   if (!(result.findings || []).length) $('findings').append(element('p', 'No findings have arrived. This is not a verified match.', 'empty'));
   renderMedia(result); renderHistory(result); renderRenters($('renters'), result);
   $('sources').replaceChildren();
-  const notRun = [];
-  for (const source of result.sources || []) {
-    if (source.status === 'off') {
-      notRun.push(source.name === 'companies_house' ? 'Companies House' : source.name.replaceAll('_', ' '));
-      continue;
-    }
-    const line = element('p', null, `source-status status-${source.status}`);
-    line.append(element('span', source.name), element('span', source.status === 'ok' ? `${source.n_evidence || 0} evidence records` : source.status === 'error' ? 'Source unavailable' : 'No record found'));
-    if (source.detail) line.append(element('small', String(source.detail).slice(0, 240), 'source-detail'));
+  const { lines: agentRows, off: notRun } = agentLines(result);
+  for (const row of agentRows) {
+    const line = element('p', null, `source-status agent-line status-${row.status}`);
+    line.dataset.testid = 'agent-line';
+    line.append(element('span', row.agent), element('span', row.text));
     $('sources').append(line);
   }
   if (notRun.length) $('sources').append(element('p', `Not run for this listing: ${notRun.join(', ')}`, 'status'));

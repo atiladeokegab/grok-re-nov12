@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { packRooms, splitFloors, advertMoney, isoScene, insideStats } from './inside.js';
+import { packRooms, splitFloors, advertMoney, isoScene, insideStats, wallSegments } from './inside.js';
 
 const kimberley = [
   ['Living Room', 6.9, 3.9], ['Kitchen', 2.9, 1.8], ['Bathroom', 1.8, 1.3], ['Bedroom 1', 3.9, 2.9],
@@ -65,4 +65,11 @@ test('insideStats turns the run into big figures with their sources', () => {
   assert.equal(by.fees.big, '1% · £1,750');
   assert.equal(by['council tax band'].big, 'E');
   assert.equal(by['m² register'].url, 'https://epc.example');
+});
+
+test('wallSegments leaves a door gap in every side long enough for one, and none in a short side', () => {
+  const segs = wallSegments({ x: 0, y: 0, w: 4, h: 1.2 });
+  assert.equal(segs.length, 2 + 1 + 2 + 1);
+  const total = segs.reduce((s, w) => s + w.len, 0);
+  assert.ok(Math.abs(total - (2 * 4 + 2 * 1.2 - 2 * 0.9)) < 1e-9);
 });

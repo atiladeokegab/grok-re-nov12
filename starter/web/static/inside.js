@@ -1,5 +1,6 @@
 // The "Inside" view: the property reconstructed from the advert's room schedule, beside the facts a
 // renter or analyst asks first, each with its source.
+// Walk-through controls adapted from sesasa/3d-house-walkthrough (MIT, (c) 2026 Saeed Asadzadeh).
 import { safeUrl } from './data.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -165,6 +166,85 @@ export function isoScene(floors, angle = 0) {
   return levels;
 }
 
+// Walls of one room as boxes, with a 0.9 m door gap in the middle of every side long enough for one.
+// shortcut: doors are not taken from a real plan and walls do not block you; fine for a sense of size.
+export function wallSegments(r, door = 0.9) {
+  const out = [];
+  for (const [x1, y1, x2, y2] of [[r.x, r.y, r.x + r.w, r.y], [r.x + r.w, r.y, r.x + r.w, r.y + r.h], [r.x, r.y + r.h, r.x + r.w, r.y + r.h], [r.x, r.y, r.x, r.y + r.h]]) {
+    const len = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / len, uy = (y2 - y1) / len;
+    const cuts = len > door + 0.6 ? [[0, (len - door) / 2], [(len + door) / 2, len]] : [[0, len]];
+    for (const [a, b] of cuts) out.push({ x: x1 + ux * (a + b) / 2, y: y1 + uy * (a + b) / 2, len: b - a, along: ux !== 0 });
+  }
+  return out;
+}
+
+async function walkThrough(host, floors) {
+  const THREE = await import('./vendor/three.module.min.js');
+  const width = host.clientWidth || 640, height = Math.round(width * 0.66);
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2)); renderer.setSize(width, height);
+  renderer.domElement.className = 'inside-walk';
+  renderer.domElement.tabIndex = 0;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color('#0d100e');
+  scene.add(new THREE.HemisphereLight('#e8f0ff', '#c8b999', 1.4));
+  const sun = new THREE.DirectionalLight('#fff5e3', 1.6); sun.position.set(-5, 12, 8); scene.add(sun);
+  const camera = new THREE.PerspectiveCamera(72, width / height, 0.05, 100);
+  const STOREY = WALL + 0.3;
+  let start = null;
+  floors.forEach((floor, i) => {
+    const pack = packRooms(floor.rooms), y0 = i * STOREY, ox = pack.width / 2, oy = pack.height / 2;
+    for (const r of pack.rooms) {
+      const color = new THREE.Color(`hsl(${hue(r.name)}, 40%, 62%)`);
+      const slab = new THREE.Mesh(new THREE.BoxGeometry(r.w, 0.06, r.h), new THREE.MeshStandardMaterial({ color: color.clone().multiplyScalar(0.55) }));
+      slab.position.set(r.x + r.w / 2 - ox, y0 - 0.03, r.y + r.h / 2 - oy); scene.add(slab);
+      const wallMat = new THREE.MeshStandardMaterial({ color });
+      for (const w of wallSegments(r)) {
+        const box = new THREE.Mesh(new THREE.BoxGeometry(w.along ? w.len : 0.08, WALL, w.along ? 0.08 : w.len), wallMat);
+        box.position.set(w.x - ox, y0 + WALL / 2, w.y - oy); scene.add(box);
+      }
+      if (i === 0 && (!start || r.w * r.h > start.a)) start = { a: r.w * r.h, x: r.x + r.w / 2 - ox, z: r.y + r.h / 2 - oy };
+    }
+  });
+  // first-person look and move, as in the reference's navigation.js: drag to look, WASD or arrows to walk
+  let yaw = 0, pitch = -0.05, level = 0, drag = false, lx = 0, ly = 0, last = 0, alive = true;
+  const keys = new Set();
+  camera.position.set(start.x, 1.6, start.z);
+  const look = () => camera.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, 'YXZ'));
+  look();
+  const c = renderer.domElement;
+  c.addEventListener('pointerdown', e => { drag = true; lx = e.clientX; ly = e.clientY; c.setPointerCapture(e.pointerId); c.focus(); });
+  c.addEventListener('pointerup', () => { drag = false; });
+  c.addEventListener('pointermove', e => { if (!drag) return; yaw -= (e.clientX - lx) * 0.005; pitch = Math.max(-1.1, Math.min(1.1, pitch - (e.clientY - ly) * 0.005)); lx = e.clientX; ly = e.clientY; look(); });
+  const MOVE = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+  c.addEventListener('keydown', e => { if (MOVE.includes(e.code)) { keys.add(e.code); e.preventDefault(); } });
+  c.addEventListener('keyup', e => keys.delete(e.code));
+  c.addEventListener('blur', () => keys.clear());
+  const tick = now => {
+    if (!alive || !c.isConnected && last) { renderer.dispose(); return; }
+    const dt = last ? Math.min((now - last) / 1000, 0.05) : 0; last = now;
+    const f = (keys.has('KeyW') || keys.has('ArrowUp')) - (keys.has('KeyS') || keys.has('ArrowDown'));
+    const side = (keys.has('KeyD')) - (keys.has('KeyA'));
+    yaw -= ((keys.has('ArrowRight')) - (keys.has('ArrowLeft'))) * 1.6 * dt; look();
+    camera.position.x += (-Math.sin(yaw) * f + Math.cos(yaw) * side) * 2.2 * dt;
+    camera.position.z += (-Math.cos(yaw) * f - Math.sin(yaw) * side) * 2.2 * dt;
+    camera.position.y += (level * STOREY + 1.6 - camera.position.y) * Math.min(1, dt * 6);
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+  const bar = el('div', null, 'inside-walk-bar');
+  if (floors.length > 1) {
+    const up = el('button', 'Go upstairs'); up.type = 'button';
+    up.addEventListener('click', () => { level = (level + 1) % floors.length; up.textContent = level ? 'Go downstairs' : 'Go upstairs'; c.focus(); });
+    bar.append(up);
+  }
+  bar.append(el('span', 'Drag to look · WASD or arrows to walk'));
+  host.replaceChildren(c, bar);
+  c.focus();
+  return () => { alive = false; host.replaceChildren(); };
+}
+
 const S = 46; // pixels per metre in the 3D view
 
 function draw3d(floors) {
@@ -238,18 +318,25 @@ export async function renderInside(container, result) {
     const plans = el('div', null, `inside-plans inside-floors-${floors.length}`);
     for (const floor of floors) plans.append(drawFloor(floor));
     plans.hidden = true;
+    const walkHost = el('div', null, 'inside-walk-host');
+    let stopWalk = null;
     const toggle = el('div', null, 'inside-toggle');
     toggle.setAttribute('role', 'group'); toggle.setAttribute('aria-label', 'View');
-    for (const [label, show] of [['3D', iso], ['Plan', plans]]) {
+    for (const [label, show] of [['3D', iso], ['Plan', plans], ['Walk through', walkHost]]) {
       const b = el('button', label); b.type = 'button'; b.setAttribute('aria-pressed', String(show === iso));
-      b.addEventListener('click', () => {
+      b.addEventListener('click', async () => {
         iso.style.display = show === iso ? '' : 'none'; plans.hidden = show !== plans;
         for (const x of toggle.children) x.setAttribute('aria-pressed', String(x === b));
+        stopWalk?.(); stopWalk = null;
+        if (show === walkHost) stopWalk = await walkThrough(walkHost, floors).catch(err => { console.error(err); walkHost.replaceChildren(el('p', 'Walk-through needs WebGL, which this browser has turned off.', 'inside-empty')); return null; });
       });
       toggle.append(b);
     }
-    stage.append(toggle, iso, plans);
-    planCol.append(stage, el('figcaption', 'Approximate, to scale from the advert’s room sizes.', 'inside-note'));
+    stage.append(toggle, iso, plans, walkHost);
+    const credit = el('figcaption', 'Approximate, to scale from the advert’s room sizes. Walkthrough based on ', 'inside-note');
+    const ref = el('a', 'sesasa/3d-house-walkthrough'); ref.href = 'https://github.com/sesasa/3d-house-walkthrough'; ref.target = '_blank'; ref.rel = 'noopener noreferrer';
+    credit.append(ref, ' (MIT).');
+    planCol.append(stage, credit);
   } else {
     planCol.append(el('p', 'This advert prints no room schedule, so the inside cannot be drawn to scale.', 'inside-empty'));
   }

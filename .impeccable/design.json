@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-12T19:28:56Z",
+  "title": "Design System: X-ray",
+  "extensions": {
+    "colorMeta": {
+      "bg": { "role": "neutral", "displayName": "Night ground", "canonical": "#080a09" },
+      "surface": { "role": "neutral", "displayName": "Evidence surface", "canonical": "#141815" },
+      "raised": { "role": "neutral", "displayName": "Raised surface", "canonical": "#202620" },
+      "border": { "role": "neutral", "displayName": "Record border", "canonical": "#3f4940" },
+      "ink": { "role": "neutral", "displayName": "Warm white", "canonical": "#f2f5ee" },
+      "muted": { "role": "neutral", "displayName": "Grey green", "canonical": "#b4beb2" },
+      "accent": { "role": "primary", "displayName": "Pale record green", "canonical": "#b8ed81" },
+      "on-accent": { "role": "neutral", "displayName": "Deep green ink", "canonical": "#17240b" },
+      "danger": { "role": "secondary", "displayName": "Record salmon", "canonical": "#ffb4a8" },
+      "warning": { "role": "secondary", "displayName": "Record amber", "canonical": "#efd18b" },
+      "photo-shade": { "role": "neutral", "displayName": "Photo shade", "canonical": "#080a09e6" },
+      "transparent": { "role": "neutral", "displayName": "Transparent", "canonical": "transparent" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Desktop opening statement." },
+      "body": { "displayName": "Body", "purpose": "Reading text and evidence." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "duration-fast", "value": "160ms", "purpose": "Hover background transitions." },
+      { "name": "reduced-motion", "value": "0.01ms", "purpose": "Reduced transition and animation duration when requested by the operating system." }
+    ],
+    "breakpoints": [
+      { "name": "phone-layout-max", "value": "900px" },
+      { "name": "phone-judge", "value": "390px" },
+      { "name": "desktop-judge", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary action",
+      "kind": "button",
+      "description": "Starts the listing check.",
+      "html": "<button class=\"ds-primary\">X-ray this listing</button>",
+      "css": ".ds-primary{min-height:var(--control-height);display:inline-flex;align-items:center;justify-content:center;padding:var(--space-3) var(--space-5);border:var(--border-width) solid var(--color-transparent);border-radius:var(--radius-control);background:var(--color-accent);color:var(--color-on-accent);font:var(--weight-bold) var(--type-body)/var(--leading-body) var(--font-body);transition:background var(--duration-fast);cursor:pointer}.ds-primary:hover{background:var(--color-ink)}.ds-primary:focus-visible{outline:var(--focus-width) solid var(--color-accent);outline-offset:var(--space-1)}"
+    },
+    {
+      "name": "Listing input",
+      "kind": "input",
+      "description": "Accepts a listing URL or crawl ID.",
+      "html": "<input class=\"ds-listing-input\" aria-label=\"Listing link or crawl ID\" placeholder=\"Paste a property listing\">",
+      "css": ".ds-listing-input{width:100%;min-height:var(--control-height);padding:var(--space-3) var(--space-4);border:var(--border-width) solid var(--color-border);border-radius:var(--radius-control);background:var(--color-surface);color:var(--color-ink);font:var(--weight-normal) var(--type-body)/var(--leading-body) var(--font-body);caret-color:var(--color-accent)}.ds-listing-input:focus-visible{outline:var(--focus-width) solid var(--color-accent);outline-offset:var(--space-1)}.ds-listing-input::placeholder{color:var(--color-muted)}"
+    },
+    {
+      "name": "Evidence row",
+      "kind": "custom",
+      "description": "An open, selectable finding separated by a quiet divider.",
+      "html": "<button class=\"ds-evidence-row\"><span>Could not verify</span><span>Open evidence</span></button>",
+      "css": ".ds-evidence-row{width:100%;display:flex;justify-content:space-between;gap:var(--space-4);padding:var(--space-4) 0;border:0;border-bottom:var(--border-width) solid var(--color-border);background:transparent;color:var(--color-ink);font:var(--weight-normal) var(--type-body)/var(--leading-body) var(--font-body);text-align:left;cursor:pointer}.ds-evidence-row:hover{color:var(--color-accent)}.ds-evidence-row:focus-visible{outline:var(--focus-width) solid var(--color-accent);outline-offset:var(--space-1)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The property dossier.",
+    "overview": "The interface gives a real property photograph room, then makes the evidence trail easy to follow. Claims, source records, retrieval times, and agents stay connected. Residential is the primary path; office property follows the same grammar as a secondary path.\n\nNear-black surfaces support a focused projected demo and keep evidence legible. Pale green marks the main action and positive records; salmon marks disagreement, and amber marks unavailable evidence. The prototype label stays prominent whenever sample values appear.",
+    "keyCharacteristics": ["source-linked photography", "open evidence rows", "restrained dividers", "explicit uncertainty"],
+    "rules": [
+      { "name": "The Named Verdict Rule", "body": "Always pair status color with words and, where applicable, an icon.", "section": "colors" },
+      { "name": "The Record Rule", "body": "Use tabular numerals when values are compared.", "section": "typography" }
+    ],
+    "dos": [
+      "Do keep the listing source adjacent to the photograph.",
+      "Do show a finding’s cited record and retrieval context alongside its claim.",
+      "Do label sample values before presenting them.",
+      "Do keep focus visible and honor reduced motion."
+    ],
+    "donts": [
+      "Don't count unavailable evidence as a match.",
+      "Don't call a discrepancy fraud or imagery AI-generated without evidence supporting that claim.",
+      "Don't imply unsupported property changes or fabricate agent-call counts.",
+      "Don't show Google tile imagery without visible attribution."
+    ]
+  }
+}

@@ -2,7 +2,9 @@
 finding traces place -> document -> evidence -> finding over HTTP."""
 
 import hashlib
+import importlib.util
 import time
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -10,9 +12,13 @@ from fastapi.testclient import TestClient
 from starter.core.gateway import build_gateway
 from starter.core.ingest import decoded_text, ground, land
 from starter.core.store import Store
+from starter.core.xray import Claim, Evidence, SourceStatus
 from starter.runtime.config import Settings
 from starter.runtime.factory import create_app
-from starter.verticals.xray import run_xray
+from starter.verticals.reconcile import reconcile
+from starter.verticals.xray import _history, run_xray
+
+ROOT = Path(__file__).resolve().parent.parent
 
 
 @pytest.fixture(autouse=True)
@@ -85,3 +91,41 @@ def test_trace_and_document_routes(tmp_path):
         assert client.get("/api/document/doc-nope").status_code == 404
         assert client.get("/api/document/doc-nope/raw").status_code == 404
         assert client.get("/api/finding/f-nope/trace").status_code == 404
+
+
+def _observed(field, value, agent="wayback"):
+    return Evidence(
+        id=f"ev-{agent}-{field}",
+        place_id="place-x",
+        field=field,
+        value=value,
+        source_name="Wayback",
+        agent=agent,
+        observed_at="2019-04-02",
+    )
+
+
+def test_observed_evidence_is_history_not_a_current_check():
+    claims = [Claim(id="c-rating", place_id="place-x", field="energy_rating", value="C")]
+    evidence = [_observed("energy_rating", "E"), _observed("floor_area", 50.0)]
+    findings = reconcile(claims, evidence, [SourceStatus(name="wayback", status="ok")])
+    assert not any(set(f.evidence_ids) & {e.id for e in evidence} for f in findings)
+    assert [f.verdict for f in findings if f.field == "energy_rating"] == ["unverifiable"]
+    history = _history(claims, evidence)
+    assert [h.fetched_at for h in history] == ["2019-04-02", "2019-04-02"]
+
+
+def test_smoke_counts_a_history_only_source_as_covered(tmp_path, monkeypatch):
+    spec = importlib.util.spec_from_file_location("xray_script", ROOT / "scripts/xray.py")
+    script = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(script)
+
+    def run_with_history_source(gateway, ref, offline=False):
+        r = run_xray(gateway, ref, offline)
+        r.sources.append(SourceStatus(name="wayback", status="ok", n_evidence=1))
+        r.evidence.append(_observed("price", 400000.0))
+        return r
+
+    monkeypatch.setattr(script, "run_xray", run_with_history_source)
+    monkeypatch.setenv("DATA_PATH", str(tmp_path / "s.json"))
+    assert script.main(["--fixture", "demo"]) == 0

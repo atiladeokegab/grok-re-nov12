@@ -85,8 +85,10 @@ def reconcile(
         )
 
     claimed = {c.field for c in claims}
+    # observed_at marks a past fact (a snapshot, an old sale): report.history, never a check now
+    current = [e for e in evidence if not e.observed_at]
     for c in claims:
-        independent = [e for e in evidence if e.field == c.field and e.agent != HISTORY_AGENT]
+        independent = [e for e in current if e.field == c.field and e.agent != HISTORY_AGENT]
         history = [e for e in evidence if e.field == c.field and e.agent == HISTORY_AGENT]
         for e in independent:
             if same(c.field, c, e):
@@ -114,7 +116,7 @@ def reconcile(
             )
             add(c.field, "unverifiable", "info", f"Could not check: {reason}.", c)
 
-    for e in evidence:
+    for e in current:
         if e.agent == HISTORY_AGENT:
             continue
         if e.field in UNCLAIMED_INFO and e.field not in claimed:

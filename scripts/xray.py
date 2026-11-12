@@ -4,7 +4,8 @@
     uv run python scripts/xray.py --fixture demo              # offline, fixtures only
 
 Exit code 0 when the run finished with a score and at least one finding per source that
-returned evidence; 1 otherwise (make smoke gates on it).
+returned current evidence (evidence with observed_at is history, not checked); 1 otherwise
+(make smoke gates on it).
 """
 
 import argparse
@@ -33,7 +34,9 @@ def main(argv: list[str] | None = None) -> int:
     print(json.dumps(report.model_dump(), indent=1))
     agent = {e.id: e.agent for e in report.evidence}
     by_source = {agent.get(i) for f in report.findings for i in f.evidence_ids}
-    with_evidence = {s.name for s in report.sources if s.n_evidence}
+    # a source whose every evidence has observed_at is history only: covered by report.history
+    current = {e.agent for e in report.evidence if not e.observed_at}
+    with_evidence = {s.name for s in report.sources if s.n_evidence and s.name in current}
     ok = (
         report.status == "done"
         and report.findings

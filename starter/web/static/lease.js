@@ -1,4 +1,5 @@
 const $ = id => document.getElementById(id);
+let sample;
 const LABELS = {
   parties: 'Parties', premises: 'Premises', permitted_use: 'Permitted use',
   contractual_term: 'Contractual term', main_rent: 'Main rent', rent_review: 'Rent review',
@@ -30,6 +31,8 @@ async function loadEvaluation() {
   $('benchmark-status').textContent = 'Loading the recorded results…';
   try {
     const result = await request('/api/lease/eval');
+    sample = result.per_document?.find(document => document.sample_id === 'MCL-OFFICE-01');
+    $('lease-sample').disabled = !sample || $('lease-form').getAttribute('aria-busy') === 'true';
     $('benchmark-strict').textContent = `${result.overall.strict} / ${result.overall.n}`;
     $('benchmark-content').textContent = `${result.overall.content} / ${result.overall.n}`;
     $('benchmark-documents').textContent = `${result.documents} documents · ${result.overall.n} fields checked. These are in-sample results, not a score for your upload.`;
@@ -49,6 +52,8 @@ async function loadEvaluation() {
 }
 
 function renderTerms(result, filename) {
+  $('lease-results-title').textContent = 'Extracted terms';
+  $('lease-provenance').hidden = true;
   const terms = Object.entries(result.terms);
   let missing = 0;
   let placeholders = 0;
@@ -82,6 +87,19 @@ function renderTerms(result, filename) {
   $('lease-results').hidden = false;
 }
 
+$('lease-sample').addEventListener('click', () => {
+  if (!sample) return;
+  const terms = Object.fromEntries(Object.entries(sample.fields).map(([field, term]) => [field, {
+    value: term.doc_span, source: term.source, placeholder: term.placeholder,
+  }]));
+  $('lease-error').hidden = true;
+  renderTerms({ terms }, sample.file);
+  $('lease-results-title').textContent = 'Recorded office sample';
+  $('lease-provenance').hidden = false;
+  $('lease-status').textContent = 'Recorded sample loaded. Upload a lease to read its full extracted text.';
+  $('lease-results').scrollIntoView({ block: 'start' });
+});
+
 $('lease-file').addEventListener('change', () => {
   const file = $('lease-file').files[0];
   $('lease-submit').disabled = !file;
@@ -100,6 +118,7 @@ $('lease-form').addEventListener('submit', async event => {
     if (!file.name.toLowerCase().endsWith('.docx')) throw new Error('Choose a Word document (.docx).');
     if (file.size > 5 * 1024 * 1024) throw new Error('This file is too large. Choose a document up to 5 MB.');
     $('lease-submit').disabled = true;
+    $('lease-sample').disabled = true;
     $('lease-file').disabled = true;
     $('lease-form').setAttribute('aria-busy', 'true');
     $('lease-status').textContent = 'Reading the lease and locating its source clauses…';
@@ -115,6 +134,7 @@ $('lease-form').addEventListener('submit', async event => {
   } finally {
     $('lease-file').disabled = false;
     $('lease-submit').disabled = !$('lease-file').files.length;
+    $('lease-sample').disabled = !sample;
     $('lease-form').removeAttribute('aria-busy');
   }
 });

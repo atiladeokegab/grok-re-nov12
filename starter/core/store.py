@@ -12,6 +12,7 @@ import json
 import os
 import random
 import tempfile
+import threading
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -23,6 +24,7 @@ from starter.core.errors import ConflictError
 
 T = TypeVar("T")
 EMPTY = {"version": 0, "events": []}
+_object_locks: dict[str, threading.RLock] = {}  # gs://bucket/object -> writers in this process
 
 
 class Store:
@@ -82,6 +84,10 @@ class GcsStore(Store):
             client = storage.Client()
         self.bucket = client.bucket(bucket)
         self.tries = tries
+        # One writer per object per process: parallel source threads queue here instead of racing
+        # the generation check; CAS then only arbitrates between instances. Reentrant, so a write
+        # from inside fn (tests simulate another instance that way) does not deadlock.
+        self._lock = _object_locks.setdefault(url, threading.RLock())
 
     def _read(self) -> tuple[dict, int]:
         """(data, generation); generation 0 means no object yet, which is what GCS matches."""
@@ -95,6 +101,10 @@ class GcsStore(Store):
         return self._read()[0]
 
     def mutate(self, fn: Callable[[dict], T]) -> T:
+        with self._lock:
+            return self._mutate(fn)
+
+    def _mutate(self, fn: Callable[[dict], T]) -> T:
         for attempt in range(self.tries):
             data, generation = self._read()
             result = fn(data)
@@ -106,8 +116,8 @@ class GcsStore(Store):
                     if_generation_match=generation,
                 )
                 return result
-            except PreconditionFailed:  # someone wrote first: back off, reread, retry
-                time.sleep(random.uniform(0, 0.05 * 2**attempt))
+            except PreconditionFailed:  # another instance wrote first: back off, reread, retry
+                time.sleep(random.uniform(0.05, 0.2 * 2 ** min(attempt, 4)))
         raise ConflictError(f"store kept changing underneath; gave up after {self.tries} tries")
 
 

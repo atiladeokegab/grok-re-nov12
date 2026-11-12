@@ -296,3 +296,22 @@ def test_place_graph_is_one_surrealql_query_with_python_fallback(tmp_path, monke
     key = lambda xs: sorted(json.dumps(x, sort_keys=True) for x in xs)  # noqa: E731
     assert key(sq["nodes"]) == key(py["nodes"]) and key(sq["edges"]) == key(py["edges"])
     assert sq["nodes"] and xv.place_graph(r.place_id, gateway.store)["edges"] == sq["edges"]
+
+
+def test_place_graph_serves_a_saved_run_not_only_the_latest(tmp_path):
+    import pytest
+
+    import starter.verticals.xray as xv
+    from starter.core.errors import NotFound
+
+    gateway = _gateway(tmp_path)
+    first = run_xray(gateway, "demo", offline=True)
+    second = run_xray(gateway, "demo", offline=True)
+    store = gateway.store
+    assert xv.place_graph(first.place_id, store)["run_id"] == second.run_id
+    old = xv.place_graph(first.place_id, store, run_id=first.run_id)
+    assert old["run_id"] == first.run_id and old.get("engine", "surrealdb") == "surrealdb"
+    assert old["nodes"]  # SurrealDB keys records by run, so the newer run did not take them over
+    other = run_xray(gateway, "kimberley-road", offline=True)
+    with pytest.raises(NotFound):
+        xv.place_graph(first.place_id, store, run_id=other.run_id)

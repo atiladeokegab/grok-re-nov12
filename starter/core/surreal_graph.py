@@ -13,21 +13,23 @@ import threading
 log = logging.getLogger(__name__)
 EDGES = ("has", "landed", "contains", "checked_by", "cites")
 _RELATE = " ELSE ".join(
-    f"IF $e.kind = '{k}' {{ RELATE (type::thing($e.fk, $e.from))->{k}->(type::thing($e.tk, $e.to))"
+    f"IF $e.kind = '{k}' {{ RELATE (type::thing($e.fk, [$run, $e.from]))"
+    f"->{k}->(type::thing($e.tk, [$run, $e.to]))"
     " SET run = $run; }"
     for k in EDGES
 )
 LOAD = (
-    "FOR $n IN $nodes { UPSERT type::thing($n.kind, $n.id) SET run = $run, json = $n.json; };"
+    "FOR $n IN $nodes { UPSERT type::thing($n.kind, [$run, $n.id]) SET run = $run, key = $n.id,"
+    " json = $n.json; };"
     f" FOR $e IN $edges {{ {_RELATE}; }};"
 )
-# What the graph panel prints: the one query that answers the whole graph for a place's run.
+# Records are keyed [run, id]: two runs of one place share ids. The panel prints this query.
 QUERY = (
-    "SELECT (SELECT meta::id(id) AS id, record::tb(id) AS kind, json"
+    "SELECT (SELECT key AS id, record::tb(id) AS kind, json"
     " FROM place, claim, evidence, finding, document WHERE run = $run) AS nodes,"
-    " (SELECT meta::id(in) AS from, meta::id(out) AS to, record::tb(id) AS kind"
+    " (SELECT in.key AS from, out.key AS to, record::tb(id) AS kind"
     f" FROM {', '.join(EDGES)} WHERE run = $run) AS edges"
-    " FROM ONLY type::thing('place', $place)"
+    " FROM ONLY type::thing('place', [$run, $place])"
 )
 
 

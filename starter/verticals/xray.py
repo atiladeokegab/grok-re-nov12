@@ -577,13 +577,15 @@ async def xray_events(run_id: str, request: Request, store: StoreDep) -> Streami
 
 
 @router.get("/api/place/{place_id}/graph")
-def place_graph(place_id: str, store: StoreDep) -> dict:
+def place_graph(place_id: str, store: StoreDep, run_id: str | None = None) -> dict:
     """Nodes and edges: place->has->claim, claim->checked_by->evidence, finding->cites->evidence,
     place->landed->document, document->contains->evidence."""
-    run_id = store.snapshot().get("xray_places", {}).get(place_id)
+    run_id = run_id or store.snapshot().get("xray_places", {}).get(place_id)  # default: latest
     if run_id is None:
         raise NotFound(f"no X-ray for place {place_id!r}")
     r = get_report(store, run_id)
+    if r["place_id"] != place_id:  # a saved run link names its own place, never another's
+        raise NotFound(f"run {run_id!r} is not an X-ray of place {place_id!r}")
     nodes = [{"id": place_id, "kind": "place", "data": r["place"]}]
     nodes += [{"id": c["id"], "kind": "claim", "data": c} for c in r["claims"]]
     nodes += [{"id": e["id"], "kind": "evidence", "data": e} for e in r["evidence"]]

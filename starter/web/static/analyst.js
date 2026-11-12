@@ -179,6 +179,22 @@ function renderMatrix(entries) {
   });
 }
 
+// Counts each score (and any [data-count] element) up from zero; always ends on the exact original text.
+function countUp(elements) {
+  if (!globalThis.matchMedia?.('(prefers-reduced-motion: no-preference)').matches) return;
+  for (const el of elements) {
+    const final = el.textContent; const digits = final.match(/\d[\d,]*/)?.[0];
+    if (!digits) continue;
+    const target = Number(digits.replace(/,/g, '')); const t0 = performance.now(); const ms = 1000;
+    const step = now => {
+      const k = Math.min(1, (now - t0) / ms);
+      el.textContent = k < 1 ? final.replace(digits, Math.round(target * (1 - (1 - k) ** 3)).toLocaleString('en-GB')) : final;
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+}
+
 const SVG = 'http://www.w3.org/2000/svg';
 function svg(tag, attrs, text) {
   const el = document.createElementNS(SVG, tag);
@@ -266,6 +282,7 @@ async function start() {
       $('analyst-cards').replaceChildren(...entries.map(renderCard));
       $('analyst-rows').replaceChildren(...renderMatrix(entries));
       $('analyst-chart').replaceChildren(renderChart(entries));
+      countUp(document.querySelectorAll('.analyst-score, [data-count]'));
       const count = entries.filter(entry => entry.report).length;
       $('analyst-status').textContent = `${count} of ${entries.length} saved reports ready`;
       $('analyst-download').disabled = !count;

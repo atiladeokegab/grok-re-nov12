@@ -412,6 +412,7 @@ input::placeholder {
 
 .image-source {
   display: block;
+  min-height: var(--control-height);
   padding: var(--space-3) var(--space-4);
   font-size: var(--type-caption);
   background: var(--color-surface)

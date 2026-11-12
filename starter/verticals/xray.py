@@ -15,6 +15,7 @@ Each source agent runs as a read-only gateway tool `source_<name>`, so every cal
 
 import asyncio
 import json
+import mimetypes
 import threading
 import time
 import uuid
@@ -437,7 +438,14 @@ def read_document_raw(doc_id: str, store: StoreDep) -> Response:
         data = raw_bytes(doc)
     except FileNotFoundError:
         raise NotFound(f"document {doc_id!r} is not on this instance") from None
-    return Response(data, media_type=doc["content_type"])
+    # untrusted source bytes from our own origin: download only, never rendered or sniffed (XSS)
+    ext = mimetypes.guess_extension(doc["content_type"].split(";")[0].strip()) or ".bin"
+    headers = {
+        "Content-Disposition": f'attachment; filename="{doc_id}{ext}"',
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": "sandbox",
+    }
+    return Response(data, media_type=doc["content_type"], headers=headers)
 
 
 @router.get("/api/finding/{finding_id}/trace")

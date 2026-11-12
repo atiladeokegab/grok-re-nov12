@@ -1,11 +1,12 @@
-// "Grok Bot & Cursor" card: live MCP call counts across every run, from GET /api/clients.
-const LABELS = { grok_bot: 'Grok Bot', cursor: 'Cursor', other: 'Other MCP clients' };
+// "X-ray over MCP" card: live MCP call counts across every run, from GET /api/clients.
+const LABELS = { cursor: 'Cursor', other: 'Other MCP clients' };
+const HIDDEN = new Set(['grok_bot']); // no xAI key: never show a Grok row the demo can't back
 const POLL_MS = 10000;
 
 /** [[label, count]] in a stable order: known clients first, then any new ones the API adds. */
 export function clientRows(body) {
   const mcp = body && typeof body.mcp === 'object' && !Array.isArray(body.mcp) ? body.mcp : {};
-  const keys = [...Object.keys(LABELS), ...Object.keys(mcp).filter(key => !(key in LABELS)).sort()];
+  const keys = [...Object.keys(LABELS), ...Object.keys(mcp).filter(key => !(key in LABELS) && !HIDDEN.has(key)).sort()];
   return keys.map(key => [LABELS[key] || key.replace(/_/g, ' '), Number.isFinite(mcp[key]) ? mcp[key] : 0]);
 }
 

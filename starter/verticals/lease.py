@@ -9,6 +9,7 @@ placeholder ([●], [ADDRESS OF PREMISES], [   ]) and the words it was read from
 import re
 import zipfile
 from pathlib import Path
+from typing import IO
 from xml.etree import ElementTree as ET
 
 from starter.core.xray import Evidence, Finding, Place
@@ -33,9 +34,12 @@ _DEF = re.compile(r'^(\[?)\s*[“"]([^”"]+)[”"]\s*\]?$')  # a definition ter
 _LR = re.compile(r"^LR(\d{1,2})\.\s")
 
 
-def paragraphs(path: str | Path) -> list[str]:
+def paragraphs(path: str | Path | IO[bytes]) -> list[str]:
     """Non-empty paragraph texts of a .docx, in order (stdlib only)."""
-    root = ET.fromstring(zipfile.ZipFile(path).read("word/document.xml"))
+    z = zipfile.ZipFile(path)
+    if z.getinfo("word/document.xml").file_size > 50 * 1024 * 1024:  # uploads: no zip bombs
+        raise ValueError("word/document.xml is over 50 MB uncompressed")
+    root = ET.fromstring(z.read("word/document.xml"))
     out = []
     for p in root.iter(_W + "p"):
         text = "".join(t.text or "" for t in p.iter(_W + "t")).strip()
@@ -131,7 +135,7 @@ def _join(*parts: tuple[str, str, bool] | None) -> tuple[str | None, str | None,
     return value, "; ".join(h for h, _, _ in hits), hits[0][2]
 
 
-def abstract(path: str | Path) -> dict:
+def abstract(path: str | Path | IO[bytes]) -> dict:
     """{field: {value, placeholder, optional, source, doc_span}} for the nine head terms + LR."""
     paras = paragraphs(path)
     out: dict[str, dict] = {}
@@ -173,7 +177,7 @@ def abstract(path: str | Path) -> dict:
 
 
 def contract(
-    path: str | Path, name: str | None = None
+    path: str | Path | IO[bytes], name: str | None = None
 ) -> tuple[Place, list[Evidence], list[Finding]]:
     """The abstraction as X-ray contract objects: one Evidence and one Finding per field."""
     sample = name or Path(path).stem

@@ -46,3 +46,35 @@ def test_contract_objects_are_office_findings(tmp_path):
     rent = next(e for e in evidence if e.field == "main_rent")
     assert rent.agent == "lease" and "[AMOUNT IN WORDS]" in rent.doc_span
     assert rent.source_name == "Model Commercial Lease MCL-TEST"
+
+
+def test_eval_route_serves_the_committed_results(client):
+    r = client.get("/api/lease/eval")
+    assert r.status_code == 200
+    assert set(r.json()["fields"]) >= {"main_rent", "break_clause", "insurance"}
+
+
+def test_upload_abstracts_a_docx_in_memory(client, tmp_path):
+    path = docx(tmp_path / "MCL-TEST.docx")
+    with path.open("rb") as f:
+        r = client.post("/api/lease/abstract", files={"file": ("MCL-TEST.docx", f)})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["place"]["use"] == "office"
+    assert body["terms"]["main_rent"]["placeholder"] is True
+    assert any(e["field"] == "main_rent" for e in body["evidence"])
+    assert {f["field"] for f in body["findings"]} >= {"main_rent", "insurance"}
+
+
+def test_upload_rejects_anything_but_a_docx(client):
+    r = client.post("/api/lease/abstract", files={"file": ("lease.pdf", b"%PDF-1.7")})
+    assert r.status_code == 422
+    r = client.post("/api/lease/abstract", files={"file": ("lease.docx", b"not a zip")})
+    assert r.status_code == 422
+
+
+def test_mcp_tool_returns_the_accuracy_table(client):
+    gateway = client.app.state.gateway
+    assert "abstract_lease_eval" in gateway.tools
+    result = gateway.call("abstract_lease_eval", {}, case_id="lease-test")["payload"]
+    assert result["overall"]["n"] == sum(f["n"] for f in result["fields"].values())

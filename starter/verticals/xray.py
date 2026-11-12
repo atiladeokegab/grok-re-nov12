@@ -437,7 +437,7 @@ def read_document_raw(doc_id: str, store: StoreDep) -> Response:
     try:
         data = raw_bytes(doc)
     except FileNotFoundError:
-        raise NotFound(f"document {doc_id!r} is not on this instance") from None
+        raise NotFound(f"document {doc_id!r} is no longer stored") from None
     # untrusted source bytes from our own origin: download only, never rendered or sniffed (XSS)
     ext = mimetypes.guess_extension(doc["content_type"].split(";")[0].strip()) or ".bin"
     headers = {

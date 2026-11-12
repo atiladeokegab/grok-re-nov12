@@ -92,8 +92,14 @@ def test_done_event_waits_for_inflight_refresh_then_loads_terminal_report(
         assert gets == 3, "the stale running snapshot must be followed by a fresh terminal GET"
         expect(page.locator("#run-status")).to_have_text("Check complete.")
         expect(page.get_by_test_id("finding")).to_have_count(4)
-        expect(page.locator("#sources")).to_contain_text("companies_house")
-        expect(page.locator("#sources")).to_contain_text("Not enabled for this check")
+        expect(page.locator("#sources > .status")).to_have_text(
+            "Not run for this listing: Companies House, photo reuse"
+        )
+        expect(page.locator("#sources .source-status")).to_have_count(3)
+        expect(page.locator("#sources .status-error")).to_contain_text("Source unavailable")
+        expect(page.locator("#sources .status-error")).to_contain_text("Register timed out")
+        expect(page.locator("#sources .status-empty")).to_contain_text("No record found")
+        expect(page.locator("#sources")).not_to_contain_text("no key")
         expect(page.locator("#error")).to_be_hidden()
         assert page.evaluate("window.__xrayEvents.closed")
 
@@ -128,7 +134,13 @@ def report(status, trust_score):
         "claims": [],
         "evidence": [],
         "history": [],
-        "sources": [{"name": "companies_house", "status": "off", "n_evidence": 0}]
+        "sources": [
+            {"name": "listing_history", "status": "ok", "n_evidence": 3},
+            {"name": "companies_house", "status": "off", "n_evidence": 0},
+            {"name": "photo_reuse", "status": "off", "n_evidence": 0, "detail": "no key"},
+            {"name": "epc", "status": "error", "detail": "Register timed out"},
+            {"name": "archive", "status": "empty", "n_evidence": 0},
+        ]
         if findings
         else [],
         "client_calls": {},

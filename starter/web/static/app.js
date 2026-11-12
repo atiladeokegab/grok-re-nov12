@@ -271,12 +271,18 @@ function render(result) {
   if (!(result.findings || []).length) $('findings').append(element('p', 'No findings have arrived. This is not a verified match.', 'empty'));
   renderMedia(result); renderHistory(result);
   $('sources').replaceChildren();
+  const notRun = [];
   for (const source of result.sources || []) {
+    if (source.status === 'off') {
+      notRun.push(source.name === 'companies_house' ? 'Companies House' : source.name.replaceAll('_', ' '));
+      continue;
+    }
     const line = element('p', null, `source-status status-${source.status}`);
-    line.append(element('span', source.name), element('span', source.status === 'ok' ? `${source.n_evidence || 0} evidence records` : source.status === 'error' ? 'Source unavailable' : source.status === 'off' ? 'no key' : 'No record found'));
+    line.append(element('span', source.name), element('span', source.status === 'ok' ? `${source.n_evidence || 0} evidence records` : source.status === 'error' ? 'Source unavailable' : 'No record found'));
     if (source.detail) line.append(element('small', String(source.detail).slice(0, 240), 'source-detail'));
     $('sources').append(line);
   }
+  if (notRun.length) $('sources').append(element('p', `Not run for this listing: ${notRun.join(', ')}`, 'status'));
   const calls = result.client_calls || {};
   const activity = [['Grok API calls', calls.grok ?? result.grok_calls], ['Cursor SDK calls', calls.cursor_sdk], ['Grok Bot MCP calls', calls.mcp?.grok_bot], ['Cursor MCP calls', calls.mcp?.cursor]];
   $('activity').replaceChildren();

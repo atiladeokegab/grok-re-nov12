@@ -87,10 +87,17 @@ class Gateway:
         return add(fn) if fn else add
 
     def call(
-        self, name: str, args: dict, case_id: str, cancel: threading.Event | None = None
+        self,
+        name: str,
+        args: dict,
+        case_id: str,
+        cancel: threading.Event | None = None,
+        audit: Callable[[dict], None] | None = None,
     ) -> dict:
         """Validate, run (or simulate), audit. Bad arguments raise ValueError (HTTP 422). Once
-        `cancel` is set, the call raises CaseCancelled: nothing runs and nothing is written."""
+        `cancel` is set, the call raises CaseCancelled: nothing runs and nothing is written.
+        `audit` receives the tool_call event instead of store.publish (the caller writes it)."""
+        publish = audit or self.store.publish
         if name not in self.tools:
             raise NotFound(f"no tool {name!r}")
         if cancel is not None and cancel.is_set():
@@ -106,12 +113,12 @@ class Gateway:
             if key in self.done:
                 result = self.done[key]
                 event = {"case_id": case_id, "tool": name, "args": args, "result": result}
-                self.store.publish({"type": "tool_call", **event, "repeat": True})
+                publish({"type": "tool_call", **event, "repeat": True})
                 return result
             result = self._run(name, args, case_id, cancel)
             if key:
                 self.done[key] = result
-        self.store.publish(
+        publish(
             {"type": "tool_call", "case_id": case_id, "tool": name, "args": args, "result": result}
         )
         return result

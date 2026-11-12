@@ -308,9 +308,11 @@ def begin(store: Store, ref: str, offline: bool = False, use: str | None = None)
 
 
 def _fetch(gateway, module, run_id: str):
-    start = time.perf_counter()
-    try:
-        result = gateway.call(f"source_{module.NAME}", {"run_id": run_id}, run_id)
+    start, audits = time.perf_counter(), []
+    try:  # the audit event is written by run_xray's next flush: no store wait in this thread
+        result = gateway.call(
+            f"source_{module.NAME}", {"run_id": run_id}, run_id, audit=audits.append
+        )
         claims = [Claim(**c) for c in result["payload"]["claims"]]
         evidence = [Evidence(**e) for e in result["payload"]["evidence"]]
         state = "ok" if claims or evidence else "empty"
@@ -319,7 +321,7 @@ def _fetch(gateway, module, run_id: str):
         claims, evidence, state, detail = [], [], "off", str(e)
     except Exception as e:  # a failed source is shown as unverifiable, never hidden
         claims, evidence, state, detail = [], [], "error", f"{type(e).__name__}: {e}"
-    return claims, evidence, state, detail, round((time.perf_counter() - start) * 1000)
+    return claims, evidence, state, detail, round((time.perf_counter() - start) * 1000), audits
 
 
 BUDGET_S = 10.0  # a whole run's sources; one still running then is reported, not waited for
@@ -339,10 +341,11 @@ def _fetch_all(gateway, run_id: str):
                 left = max(0.0, start + budget - time.monotonic())
                 for fut in as_completed(futures, timeout=left):
                     yield futures.pop(fut), fut.result()
-            except TimeoutError:
+            except TimeoutError:  # the consumer's store writes may run past it: done still counts
                 ms = round((time.monotonic() - start) * 1000)
-                for m in futures.values():
-                    yield m, ([], [], "error", f"timed out after {budget:g} s", ms)
+                for fut, m in futures.items():
+                    late = ([], [], "error", f"timed out after {budget:g} s", ms, [])
+                    yield m, fut.result() if fut.done() else late
     finally:
         pool.shutdown(wait=False, cancel_futures=True)  # a straggler finishes unobserved
 
@@ -372,8 +375,9 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
     _buffers[run_id] = []
     try:
         batches = {}
-        for module, (claims, evidence, state, detail, ms) in _fetch_all(gateway, run_id):
+        for module, (claims, evidence, state, detail, ms, audits) in _fetch_all(gateway, run_id):
             batches[module.NAME] = (claims, evidence)
+            _buffers[run_id] += audits
             try:  # provenance is extra: a landing or grounding failure never fails the run
                 _land_known(module.NAME, listing)
             except Exception as e:

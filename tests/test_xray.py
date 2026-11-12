@@ -255,3 +255,25 @@ def test_offline_run_makes_no_paid_model_calls(tmp_path, monkeypatch):
     r = run_xray(_gateway(tmp_path), "demo", offline=True)
     assert r.status == "done" and r.trust_score == 67
     assert r.grok_calls == 0 and r.client_calls.cursor_sdk == 0
+
+
+def test_source_threads_never_wait_on_the_store_and_every_source_call_is_still_audited(tmp_path):
+    import threading
+
+    from starter.verticals import xray as xv
+
+    class SlowStore(Store):  # live GCS: a write per source thread queued behind other runs
+        def mutate(self, fn):
+            if threading.current_thread() is not threading.main_thread():
+                raise AssertionError("a source thread wrote the store")
+            return super().mutate(fn)
+
+        def publish(self, event):
+            return self.mutate(lambda d: d.setdefault("events", []).append(event))
+
+    store = SlowStore(tmp_path / "s.json")
+    r = xv.run_xray(build_gateway(store), "demo", offline=True)
+    assert r.status == "done" and r.trust_score == 67
+    calls = [e["tool"] for e in store.snapshot()["events"] if e.get("type") == "tool_call"]
+    ran = [f"source_{s.name}" for s in r.sources if s.status != "off"]  # off raises: no audit
+    assert ran and sorted(calls) == sorted(ran)

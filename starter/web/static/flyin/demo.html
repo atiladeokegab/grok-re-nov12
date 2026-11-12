@@ -22,8 +22,8 @@
       lat: 51.489504, lng: -0.015614, label: '24 Macquarie Way, Isle of Dogs, E14 3AU',
       precision: q.get('precision') || 'postcode_centroid', use: 'residential', durationMs: +(q.get('ms') || 7000),
     });
-    document.title = `resolved ${Math.round(performance.now() - t0)}ms`;
-    console.log(document.title, document.querySelector('.xf-fallback')?.dataset.reason || 'map');
+    document.body.dataset.resolvedMs = Math.round(performance.now() - t0); // for headless checks; the title stays clean
+    console.log('resolved', document.body.dataset.resolvedMs, document.querySelector('.xf-fallback')?.dataset.reason || 'map');
   </script>
 </body>
 </html>

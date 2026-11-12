@@ -4,7 +4,7 @@ const MAPLIBRE = 'https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1';
 const TILES = 'https://tiles.openfreemap.org/planet';
 const GLYPHS = 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf';
 const CESIUM = 'https://cdnjs.cloudflare.com/ajax/libs/cesium/1.140.0';
-const CEILING_MS = 8500; // absolute: the caller has control back by then on the 3D tiles path
+const CEILING_MS = 8500; // absolute: flyIn resolves by then, whatever is still loading
 const LONDON = [-0.1276, 51.5072];
 const C = { bg: '#080a09', water: '#0f1a17', park: '#0d140f', road: '#232a24', major: '#323b33', bldLo: '#151a16', bldHi: '#2c342d', accent: '#b8ed81', muted: '#b4beb2' };
 
@@ -168,7 +168,7 @@ function light(map, area, target) {
 
 async function runMapLibre(el, o, state) {
   const ml = await script(`${MAPLIBRE}/maplibre-gl.js`, 8000);
-  if (state.done) return;
+  if (state.dead) return;
   const area = o.precision === 'postcode_centroid';
   const target = [o.lng, o.lat];
   const mapEl = document.createElement('div');
@@ -192,22 +192,23 @@ async function runMapLibre(el, o, state) {
     map.on('error', (e) => { if (!map.loaded()) no(e.error || new Error('map error')); });
     setTimeout(() => no(new Error('map load timeout')), 9000);
   });
-  if (state.done) return;
+  if (state.dead) return;
   if (!map.getSource('omt')?.loaded?.() && !map.isSourceLoaded('omt')) await new Promise((ok) => { map.once('idle', ok); setTimeout(ok, 2500); });
 
   const marker = area ? null : new ml.Marker({ element: Object.assign(document.createElement('div'), { className: 'xf-pin', innerHTML: '<i></i><b></b>' }), anchor: 'bottom' }).setLngLat(target).addTo(map);
 
   if (!reduce) {
     const t = o.durationMs;
+    state.flightStart = performance.now();
     map.flyTo({ center: [(LONDON[0] + o.lng) / 2 + 0.01, (LONDON[1] + o.lat) / 2], zoom: 12.4, pitch: 42, bearing: -24, duration: t * 0.42, curve: 1.2, essential: true });
     await wait(t * 0.42 + 50);
-    if (state.done) return;
+    if (state.dead) return;
     map.easeTo({ ...final, duration: t * 0.58, easing: (x) => 1 - Math.pow(1 - x, 3), essential: true });
     await wait(t * 0.58 + 50);
   } else {
     await new Promise((ok) => { map.once('idle', ok); setTimeout(ok, 3000); });
   }
-  if (state.done) return;
+  if (state.dead) return;
 
   light(map, area, target);
   ['area-fill', 'area-glow', 'area-line'].forEach((id, i) => map.setPaintProperty(id, id === 'area-fill' ? 'fill-opacity' : 'line-opacity', [0.1, 0.55, 0.9][i]));
@@ -229,19 +230,28 @@ const lerp = (a, b, u) => a + (b - a) * u;
 const rad = (d) => (d * Math.PI) / 180;
 const inOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 
-// Orbit-and-descend: London from 28 km straight down, spiralling onto an oblique orbit of the target.
+function dropTiles(el, state) {
+  try { state.tiles?.isDestroyed() || state.tiles?.destroy(); } catch {}
+  state.tiles = null;
+  el.querySelectorAll('.xf-tiles').forEach((n) => n.remove());
+}
+
+// Google 3D tiles over the MapLibre flight: London from 28 km straight down, spiralling onto an oblique
+// orbit of the target, on MapLibre's clock. Hidden until the landing view is sharp, then crossfaded in.
 async function runTiles(el, o, state, key, deadline) {
   window.CESIUM_BASE_URL = `${CESIUM}/`;
   css(`${CESIUM}/Widgets/widgets.css`);
-  const Cesium = await script(`${CESIUM}/Cesium.js`, Math.min(5000, deadline - performance.now() - 3500), 'Cesium');
-  if (state.done) return;
+  const Cesium = await script(`${CESIUM}/Cesium.js`, Math.min(5000, deadline - performance.now() - 1000), 'Cesium');
+  if (state.dead) return;
   const area = o.precision === 'postcode_centroid';
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const mapEl = document.createElement('div');
   mapEl.className = 'xf-map xf-tiles';
+  mapEl.style.opacity = '0';
   el.prepend(mapEl);
   const widget = new Cesium.CesiumWidget(mapEl, { baseLayer: false, globe: false, skyBox: false, showRenderLoopErrors: false, msaaSamples: 4 });
-  state.map = { remove: () => widget.isDestroyed() || widget.destroy(), loaded: () => true };
+  state.tiles = widget;
+  const gone = () => state.tiles !== widget;
   const scene = widget.scene;
   scene.backgroundColor = Cesium.Color.fromCssColorString(C.bg);
   scene.screenSpaceCameraController.enableInputs = false;
@@ -249,58 +259,62 @@ async function runTiles(el, o, state, key, deadline) {
   const failed = new Promise((_, no) => { broke = no; });
   scene.renderError.addEventListener((_, e) => broke(e || new Error('render error')));
   // Google's own endpoint with Google's logo credit; no ion asset, no globe, no base imagery.
-  const tileset = await within(Cesium.createGooglePhotorealistic3DTileset({ key, onlyUsingWithGoogleGeocoder: true }, { showCreditsOnScreen: true, maximumScreenSpaceError: 16 }), Math.min(3000, deadline - performance.now() - 5500), 'tiles timeout');
-  if (state.done) return;
+  const tileset = await within(Cesium.createGooglePhotorealistic3DTileset({ key, onlyUsingWithGoogleGeocoder: true }, { showCreditsOnScreen: true, maximumScreenSpaceError: 16 }), Math.min(3000, deadline - performance.now() - 500), 'tiles timeout');
+  if (gone()) return;
   scene.primitives.add(tileset);
+  const loaded = (ms) => Promise.race([new Promise((ok) => { const off = tileset.allTilesLoaded.addEventListener(() => { off(); ok(); }); }), wait(ms), failed]);
 
   // shortcut: London ground is ~50 m above the ellipsoid; replaced by the sampled roof once tiles load.
   let H = 60, roof = Cesium.Cartesian3.fromDegrees(o.lng, o.lat, H + 20);
-  const R = area ? 950 : 300, PITCH = area ? -52 : -42, SPIN = 3, PRELOAD = 2000; // SPIN: degrees per second of orbit
-  const D = reduce ? 0 : Math.min(o.durationMs, deadline - performance.now() - PRELOAD - 300);
-  if (!reduce && D < 3000) throw new Error('tiles too slow');
-  let t0 = null; // null while preloading: the camera holds the landing pose so its tiles stream first, unseen
+  const R = area ? 950 : 300, PITCH = area ? -52 : -42, SPIN = 3; // SPIN: degrees per second of orbit
+  const D = reduce ? 0 : o.durationMs;
+  let t0 = null; // null while preloading: hold the landing pose so its tiles stream first, unseen
   const pose = () => {
     const sec = t0 === null ? D / 1000 : (performance.now() - t0) / 1000, u = D ? Math.min(sec * 1000 / D, 1) : 1, e = inOut(u), c = 1 - Math.pow(1 - u, 3);
     const center = Cesium.Cartesian3.fromDegrees(lerp(LONDON[0], o.lng, c), lerp(LONDON[1], o.lat, c), H);
     const heading = -40 + 40 * e + (reduce ? 0 : SPIN * sec);
     widget.camera.lookAt(center, new Cesium.HeadingPitchRange(rad(heading), rad(lerp(-89, PITCH, e)), Math.exp(lerp(Math.log(28000), Math.log(R), e))));
   };
-  mapEl.style.opacity = '0';
   scene.preRender.addEventListener(pose);
-  await Promise.race([new Promise((ok) => tileset.allTilesLoaded.addEventListener(ok)), wait(PRELOAD), failed]);
-  if (state.done) return;
-  // A judge never sees a grey blur: if the landing view is not sharp in time, MapLibre takes over.
+  await loaded(deadline - performance.now());
+  if (gone()) return;
+  // A judge never sees a grey blur: unsharp by the ceiling means MapLibre stays.
   if (!tileset.tilesLoaded) throw new Error('tiles not sharp in time');
   const top = scene.sampleHeightSupported ? scene.sampleHeight(Cesium.Cartographic.fromDegrees(o.lng, o.lat)) : undefined;
   if (top > 0 && top < 400) { H = top - 10; roof = Cesium.Cartesian3.fromDegrees(o.lng, o.lat, top + 2); }
+  t0 = state.flightStart ?? performance.now();
+  await loaded(800); // the in-flight view, if MapLibre is still mid-air
+  if (gone()) return;
 
   const pin = area ? null : Object.assign(document.createElement('div'), { className: 'xf-pin', innerHTML: '<i></i><b></b>' });
-  if (pin) mapEl.append(pin);
-  if (pin) scene.postRender.addEventListener(() => {
-    const p = Cesium.SceneTransforms.worldToWindowCoordinates(scene, roof);
-    if (p) pin.style.transform = `translate(${p.x - 8}px, ${p.y - 56}px)`;
-  });
-  t0 = performance.now();
-  mapEl.style.transition = 'opacity 400ms';
+  if (pin) {
+    mapEl.append(pin);
+    scene.postRender.addEventListener(() => {
+      const p = Cesium.SceneTransforms.worldToWindowCoordinates(scene, roof);
+      if (p) pin.style.transform = `translate(${p.x - 8}px, ${p.y - 56}px)`;
+    });
+    setTimeout(() => pin.classList.add('is-landed'), Math.max(0, t0 + D - performance.now()));
+  }
+  mapEl.style.transition = 'opacity 700ms';
   mapEl.style.opacity = '1';
-  await Promise.race([wait(D), failed]);
-  if (reduce) scene.preRender.removeEventListener(pose);
-  pin?.classList.add('is-landed');
+  el.dataset.flyin = 'tiles';
 }
 
 export function flyIn(el, opts = {}) {
   const o = { label: '', precision: 'address', use: 'residential', durationMs: 7000, ...opts };
   o.durationMs = Math.min(Math.max(+o.durationMs || 7000, 1500), 9000);
   return new Promise((resolve) => {
-    const state = { done: false, map: null };
+    const state = { done: false, map: null, tiles: null };
     let ui;
     const finish = (reason) => {
       if (state.done) return;
       state.done = true;
       clearTimeout(guard);
       if (reason) {
+        state.dead = true;
         try { state.map?.remove(); } catch {}
         state.map = null;
+        dropTiles(el, state);
         try { fallback(el, o, reason); } catch {}
       } else {
         ui?.land();
@@ -308,8 +322,8 @@ export function flyIn(el, opts = {}) {
       live.set(el, state);
       resolve();
     };
-    // Hard ceiling: whatever happens, the caller gets control back.
-    const guard = setTimeout(() => finish(state.map?.loaded() ? null : 'timeout'), o.durationMs + 9000);
+    // Hard ceiling: whatever happens, the caller gets control back by 8.5 s; a flight still in the air lands on its own.
+    const guard = setTimeout(() => finish(state.flightStart ? null : 'timeout'), CEILING_MS);
     try {
       dispose(el);
       el.classList.add('xf-root');
@@ -319,33 +333,21 @@ export function flyIn(el, opts = {}) {
       if (!hasWebGL()) return finish('no-webgl');
       css(`${MAPLIBRE}/maplibre-gl.css`);
       const deadline = performance.now() + CEILING_MS;
+      o.durationMs = Math.min(o.durationMs, CEILING_MS - 2000);
+      ui = hud(el, o);
       live.set(el, state);
-      const run = async () => {
-        const key = await mapsKey();
-        if (key && !state.done) {
-          const full = o.durationMs;
-          o.durationMs = Math.min(o.durationMs, CEILING_MS - 1500);
-          ui = hud(el, o);
-          try {
-            await runTiles(el, o, state, key, deadline);
-            el.dataset.flyin = 'tiles';
-            return;
-          } catch (e) {
-            // Any 3D tiles failure (403, no WebGL2, slow CDN, render error) drops to MapLibre in the time left.
-            el.dataset.flyinTilesError = String(e?.message || e);
-            try { state.map?.remove(); } catch {}
-            state.map = null;
-            el.querySelectorAll('.xf-map, .xf-overlay').forEach((n) => n.remove());
-            el.classList.remove('xf-flying');
-            o.durationMs = Math.min(full, Math.max(1500, deadline - performance.now() - 2500));
-          }
-        }
-        if (state.done) return;
-        ui = hud(el, o);
-        await runMapLibre(el, o, state);
-        el.dataset.flyin = 'maplibre';
-      };
-      run().then(() => finish(null), (e) => finish(String(e?.message || e || 'map error')));
+      // MapLibre moves from the first second; Google tiles crossfade over it once sharp, else MapLibre stays.
+      const tiles = mapsKey().then((key) => key && runTiles(el, o, state, key, deadline)).catch((e) => {
+        el.dataset.flyinTilesError = String(e?.message || e);
+        dropTiles(el, state);
+      });
+      runMapLibre(el, o, state).then(() => {
+        el.dataset.flyin ||= 'maplibre';
+        finish(null);
+      }, async (e) => {
+        await tiles;
+        finish(el.dataset.flyin === 'tiles' ? null : String(e?.message || e || 'map error'));
+      });
     } catch (e) {
       finish(String(e?.message || e));
     }
@@ -354,7 +356,7 @@ export function flyIn(el, opts = {}) {
 
 function dispose(el) {
   const s = live.get(el);
-  if (s) { s.done = true; try { s.map?.remove(); } catch {} }
+  if (s) { s.done = s.dead = true; try { s.map?.remove(); } catch {} dropTiles(el, s); }
   live.delete(el);
   el.querySelectorAll('.xf-map, .xf-overlay, .xf-fallback').forEach((n) => n.remove());
   el.classList.remove('xf-root', 'xf-flying', 'xf-landed');

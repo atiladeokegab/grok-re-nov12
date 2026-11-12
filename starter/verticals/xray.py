@@ -172,6 +172,10 @@ def _ground(
         _save(store, report, "ingestion.parsed", data)
 
 
+def _warn(step: str, source: str, e: Exception) -> None:
+    print(json.dumps({"ingest_warning": step, "source": source, "error": repr(e)}), flush=True)
+
+
 def _public(doc: dict) -> dict:
     return {k: v for k, v in doc.items() if k != "bytes_path"}
 
@@ -272,12 +276,18 @@ def run_xray(gateway, ref: str, offline: bool = False, report: XRayReport | None
                 detail = None if evidence or claims else "no record for this address"
             except Exception as e:  # a failed source is shown as unverifiable, never hidden
                 claims, evidence, state, detail = [], [], "error", f"{type(e).__name__}: {e}"
-            _land_known(module.NAME, listing)
+            try:  # provenance is extra: a landing or grounding failure never fails the run
+                _land_known(module.NAME, listing)
+            except Exception as e:
+                _warn("land", module.NAME, e)
             landed = listing.get("_documents", [])[len(report.documents) :]
             report.documents += landed
             for d in landed:
                 _save(store, report, "ingestion.landed", {"document": _public(d.model_dump())})
-            _ground(store, report, evidence, claims)
+            try:
+                _ground(store, report, evidence, claims)
+            except Exception as e:
+                _warn("ground", module.NAME, e)
             ms = round((time.perf_counter() - start) * 1000)
             status = SourceStatus(
                 name=module.NAME, status=state, n_evidence=len(evidence), ms=ms, detail=detail

@@ -199,3 +199,28 @@ def test_gcs_documents_live_in_the_bucket_and_read_from_any_instance(tmp_path, m
     fake.objects.clear()
     gone = doc.model_copy(update={"bytes_path": "gs://demo-bucket/documents/nope"})
     assert decoded_text(gone) is None
+
+
+def test_a_denied_bucket_write_keeps_the_document_locally_and_the_run_finishes(
+    tmp_path, monkeypatch
+):
+    from google.api_core.exceptions import Forbidden
+
+    from starter.core import ingest
+
+    class DeniedBlob(_FakeBlob):
+        def upload_from_string(self, *a, **k):
+            raise Forbidden("storage.objects.create denied")
+
+    class DeniedClient(_FakeClient):
+        def blob(self, name):
+            return DeniedBlob(self.objects, name)
+
+    monkeypatch.delenv("DOCS_DIR")
+    monkeypatch.setenv("DATA_PATH", "gs://demo-bucket/state/store.json")
+    monkeypatch.setattr(ingest, "_client", DeniedClient())
+    monkeypatch.setattr(ingest, "CACHE_DIR", tmp_path / "cache")
+    r = run_xray(build_gateway(Store(tmp_path / "s.json")), "demo", offline=True)
+    assert r.status == "done" and r.documents
+    assert all(d.bytes_path.startswith(str(tmp_path / "cache")) for d in r.documents)
+    assert any(e.span for e in r.evidence)  # grounded from the local copy

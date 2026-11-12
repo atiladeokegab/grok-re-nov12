@@ -65,6 +65,9 @@ def _write(where: Path | str, sha: str, data: bytes) -> str:
         )
     except PreconditionFailed:
         pass
+    except Exception as e:  # IAM, network: keep this instance's copy rather than fail the run
+        print(json.dumps({"ingest_warning": "gcs_write", "sha256": sha, "error": repr(e)}))
+        return _write(CACHE_DIR, sha, data)
     _write(CACHE_DIR, sha, data)
     return f"{where}/{sha}"
 

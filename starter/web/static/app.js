@@ -4,7 +4,7 @@ import { mountClients } from './clients.js';
 import { loadGallery } from './gallery.js';
 import { renderRenters } from './renters.js';
 import { renderPlaces } from './places.js';
-import { agentLines } from './agents.js';
+import { agentChips } from './agents.js';
 
 const $ = id => document.getElementById(id);
 const mockup = new URLSearchParams(location.search).get('mockup') === '1';
@@ -286,8 +286,10 @@ async function showFlyIn(result) {
 function render(result) {
   current = result;
   $('intro').hidden = true; $('results').hidden = false;
+  // the address, never the crawl's page title ("Property for Auction in London - ...")
   $('place-title').textContent = result.place?.address || result.place?.title || 'Listing X-ray';
-  $('place-description').textContent = result.place?.address ? '' : result.place?.postcode || '';
+  $('place-description').textContent = result.place?.address ? '' : result.listing_id || '';
+  document.title = result.place?.address ? `${result.place.address} | X-ray` : 'X-ray | The record behind every claim';
   $('place-description').hidden = !$('place-description').textContent;
   $('run-status').textContent = result.status === 'running' ? 'Checking sources. Findings update as records arrive.' : result.status === 'done' ? 'Check complete.' : result.status === 'error' ? 'Check incomplete. Review the source details below.' : 'Source records from this check.';
   const counts = result.counts || {};
@@ -314,18 +316,21 @@ function render(result) {
   if (!(result.findings || []).length) $('findings').append(element('p', 'No findings have arrived. This is not a verified match.', 'empty'));
   renderMedia(result); renderHistory(result); renderRenters($('renters'), result); renderPlaces($('places'), result);
   $('sources').replaceChildren();
-  const { lines: agentRows, off: notRun } = agentLines(result);
-  for (const row of agentRows) {
-    const line = element('p', null, `source-status agent-line status-${row.status}`);
-    line.dataset.testid = 'agent-line';
-    line.append(element('span', row.agent), element('span', row.text));
-    $('sources').append(line);
+  const { chips, off: notRun } = agentChips(result);
+  const row = element('div', null, 'agent-chips');
+  for (const chip of chips) {
+    const item = element('span', null, `agent-chip status-${chip.status}`);
+    item.dataset.testid = 'agent-chip';
+    item.append(element('b', chip.agent), element('span', chip.text));
+    row.append(item);
   }
-  if (notRun.length) $('sources').append(element('p', `Not run for this listing: ${notRun.join(', ')}`, 'status'));
+  $('sources').append(row);
+  if (notRun.length) $('sources').append(element('p', `Not run: ${notRun.join(', ')}`, 'status'));
   const calls = result.client_calls || {};
-  const activity = [['Cursor SDK calls', calls.cursor_sdk], ['Cursor MCP calls', calls.mcp?.cursor], ['Other MCP calls', calls.mcp && (calls.mcp.other ?? 0) + (calls.mcp.grok_bot ?? 0)]];
+  const mcpCalls = (calls.mcp?.other ?? 0) + (calls.mcp?.grok_bot ?? 0);
   $('activity').replaceChildren();
-  for (const [label, count] of activity) $('activity').append(element('dt', label), element('dd', Number.isFinite(count) ? count : 'Not reported'));
+  if (mcpCalls > 0) $('activity').append(element('dt', 'MCP calls'), element('dd', mcpCalls));
+  $('activity').hidden = mcpCalls <= 0; // a row of zeros advertises non-use
   $('run-id').textContent = `Run ${result.run_id || 'not recorded'}`;
   $('export-csv').hidden = !result.run_id; if (result.run_id) $('export-csv').href = `/api/xray/${encodeURIComponent(result.run_id)}/export.csv`;
   if (selected && (result.findings || []).some(item => item.id === selected)) showFinding(selected);
@@ -444,7 +449,7 @@ loadGallery($('gallery'), item => {
 
 async function startRun(payload) {
   stop(); controller = new AbortController();
-  setView('findings');
+  setView('connections'); // every run opens on the graph: the red row is the hero
   const ownGeneration = generation;
   $('error').hidden = true; $('start').disabled = true; $('status').textContent = 'Checking the records. Each finding will link to its evidence.';
   try {
@@ -480,6 +485,7 @@ async function openRun(runId, ownGeneration, flyIn) {
 // /?run=<id>: a saved run, as it finished. No new run starts; a running one is watched.
 async function loadRun(runId) {
   stop(); controller = new AbortController();
+  setView('connections');
   const ownGeneration = generation;
   $('error').hidden = true; $('status').textContent = `Opening X-ray run ${runId}.`;
   try {

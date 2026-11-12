@@ -22,7 +22,7 @@
 .hero .place-meta { color: var(--color-accent) }
 .place-credit {
   position: absolute; z-index: 1; top: var(--space-2); right: var(--space-2); padding: var(--space-0) var(--space-2);
-  font-size: 11px; color: var(--color-ink); background: var(--color-photo-shade); border-radius: var(--radius-control)
+  max-width: calc(100% - var(--space-4)); overflow-wrap: anywhere; font-size: 11px; color: var(--color-ink); background: var(--color-photo-shade); border-radius: var(--radius-control)
 }
 @media (max-width: 600px) {
   .places-grid { grid-template-columns: 1fr 1fr; grid-auto-rows: 132px }

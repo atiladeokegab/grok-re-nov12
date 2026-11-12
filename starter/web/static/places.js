@@ -20,7 +20,8 @@ export function placeTiles(manifest, result) {
     .map(t => ({
       src: base + t.file, label: t.label || t.source, source: t.source, url: safeUrl(t.url),
       date: t.date ? `${t.date_note === 'captured' ? 'Captured' : 'Fetched'} ${dateText(t.date)}` : '',
-      attribution: manifest.attribution || 'Imagery © Google',
+      attribution: t.credit || manifest.attribution || 'Imagery © Google',
+      focus: /^\d{1,3}% \d{1,3}%$/.test(t.focus || '') ? t.focus : '',
     }));
   if (!saved.length) return [];
   // Two advert photos keep the strip to two rows; the full set is in the advert itself.
@@ -39,6 +40,7 @@ function tileNode(t) {
   if (t.url) { a.href = t.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; }
   const img = document.createElement('img');
   img.src = t.src; img.alt = `${t.label}, ${t.source}`; img.loading = 'lazy';
+  if (t.focus) img.style.objectPosition = t.focus; // keeps the ringed property in the cropped view
   img.addEventListener('error', () => a.remove(), { once: true });
   const caption = document.createElement('span'); caption.className = 'place-caption';
   const label = document.createElement('span'); label.className = 'place-label'; label.textContent = t.label;

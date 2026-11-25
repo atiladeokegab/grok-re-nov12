@@ -23,7 +23,9 @@ A listing is a sales document, and AI has made faking one free. In November 2026
 
    <img src="docs/assets/how-photos.gif" alt="A photo finding: 7 of 8 photos are byte-identical to another advert" width="640">
 
-2. **Keep claims and evidence apart.** Each record is stored as evidence with its source URL, fetch time and agent. A verdict can only point at evidence, so you can follow any finding back to the record. `starter/core/surreal_graph.py`
+   <sub>Cropped: the line below this one in the app says the source document is unavailable, so this finding links to no copy of the other advert.</sub>
+
+2. **Keep claims and evidence apart.** Each record is stored as evidence with its source URL, fetch time and agent. A verdict can only point at evidence, so a finding can be followed back to the record that was captured for it. `starter/core/surreal_graph.py`
 
    <img src="docs/assets/how-evidence.gif" alt="The evidence view linking the advert's property type to the EPC register's" width="720">
 
